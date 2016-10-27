@@ -19,10 +19,8 @@ public class Test {
 
         RedactableSignature rss = null;
         try {
-            rss = RedactableSignature.getInstance("TestDummy", "WP");
+            rss = RedactableSignature.getInstance("TestDummy");
             rss.initSign(null);
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
