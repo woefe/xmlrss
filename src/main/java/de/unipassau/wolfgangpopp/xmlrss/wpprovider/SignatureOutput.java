@@ -1,4 +1,4 @@
-package de.unipassau.wolfgangpopp.xmlrss;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 
 /**
  * @author Wolfgang Popp

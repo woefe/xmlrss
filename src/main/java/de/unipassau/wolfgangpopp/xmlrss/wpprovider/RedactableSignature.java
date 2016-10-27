@@ -1,16 +1,28 @@
-package de.unipassau.wolfgangpopp.xmlrss;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 
 import sun.security.jca.GetInstance;
 
-import java.security.*;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.SignatureException;
 
 public abstract class RedactableSignature extends RedactableSignatureSPI {
 
     private Provider provider;
     private String algorithm;
+    private STATE state;
+
+    private enum STATE {
+        UNINITIALIZED, SIGN, REDACT, VERIFY
+    }
 
     protected RedactableSignature(String algorithm) {
         this.algorithm = algorithm;
+        this.state = STATE.UNINITIALIZED;
     }
 
     public static RedactableSignature getInstance(String algorithm, String provider) throws NoSuchProviderException, NoSuchAlgorithmException {
@@ -30,36 +42,49 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
 
     }
 
-    // TODO: 10/26/16 Handle state!!
-
-    public void initSign(PublicKey publicKey) throws InvalidKeyException {
-        engineInitSign(publicKey);
+    public void initSign(KeyPair keyPair) throws InvalidKeyException {
+        state = STATE.SIGN;
+        engineInitSign(keyPair);
     }
 
     public void addPart(byte[] part, boolean admissible) throws SignatureException {
-        engineAddPart(part, admissible);
+        if (state != STATE.UNINITIALIZED) {
+            engineAddPart(part, admissible);
+        }
+        throw new SignatureException("not initialized");
     }
 
     public SignatureOutput sign() throws SignatureException {
-        return engineSign();
+        if (state == STATE.SIGN) {
+            return engineSign();
+        }
+        throw new SignatureException("not initialized for signing");
     }
 
 
     public void initVerify(PublicKey publicKey) throws InvalidKeyException {
+        state = STATE.VERIFY;
         engineInitVerify(publicKey);
     }
 
     public boolean verify(SignatureOutput signature) throws SignatureException {
-        return engineVerify(signature);
+        if (state == STATE.VERIFY) {
+            return engineVerify(signature);
+        }
+        throw new SignatureException("not initialized for verification");
     }
 
 
-    public void initRedact(PublicKey publicKey /*TODO*/) throws InvalidKeyException {
+    public void initRedact(PublicKey publicKey) throws InvalidKeyException {
+        state = STATE.REDACT;
         engineInitRedact(publicKey);
     }
 
-    public SignatureOutput redact(SignatureOutput signature) throws SignatureException {
-        return engineRedact(signature);
+    public SignatureOutput redact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
+        if (state == STATE.REDACT) {
+            return engineRedact(signature, mod);
+        }
+        throw new SignatureException("not initialized for redaction");
     }
 
     static class Delegate extends RedactableSignature {
@@ -72,14 +97,13 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
         }
 
         @Override
-        protected void engineInitSign(PublicKey publicKey) throws InvalidKeyException {
-            rssSPI.engineInitSign(publicKey);
+        protected void engineInitSign(KeyPair keyPair) throws InvalidKeyException {
+            rssSPI.engineInitSign(keyPair);
         }
 
         @Override
         protected void engineAddPart(byte[] part, boolean admissible) throws SignatureException {
             rssSPI.engineAddPart(part, admissible);
-
         }
 
         @Override
@@ -90,7 +114,6 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
         @Override
         protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
             rssSPI.engineInitVerify(publicKey);
-
         }
 
         @Override
@@ -104,10 +127,8 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
         }
 
         @Override
-        protected SignatureOutput engineRedact(SignatureOutput signature) throws SignatureException {
-            return rssSPI.engineRedact(signature);
+        protected SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
+            return rssSPI.engineRedact(signature, mod);
         }
     }
-
-
 }
