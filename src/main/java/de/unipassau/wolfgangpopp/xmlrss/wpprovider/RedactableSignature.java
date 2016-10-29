@@ -14,16 +14,17 @@ import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.List;
 
-public abstract class RedactableSignature extends RedactableSignatureSPI {
+public abstract class RedactableSignature extends RedactableSignatureSpi {
 
     //TODO Debug mode
 
     private Provider provider;
     private String algorithm;
     private STATE state;
+    private static String type = "RedactableSignature";
 
     private enum STATE {
-        UNINITIALIZED, SIGN, REDACT, VERIFY
+        UNINITIALIZED, SIGN, REDACT, VERIFY, UPDATE, MERGE
     }
 
     protected RedactableSignature(String algorithm) {
@@ -33,11 +34,11 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
 
     public static RedactableSignature getInstance(String algorithm) throws NoSuchAlgorithmException {
         NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + "RedactableSignature not available");
-        List<Provider.Service> services = GetInstance.getServices("RedactableSignature", algorithm);
+        List<Provider.Service> services = GetInstance.getServices(type, algorithm);
 
         for (Provider.Service service : services) {
             try {
-                GetInstance.Instance instance = GetInstance.getInstance(service, RedactableSignatureSPI.class);
+                GetInstance.Instance instance = GetInstance.getInstance(service, RedactableSignatureSpi.class);
                 return getInstance(instance, algorithm);
             } catch (NoSuchAlgorithmException e) {
                 failure = e;
@@ -49,14 +50,14 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
     public static RedactableSignature getInstance(String algorithm, String provider)
             throws NoSuchProviderException, NoSuchAlgorithmException {
 
-        GetInstance.Instance instance = GetInstance.getInstance("RedactableSignature",
-                RedactableSignatureSPI.class, algorithm, provider);
+        GetInstance.Instance instance = GetInstance.getInstance(type,
+                RedactableSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }
 
     public static RedactableSignature getInstance(String algorithm, Provider provider) throws NoSuchAlgorithmException {
-        GetInstance.Instance instance = GetInstance.getInstance("RedactableSignature",
-                RedactableSignatureSPI.class, algorithm, provider);
+        GetInstance.Instance instance = GetInstance.getInstance(type,
+                RedactableSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }
 
@@ -66,7 +67,7 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
             sig = (RedactableSignature) instance.impl;
             sig.algorithm = algorithm;
         } else {
-            RedactableSignatureSPI spi = (RedactableSignatureSPI) instance.impl;
+            RedactableSignatureSpi spi = (RedactableSignatureSpi) instance.impl;
             sig = new Delegate(spi, algorithm);
         }
         sig.provider = instance.provider;
@@ -97,6 +98,17 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
         engineInitRedact(publicKey);
     }
 
+    public void initMerge(PublicKey publicKey) throws InvalidKeyException {
+        state = STATE.MERGE;
+        engineInitMerge(publicKey);
+    }
+
+
+    public void initUpdate(PrivateKey privateKey) throws InvalidKeyException {
+        state = STATE.UPDATE;
+        engineInitUpdate(privateKey);
+    }
+
     public final void addPart(byte[] part, boolean admissible) throws SignatureException {
         if (state != STATE.UNINITIALIZED) {
             engineAddPart(part, admissible);
@@ -125,6 +137,21 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
         throw new SignatureException("not initialized for redaction");
     }
 
+    public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
+        if (state == STATE.MERGE) {
+            return engineMerge(signature1, signature2);
+        }
+        throw new SignatureException("not initialized for merging");
+    }
+
+    public SignatureOutput update(SignatureOutput signature) throws SignatureException {
+        if (state == STATE.UPDATE) {
+            return engineUpdate(signature);
+        }
+        throw new SignatureException("not initialized for updating");
+    }
+
+
     public final String getAlgorithm() {
         return this.algorithm;
     }
@@ -144,9 +171,9 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
 
     static class Delegate extends RedactableSignature {
 
-        private RedactableSignatureSPI rssSPI;
+        private RedactableSignatureSpi rssSPI;
 
-        Delegate(RedactableSignatureSPI spi, String algorithm) {
+        Delegate(RedactableSignatureSpi spi, String algorithm) {
             super(algorithm);
             this.rssSPI = spi;
         }
@@ -156,6 +183,7 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
             rssSPI.engineInitSign(privateKey);
         }
 
+        @Override
         protected void engineInitSign(PrivateKey privateKey, SecureRandom random) throws InvalidKeyException {
             rssSPI.engineInitSign(privateKey, random);
         }
@@ -186,14 +214,36 @@ public abstract class RedactableSignature extends RedactableSignatureSPI {
         }
 
         @Override
+        protected void engineInitMerge(PublicKey publicKey) throws InvalidKeyException {
+            rssSPI.engineInitMerge(publicKey);
+        }
+
+        @Override
+        protected void engineInitUpdate(PrivateKey privateKey) throws InvalidKeyException {
+            rssSPI.engineInitUpdate(privateKey);
+        }
+
+        @Override
         protected SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
             return rssSPI.engineRedact(signature, mod);
         }
 
+        @Override
+        protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
+            return rssSPI.engineMerge(signature1, signature2);
+        }
+
+        @Override
+        protected SignatureOutput engineUpdate(SignatureOutput signature) throws SignatureException {
+            return rssSPI.engineUpdate(signature);
+        }
+
+        @Override
         protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException{
             rssSPI.engineSetParameters(parameters);
         }
 
+        @Override
         protected AlgorithmParameters engineGetParameters() {
             return rssSPI.engineGetParameters();
         }

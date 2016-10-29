@@ -1,7 +1,7 @@
 package de.unipassau.wolfgangpopp.xmlrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.ModificationInstruction;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSPI;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 
 import java.security.AlgorithmParameters;
@@ -14,7 +14,7 @@ import java.security.SignatureException;
 /**
  * Created by popeye on 10/27/16.
  */
-public class TestDummy extends RedactableSignatureSPI {
+public class TestDummy extends RedactableSignatureSpi {
     protected void engineInitSign(PrivateKey privateKey) throws InvalidKeyException {
         System.out.println("initSign");
     }
@@ -49,8 +49,16 @@ public class TestDummy extends RedactableSignatureSPI {
 
     }
 
+    protected void engineInitMerge(PublicKey publicKey) throws InvalidKeyException {
+
+    }
+
     protected SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
         System.out.println("redact");
+        return null;
+    }
+
+    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
         return null;
     }
 

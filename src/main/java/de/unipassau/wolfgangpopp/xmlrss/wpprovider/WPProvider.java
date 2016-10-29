@@ -7,28 +7,26 @@ import java.security.Provider;
 public class WPProvider extends Provider{
 
     public WPProvider() {
-        // TODO: 10/26/16 better description
-        super("WP", 0.1, "Redactable Signature Schemes; Accumulators");
+        super("WP", 0.1, "WP Provider (implements Redactable Signature Schemes, Accumulators)");
         AccessController.doPrivileged(new PrivilegedAction<Object>() {
             public Object run() {
                 /*
                  * Signature engines
                  */
                 put("RedactableSignature.TestDummy", "de.unipassau.wolfgangpopp.xmlrss.TestDummy");
-                //put("RedactableSignature.RSARedactableSignature", "de.unipassau.wolfgangpopp.RSARedactableSignature");
-                //put("RedactableSignature.ECDSARedactableSignature", "sun.security.provider.DSA");
-                //put("Alg.Alias.RedactableSignature.RSSwithACC", "SHA1withDSA");
+                put("RedactableSignature.RSSwithPSAccumulator", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableSignature");
+                put("Alg.Alias.RedactableSignature.RSSwithACC", "RSSwithPSAccumulator");
+                put("Alg.Alias.RedactableSignature.RSSwithPSA", "RSSwithPSAccumulator");
 
                 /*
                  *  Key Pair Generator engines
-                put("KeyPairGenerator.RSS", "sun.security.provider.DSAKeyPairGenerator");
                  */
+                put("KeyPairGenerator.PSRSS", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRSSKeyPairGenerator");
 
                 /*
                  * Accumulator engines
-                put("MessageDigest.MD5", "sun.security.provider.MD5");
-                put("MessageDigest.SHA", "sun.security.provider.SHA");
                  */
+                put("Accumulator.PSA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSAccumulator");
 
 
                 return null;

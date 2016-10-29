@@ -8,7 +8,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 
-public abstract class RedactableSignatureSPI {
+public abstract class RedactableSignatureSpi {
 
     protected SecureRandom appRandom = null;
 
@@ -20,6 +20,12 @@ public abstract class RedactableSignatureSPI {
 
     protected abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
+    protected abstract void engineInitMerge(PublicKey publicKey) throws InvalidKeyException;
+
+    protected void engineInitUpdate(PrivateKey privateKey) throws InvalidKeyException {
+        throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
+    }
+
     protected abstract void engineAddPart(byte[] part, boolean admissible) throws SignatureException;
 
     protected abstract SignatureOutput engineSign() throws SignatureException;
@@ -27,6 +33,12 @@ public abstract class RedactableSignatureSPI {
     protected abstract boolean engineVerify(SignatureOutput signature) throws SignatureException;
 
     protected abstract SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException;
+
+    protected abstract SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException;
+
+    protected SignatureOutput engineUpdate(SignatureOutput signature) throws SignatureException {
+        throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
+    }
 
     protected abstract void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException;
 

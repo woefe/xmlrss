@@ -7,6 +7,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Security;
+import java.security.SignatureException;
 
 /**
  * @author Wolfgang Popp
@@ -21,9 +22,12 @@ public class Test {
         try {
             rss = RedactableSignature.getInstance("TestDummy");
             rss.initSign(null);
+            rss.update(null);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
             e.printStackTrace();
         }
 
