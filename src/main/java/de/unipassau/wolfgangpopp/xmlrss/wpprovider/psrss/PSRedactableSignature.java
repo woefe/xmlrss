@@ -63,7 +63,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     @Override
-    protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
+    //TODO signature output when initializing, or when updating/redacting/...
+    // Note: mehrere nachrichten sollten ohne erneute initialisierung bearbeitet werden können
+    protected void engineInitUpdate(KeyPair keyPair, SignatureOutput signature) throws InvalidKeyException {
         setKeyPair(keyPair);
     }
 
@@ -94,8 +96,8 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         Function<byte[], PSSignatureOutput.SignedElement> signFunction = new Function<byte[], PSSignatureOutput.SignedElement>() {
             @Override
-            public PSSignatureOutput.SignedElement execute(byte[] argument) throws Exception {
-                return signElement(tag, argument);
+            public PSSignatureOutput.SignedElement execute(byte[] element) throws Exception {
+                return new PSSignatureOutput.SignedElement(accumulator.createWitness(concat(tag, element)), element);
             }
         };
 
@@ -104,16 +106,45 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return builder.build();
     }
 
-    private PSSignatureOutput.SignedElement signElement(byte[] tag, byte[] element) throws AccumulatorException {
-
-        byte[] valueConcatTag = new byte[tag.length + element.length];
-        System.arraycopy(element, 0, valueConcatTag, 0, element.length);
-        System.arraycopy(tag, 0, valueConcatTag, element.length - 1, tag.length);
-        return new PSSignatureOutput.SignedElement(element, accumulator.createWitness(valueConcatTag));
+    private byte[] concat(byte[] first, byte[] second) {
+        byte[] concat = new byte[first.length + second.length];
+        System.arraycopy(first, 0, concat, 0, first.length);
+        System.arraycopy(second, 0, concat, second.length - 1, second.length);
+        return concat;
     }
 
     protected boolean engineVerify(SignatureOutput signature) throws SignatureException {
-        return false;
+        PSSignatureOutput sig;
+        if (!(signature instanceof PSSignatureOutput)) {
+            throw new SignatureException("bad signature type");
+        }
+        sig = ((PSSignatureOutput) signature);
+        try {
+            accumulator.initVerify(publicKey, sig.getAccumulator());
+        } catch (InvalidKeyException e) {
+            throw new SignatureException(e);
+        }
+
+        final byte tag[] = sig.getTag();
+
+        Function<PSSignatureOutput.SignedElement, Boolean> verifyFunction
+                = new Function<PSSignatureOutput.SignedElement, Boolean>() {
+
+            @Override
+            public Boolean execute(PSSignatureOutput.SignedElement argument) throws Exception {
+                byte[] proof = argument.getProof();
+                byte[] value = argument.getElement();
+                return accumulator.verify(proof, concat(tag, value));
+            }
+        };
+
+        Collection<Boolean> results = map(verifyFunction, sig);
+
+        try {
+            return !results.contains(false) && accumulator.verify(sig.getProofOfTag(), sig.getTag());
+        } catch (AccumulatorException e) {
+            throw new SignatureException(e);
+        }
     }
 
     protected SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
@@ -125,7 +156,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     @Override
-    protected SignatureOutput engineUpdate(SignatureOutput signature) throws SignatureException {
+    protected SignatureOutput engineUpdate() throws SignatureException {
         return null;
     }
 

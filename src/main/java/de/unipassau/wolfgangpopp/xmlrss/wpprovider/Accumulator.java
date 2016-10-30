@@ -93,7 +93,7 @@ public abstract class Accumulator extends AccumulatorSpi {
     }
 
     public final boolean verify(byte[] witness, byte[] element) throws AccumulatorException {
-        if (state == STATE.CREATE_WITNESS) {
+        if (state == STATE.VERIFY) {
             return engineVerify(witness, element);
         }
         throw new AccumulatorException("not initialized for verification");

@@ -12,11 +12,13 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-public final class PSSignatureOutput implements SignatureOutput, Iterable {
+public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSignatureOutput.SignedElement> {
     private final Set<SignedElement> set;
     private final byte[] tag;
     private final byte[] proofOfTag;
     private final byte[] accumulator;
+
+    //TODO rename proof to witness
 
     private PSSignatureOutput(byte[] tag, byte[] proofOfTag, byte[] accumulator) {
         this.tag = tag;

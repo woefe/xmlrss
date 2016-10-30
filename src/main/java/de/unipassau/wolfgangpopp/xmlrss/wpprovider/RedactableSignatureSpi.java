@@ -10,8 +10,6 @@ import java.security.SignatureException;
 
 public abstract class RedactableSignatureSpi {
 
-    protected SecureRandom appRandom = null;
-
     protected abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
 
     protected abstract void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException;
@@ -22,11 +20,16 @@ public abstract class RedactableSignatureSpi {
 
     protected abstract void engineInitMerge(PublicKey publicKey) throws InvalidKeyException;
 
-    protected void engineInitUpdate(KeyPair privateKey) throws InvalidKeyException {
+    protected void engineInitUpdate(KeyPair privateKey, SignatureOutput signature) throws InvalidKeyException {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }
 
     protected abstract void engineAddPart(byte[] part, boolean admissible) throws SignatureException;
+
+    //protected abstract void engineAddAllAdmissibleParts(byte[]... parts) throws SignatureException;
+    //protected abstract void engineAddAllNonAdmissibleParts(byte[]... parts) throws SignatureException;
+    //protected abstract void engineAddAllAdmissibleParts(Collection<byte[]> parts) throws SignatureException;
+    //protected abstract void engineAddAllNonAdmissibleParts(Collection<byte[]> parts) throws SignatureException;
 
     protected abstract SignatureOutput engineSign() throws SignatureException;
 
@@ -36,7 +39,7 @@ public abstract class RedactableSignatureSpi {
 
     protected abstract SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException;
 
-    protected SignatureOutput engineUpdate(SignatureOutput signature) throws SignatureException {
+    protected SignatureOutput engineUpdate() throws SignatureException {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }
 

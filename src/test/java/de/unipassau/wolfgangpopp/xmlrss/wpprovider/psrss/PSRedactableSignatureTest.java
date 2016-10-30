@@ -3,20 +3,19 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.Security;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Wolfgang Popp
  */
 public class PSRedactableSignatureTest {
-    static{
+    static {
         Security.insertProviderAt(new WPProvider(), 0);
     }
 
@@ -69,7 +68,8 @@ public class PSRedactableSignatureTest {
 
         SignatureOutput signature = rssWithPSA.sign();
 
-        Assert.assertNotNull(signature);
+        rssWithPSA.initVerify(keyPair.getPublic());
+        assertTrue(rssWithPSA.verify(signature));
 
     }
 
