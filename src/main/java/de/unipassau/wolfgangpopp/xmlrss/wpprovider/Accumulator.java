@@ -35,7 +35,7 @@ public abstract class Accumulator extends AccumulatorSpi {
 
         for (Provider.Service service : services) {
             try {
-                GetInstance.Instance instance = GetInstance.getInstance(service, RedactableSignatureSpi.class);
+                GetInstance.Instance instance = GetInstance.getInstance(service, AccumulatorSpi.class);
                 return getInstance(instance, algorithm);
             } catch (NoSuchAlgorithmException e) {
                 failure = e;
@@ -48,13 +48,13 @@ public abstract class Accumulator extends AccumulatorSpi {
             throws NoSuchProviderException, NoSuchAlgorithmException {
 
         GetInstance.Instance instance = GetInstance.getInstance("Accumulator",
-                RedactableSignatureSpi.class, algorithm, provider);
+                AccumulatorSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }
 
     public static Accumulator getInstance(String algorithm, Provider provider) throws NoSuchAlgorithmException {
         GetInstance.Instance instance = GetInstance.getInstance("Accumulator",
-                RedactableSignatureSpi.class, algorithm, provider);
+                AccumulatorSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }
 
@@ -87,7 +87,7 @@ public abstract class Accumulator extends AccumulatorSpi {
 
     public final byte[] createWitness(byte[] element) throws AccumulatorException {
         if (state == STATE.CREATE_WITNESS) {
-            engineCreateWitness(element);
+            return engineCreateWitness(element);
         }
         throw new AccumulatorException("not initialized for creating witnesses");
     }

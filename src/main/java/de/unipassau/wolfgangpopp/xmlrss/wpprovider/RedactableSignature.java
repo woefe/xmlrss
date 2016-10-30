@@ -5,6 +5,7 @@ import sun.security.jca.GetInstance;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -78,14 +79,14 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         return this.provider;
     }
 
-    public final void initSign(PrivateKey privateKey) throws InvalidKeyException {
+    public final void initSign(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.SIGN;
-        engineInitSign(privateKey);
+        engineInitSign(keyPair);
     }
 
-    public final void initSign(PrivateKey privateKey, SecureRandom random) throws InvalidKeyException {
+    public final void initSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         state = STATE.SIGN;
-        engineInitSign(privateKey, random);
+        engineInitSign(keyPair, random);
     }
 
     public final void initVerify(PublicKey publicKey) throws InvalidKeyException {
@@ -104,16 +105,17 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
     }
 
 
-    public void initUpdate(PrivateKey privateKey) throws InvalidKeyException {
+    public void initUpdate(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.UPDATE;
-        engineInitUpdate(privateKey);
+        engineInitUpdate(keyPair);
     }
 
     public final void addPart(byte[] part, boolean admissible) throws SignatureException {
         if (state != STATE.UNINITIALIZED) {
             engineAddPart(part, admissible);
+        } else {
+            throw new SignatureException("not initialized");
         }
-        throw new SignatureException("not initialized");
     }
 
     public final SignatureOutput sign() throws SignatureException {
@@ -179,13 +181,13 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected void engineInitSign(PrivateKey privateKey) throws InvalidKeyException {
-            rssSPI.engineInitSign(privateKey);
+        protected void engineInitSign(KeyPair keyPair) throws InvalidKeyException {
+            rssSPI.engineInitSign(keyPair);
         }
 
         @Override
-        protected void engineInitSign(PrivateKey privateKey, SecureRandom random) throws InvalidKeyException {
-            rssSPI.engineInitSign(privateKey, random);
+        protected void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
+            rssSPI.engineInitSign(keyPair, random);
         }
 
         @Override
@@ -219,8 +221,8 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected void engineInitUpdate(PrivateKey privateKey) throws InvalidKeyException {
-            rssSPI.engineInitUpdate(privateKey);
+        protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
+            rssSPI.engineInitUpdate(keyPair);
         }
 
         @Override

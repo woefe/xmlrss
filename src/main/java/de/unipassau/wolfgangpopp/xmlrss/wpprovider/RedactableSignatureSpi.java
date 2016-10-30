@@ -3,7 +3,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.PrivateKey;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
@@ -12,9 +12,9 @@ public abstract class RedactableSignatureSpi {
 
     protected SecureRandom appRandom = null;
 
-    protected abstract void engineInitSign(PrivateKey privateKey) throws InvalidKeyException;
+    protected abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
 
-    protected abstract void engineInitSign(PrivateKey privateKey, SecureRandom random) throws InvalidKeyException;
+    protected abstract void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException;
 
     protected abstract void engineInitVerify(PublicKey publicKey) throws InvalidKeyException;
 
@@ -22,7 +22,7 @@ public abstract class RedactableSignatureSpi {
 
     protected abstract void engineInitMerge(PublicKey publicKey) throws InvalidKeyException;
 
-    protected void engineInitUpdate(PrivateKey privateKey) throws InvalidKeyException {
+    protected void engineInitUpdate(KeyPair privateKey) throws InvalidKeyException {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }
 

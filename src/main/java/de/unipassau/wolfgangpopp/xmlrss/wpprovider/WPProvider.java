@@ -13,8 +13,7 @@ public class WPProvider extends Provider{
                 /*
                  * Signature engines
                  */
-                put("RedactableSignature.TestDummy", "de.unipassau.wolfgangpopp.xmlrss.TestDummy");
-                put("RedactableSignature.RSSwithPSAccumulator", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableSignature");
+                put("RedactableSignature.RSSwithPSAccumulator", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableSignature$RSSwithPSA");
                 put("Alg.Alias.RedactableSignature.RSSwithACC", "RSSwithPSAccumulator");
                 put("Alg.Alias.RedactableSignature.RSSwithPSA", "RSSwithPSAccumulator");
 
