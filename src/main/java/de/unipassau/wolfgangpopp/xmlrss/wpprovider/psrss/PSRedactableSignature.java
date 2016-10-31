@@ -1,25 +1,9 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.ModificationInstruction;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.*;
 
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.security.*;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -63,9 +47,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     @Override
-    //TODO signature output when initializing, or when updating/redacting/...
-    // Note: mehrere nachrichten sollten ohne erneute initialisierung bearbeitet werden können
-    protected void engineInitUpdate(KeyPair keyPair, SignatureOutput signature) throws InvalidKeyException {
+    protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
         setKeyPair(keyPair);
     }
 
@@ -97,13 +79,17 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         Function<byte[], PSSignatureOutput.SignedElement> signFunction = new Function<byte[], PSSignatureOutput.SignedElement>() {
             @Override
             public PSSignatureOutput.SignedElement execute(byte[] element) throws Exception {
-                return new PSSignatureOutput.SignedElement(accumulator.createWitness(concat(tag, element)), element);
+                return signPart(element, tag);
             }
         };
 
         builder.addAll(map(signFunction, parts));
 
         return builder.build();
+    }
+
+    private PSSignatureOutput.SignedElement signPart(byte[] element, byte[] tag) throws AccumulatorException {
+        return new PSSignatureOutput.SignedElement(accumulator.createWitness(concat(tag, element)), element);
     }
 
     private byte[] concat(byte[] first, byte[] second) {
@@ -148,20 +134,90 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     protected SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
-        return null;
+        //verifySignature(key, original);
+
+        if (!(signature instanceof PSSignatureOutput)) {
+            throw new SignatureException("bad signature type");
+        }
+
+        if (!(mod instanceof PSModificationInstruction)) {
+            throw new SignatureException("bad signature type");
+        }
+
+        PSSignatureOutput sig = (PSSignatureOutput) signature;
+        PSModificationInstruction psMod = (PSModificationInstruction) mod;
+
+        if (!sig.containsAll(psMod)) {
+            throw new IllegalArgumentException("Redact Set is not a subset of the original set");
+        }
+
+        PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(
+                sig.getTag(), sig.getProofOfTag(), sig.getAccumulator());
+
+        for (PSSignatureOutput.SignedElement signedElement : sig) {
+            if (!psMod.contains(signedElement.getElement())) {
+                builder.add(signedElement);
+            }
+        }
+
+        return builder.build();
     }
 
     protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
-        return null;
+        //verifySignature(key, s);
+        //verifySignature(key, t);
+
+        if (!(signature1 instanceof PSSignatureOutput)) {
+            throw new SignatureException("bad signature type");
+        }
+
+        if (!(signature2 instanceof PSSignatureOutput)) {
+            throw new SignatureException("bad signature type");
+        }
+
+        PSSignatureOutput psSignature1 = (PSSignatureOutput) signature1;
+        PSSignatureOutput psSignature2 = (PSSignatureOutput) signature2;
+
+        if (!Arrays.equals(psSignature1.getTag(), psSignature2.getTag())) {
+            throw new SignatureException("the tags of the given signatures differ");
+        }
+
+        PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSignature1);
+        for (PSSignatureOutput.SignedElement signedElement : psSignature2) {
+            builder.add(signedElement);
+        }
+
+        return builder.build();
     }
 
     @Override
-    protected SignatureOutput engineUpdate() throws SignatureException {
-        return null;
+    protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
+        //verifySignature(keyPair.getPublic(), original);
+
+        if (!(original instanceof PSSignatureOutput)) {
+            throw new SignatureException("bad signature type");
+        }
+
+        PSSignatureOutput psSig = (PSSignatureOutput) original;
+
+        if (!psSig.isDisjoint(parts)) {
+            throw new IllegalArgumentException("Redact Set and this set are not disjoint");
+        }
+
+        PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSig);
+        for (byte[] part : parts) {
+            try {
+                builder.add( signPart(part, psSig.getTag()));
+            } catch (AccumulatorException e) {
+                throw new SignatureException(e);
+            }
+        }
+
+        return builder.build();
     }
 
     protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
-
+        //TODO No parameters needed
     }
 
     protected AlgorithmParameters engineGetParameters() {

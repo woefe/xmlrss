@@ -8,7 +8,6 @@ import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
@@ -107,7 +106,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
 
     public void initUpdate(KeyPair keyPair, SignatureOutput signature) throws InvalidKeyException {
         state = STATE.UPDATE;
-        engineInitUpdate(keyPair, signature);
+        engineInitUpdate(keyPair);
     }
 
     public final void addPart(byte[] part, boolean admissible) throws SignatureException {
@@ -221,8 +220,8 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected void engineInitUpdate(KeyPair keyPair, SignatureOutput signature) throws InvalidKeyException {
-            rssSPI.engineInitUpdate(keyPair, signature);
+        protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
+            rssSPI.engineInitUpdate(keyPair);
         }
 
         @Override
@@ -236,7 +235,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected SignatureOutput engineUpdate() throws SignatureException {
+        protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
             return rssSPI.engineUpdate();
         }
 
