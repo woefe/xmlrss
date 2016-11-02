@@ -7,8 +7,11 @@ import org.junit.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+import java.security.SignatureException;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -19,47 +22,31 @@ public class PSRedactableSignatureTest {
         Security.insertProviderAt(new WPProvider(), 0);
     }
 
-    @Test
-    public void engineInitSign() throws Exception {
+    private final KeyPair keyPair;
 
+    public PSRedactableSignatureTest() throws NoSuchAlgorithmException {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("PSRSS");
+        generator.initialize(512);
+        this.keyPair = generator.generateKeyPair();
     }
 
-    @Test
-    public void engineInitSign1() throws Exception {
+    @Test(expected = SignatureException.class)
+    public void getInstance() throws Exception{
+        RedactableSignature rss1 = RedactableSignature.getInstance("RSSwithPSA");
 
-    }
+        try {
+            rss1.initVerify(keyPair.getPublic());
+            rss1.addPart("test".getBytes(), false);
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
 
-    @Test
-    public void engineInitVerify() throws Exception {
-
-    }
-
-    @Test
-    public void engineInitRedact() throws Exception {
-
-    }
-
-    @Test
-    public void engineInitMerge() throws Exception {
-
-    }
-
-    @Test
-    public void engineInitUpdate() throws Exception {
-
-    }
-
-    @Test
-    public void engineAddPart() throws Exception {
-
+        rss1 = RedactableSignature.getInstance("RSSwithPSA");
+        rss1.addPart("asdf".getBytes(), false);
     }
 
     @Test
     public void engineSign() throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("PSRSS");
-        generator.initialize(512);
-        KeyPair keyPair = generator.generateKeyPair();
-
         RedactableSignature rssWithPSA = RedactableSignature.getInstance("RSSwithPSA");
         rssWithPSA.initSign(keyPair);
 
@@ -68,39 +55,94 @@ public class PSRedactableSignatureTest {
 
         SignatureOutput signature = rssWithPSA.sign();
 
-        rssWithPSA.initVerify(keyPair.getPublic());
-        assertTrue(rssWithPSA.verify(signature));
-
+        assertNotNull(signature);
     }
 
     @Test
     public void engineVerify() throws Exception {
+        RedactableSignature rssWithPSA = RedactableSignature.getInstance("RSSwithPSA");
+        rssWithPSA.initSign(keyPair);
 
+        rssWithPSA.addPart("test3".getBytes(), false);
+        rssWithPSA.addPart("test2".getBytes(), false);
+        rssWithPSA.addPart("test4".getBytes(), false);
+
+        SignatureOutput signature = rssWithPSA.sign();
+
+        rssWithPSA.initVerify(keyPair.getPublic());
+        assertTrue(rssWithPSA.verify(signature));
     }
 
     @Test
     public void engineRedact() throws Exception {
+        RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
+        rss.initSign(keyPair);
 
+        rss.addPart("test1".getBytes(), false);
+        rss.addPart("test2".getBytes(), false);
+        rss.addPart("test3".getBytes(), false);
+        rss.addPart("test4".getBytes(), false);
+        rss.addPart("test5".getBytes(), false);
+
+        SignatureOutput wholeMessage = rss.sign();
+
+        rss.initRedact(keyPair.getPublic());
+        PSModificationInstruction mod = new PSModificationInstruction();
+        mod.add("test4".getBytes());
+        mod.add("test5".getBytes());
+        SignatureOutput redacted1 = rss.redact(wholeMessage, mod);
+
+        rss.initVerify(keyPair.getPublic());
+        assertTrue(rss.verify(redacted1));
     }
 
     @Test
     public void engineMerge() throws Exception {
+        RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
+        rss.initSign(keyPair);
+
+        rss.addPart("test1".getBytes(), false);
+        rss.addPart("test2".getBytes(), false);
+        rss.addPart("test3".getBytes(), false);
+        rss.addPart("test4".getBytes(), false);
+        rss.addPart("test5".getBytes(), false);
+
+        SignatureOutput wholeMessage = rss.sign();
+
+        rss.initRedact(keyPair.getPublic());
+        PSModificationInstruction mod = new PSModificationInstruction();
+        mod.add("test4".getBytes());
+        mod.add("test5".getBytes());
+        SignatureOutput redacted1 = rss.redact(wholeMessage, mod);
+
+        rss = RedactableSignature.getInstance("RSSwithPSA");
+        rss.initRedact(keyPair.getPublic());
+        mod = new PSModificationInstruction();
+        mod.add("test2".getBytes());
+        mod.add("test3".getBytes());
+        SignatureOutput redacted2 = rss.redact(wholeMessage, mod);
+
+        rss.initMerge(keyPair.getPublic());
+        rss.merge(redacted1, redacted2);
 
     }
 
     @Test
     public void engineUpdate() throws Exception {
+        RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
 
+        rss.initSign(keyPair);
+        rss.addPart("test1".getBytes(), false);
+        rss.addPart("test2".getBytes(), false);
+        rss.addPart("test3".getBytes(), false);
+        SignatureOutput wholeMessage = rss.sign();
+
+        rss.initUpdate(keyPair);
+        rss.addPart("test4".getBytes(), false);
+        rss.addPart("test5".getBytes(), false);
+        SignatureOutput updated = rss.update(wholeMessage);
+
+        rss.initVerify(keyPair.getPublic());
+        assertTrue(rss.verify(updated));
     }
-
-    @Test
-    public void engineSetParameters() throws Exception {
-
-    }
-
-    @Test
-    public void engineGetParameters() throws Exception {
-
-    }
-
 }
