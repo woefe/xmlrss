@@ -44,6 +44,13 @@ public class PSAccumulator extends AccumulatorSpi {
     }
 
     @Override
+    protected void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
+        setKeyPair(keyPair);
+        this.accumulatorValueRaw = Arrays.copyOf(accumulatorValue, accumulatorValue.length);
+        this.accumulatorValue = new BigInteger(accumulatorValueRaw);
+    }
+
+    @Override
     protected void engineInitVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
         setPublicKey(publicKey);
         this.accumulatorValueRaw = Arrays.copyOf(accumulatorValue, accumulatorValue.length);

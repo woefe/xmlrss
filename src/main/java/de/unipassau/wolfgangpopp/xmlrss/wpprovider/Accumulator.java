@@ -80,6 +80,11 @@ public abstract class Accumulator extends AccumulatorSpi {
         return engineInitWitness(keyPair, elements);
     }
 
+    public final void restore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
+        state = STATE.CREATE_WITNESS;
+        engineRestore(keyPair, accumulatorValue);
+    }
+
     public final void initVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
         state = STATE.VERIFY;
         engineInitVerify(publicKey, accumulatorValue);
@@ -136,6 +141,11 @@ public abstract class Accumulator extends AccumulatorSpi {
         @Override
         protected byte[] engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
             return rssSPI.engineInitWitness(keyPair, elements);
+        }
+
+        @Override
+        protected void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
+            rssSPI.engineRestore(keyPair, accumulatorValue);
         }
 
         @Override

@@ -104,7 +104,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
     }
 
 
-    public void initUpdate(KeyPair keyPair, SignatureOutput signature) throws InvalidKeyException {
+    public void initUpdate(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.UPDATE;
         engineInitUpdate(keyPair);
     }
@@ -147,7 +147,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
 
     public SignatureOutput update(SignatureOutput signature) throws SignatureException {
         if (state == STATE.UPDATE) {
-            return engineUpdate();
+            return engineUpdate(signature);
         }
         throw new SignatureException("not initialized for updating");
     }
@@ -236,7 +236,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
 
         @Override
         protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
-            return rssSPI.engineUpdate();
+            return rssSPI.engineUpdate(original);
         }
 
         @Override

@@ -1,9 +1,26 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.*;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.ModificationInstruction;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 
-import java.security.*;
-import java.util.*;
+import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -52,6 +69,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     //TODO admissible is ignored
+    //TODO Error when part is added twice
     protected void engineAddPart(byte[] part, boolean admissible) throws SignatureException {
         parts.add(part);
     }
@@ -204,10 +222,16 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
             throw new IllegalArgumentException("Redact Set and this set are not disjoint");
         }
 
+        try {
+            accumulator.restore(keyPair, psSig.getAccumulator());
+        } catch (InvalidKeyException e) {
+            throw new SignatureException(e);
+        }
+
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSig);
         for (byte[] part : parts) {
             try {
-                builder.add( signPart(part, psSig.getTag()));
+                builder.add(signPart(part, psSig.getTag()));
             } catch (AccumulatorException e) {
                 throw new SignatureException(e);
             }
