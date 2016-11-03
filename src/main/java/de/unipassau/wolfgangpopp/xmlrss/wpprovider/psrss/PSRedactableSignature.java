@@ -35,7 +35,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     private PSRSSPrivateKey privateKey;
     private Accumulator accumulator;
     private SecureRandom random;
-    private final Set<byte[]> parts = new HashSet<>();
+    private final Set<PSMessagePart> parts = new HashSet<>();
     private KeyPair keyPair;
 
     PSRedactableSignature(Accumulator accumulator) {
@@ -71,13 +71,20 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     //TODO admissible is ignored
     //TODO Error when part is added twice
     protected void engineAddPart(byte[] part, boolean admissible) throws SignatureException {
-        parts.add(part);
+        parts.add(new PSMessagePart(part));
     }
 
     protected SignatureOutput engineSign() throws SignatureException {
         final byte[] acc;
+        byte[][] pts = new byte[parts.size()][];
+
+        int i = 0;
+        for (PSMessagePart part : parts) {
+            pts[i] = part.getArray();
+            ++i;
+        }
         try {
-            acc = accumulator.initWitness(keyPair, parts.toArray(new byte[][]{}));
+            acc = accumulator.initWitness(keyPair, pts);
         } catch (InvalidKeyException e) {
             throw new SignatureException(e);
         }
@@ -94,9 +101,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, acc);
 
-        Function<byte[], PSSignatureOutput.SignedElement> signFunction = new Function<byte[], PSSignatureOutput.SignedElement>() {
+        Function<PSMessagePart, PSSignatureOutput.SignedPart> signFunction = new Function<PSMessagePart, PSSignatureOutput.SignedPart>() {
             @Override
-            public PSSignatureOutput.SignedElement execute(byte[] element) throws Exception {
+            public PSSignatureOutput.SignedPart execute(PSMessagePart element) throws Exception {
                 return signPart(element, tag);
             }
         };
@@ -106,8 +113,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return builder.build();
     }
 
-    private PSSignatureOutput.SignedElement signPart(byte[] element, byte[] tag) throws AccumulatorException {
-        return new PSSignatureOutput.SignedElement(accumulator.createWitness(concat(tag, element)), element);
+    private PSSignatureOutput.SignedPart signPart(PSMessagePart part, byte[] tag) throws AccumulatorException {
+        byte[] partRaw = part.getArray();
+        return new PSSignatureOutput.SignedPart(accumulator.createWitness(concat(tag, partRaw)), part);
     }
 
     private byte[] concat(byte[] first, byte[] second) {
@@ -131,13 +139,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         final byte tag[] = sig.getTag();
 
-        Function<PSSignatureOutput.SignedElement, Boolean> verifyFunction
-                = new Function<PSSignatureOutput.SignedElement, Boolean>() {
+        Function<PSSignatureOutput.SignedPart, Boolean> verifyFunction
+                = new Function<PSSignatureOutput.SignedPart, Boolean>() {
 
             @Override
-            public Boolean execute(PSSignatureOutput.SignedElement argument) throws Exception {
+            public Boolean execute(PSSignatureOutput.SignedPart argument) throws Exception {
                 byte[] proof = argument.getProof();
-                byte[] value = argument.getElement();
+                byte[] value = argument.getElement().getArray();
                 return accumulator.verify(proof, concat(tag, value));
             }
         };
@@ -172,9 +180,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(
                 sig.getTag(), sig.getProofOfTag(), sig.getAccumulator());
 
-        for (PSSignatureOutput.SignedElement signedElement : sig) {
-            if (!psMod.contains(signedElement.getElement())) {
-                builder.add(signedElement);
+        for (PSSignatureOutput.SignedPart signedPart : sig) {
+            if (!psMod.contains(signedPart.getElement())) {
+                builder.add(signedPart);
             }
         }
 
@@ -201,8 +209,8 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSignature1);
-        for (PSSignatureOutput.SignedElement signedElement : psSignature2) {
-            builder.add(signedElement);
+        for (PSSignatureOutput.SignedPart signedPart : psSignature2) {
+            builder.add(signedPart);
         }
 
         return builder.build();
@@ -229,7 +237,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSig);
-        for (byte[] part : parts) {
+        for (PSMessagePart part : parts) {
             try {
                 builder.add(signPart(part, psSig.getTag()));
             } catch (AccumulatorException e) {

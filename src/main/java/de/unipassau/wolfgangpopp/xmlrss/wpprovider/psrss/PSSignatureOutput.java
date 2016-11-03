@@ -12,8 +12,8 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSignatureOutput.SignedElement> {
-    private final Set<SignedElement> set;
+public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSignatureOutput.SignedPart> {
+    private final Set<SignedPart> set;
     private final byte[] tag;
     private final byte[] proofOfTag;
     private final byte[] accumulator;
@@ -60,7 +60,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @param c collection to be checked for containment in this set.
      * @return true if all elements of <code>c</code> are values of this set.
      */
-    public boolean containsAll(Collection<byte[]> c) {
+    public boolean containsAll(Collection<PSMessagePart> c) {
         return values().containsAll(c);
     }
 
@@ -70,7 +70,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @param c collection that is checked to be disjoint
      * @return true if all elements of <code>c</code> are not values of this set.
      */
-    public boolean isDisjoint(Collection<byte[]> c) {
+    public boolean isDisjoint(Collection<PSMessagePart> c) {
         return Collections.disjoint(c, values());
     }
 
@@ -82,9 +82,9 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      *
      * @return the set of values without their corresponding proofs
      */
-    public Set<byte[]> values() {
-        Set<byte[]> resultSet = new HashSet<>();
-        for (SignedElement elem : set) {
+    public Set<PSMessagePart> values() {
+        Set<PSMessagePart> resultSet = new HashSet<>();
+        for (SignedPart elem : set) {
             resultSet.add(elem.getElement());
         }
         return resultSet;
@@ -92,7 +92,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
 
     private PSSignatureOutput copy() {
         PSSignatureOutput outputSet = new PSSignatureOutput(getTag(), getProofOfTag(), getAccumulator());
-        for (SignedElement element : set) {
+        for (SignedPart element : set) {
             outputSet.set.add(element);
         }
         return outputSet;
@@ -102,7 +102,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * {@inheritDoc}
      */
     @Override
-    public Iterator<SignedElement> iterator() {
+    public Iterator<SignedPart> iterator() {
         return set.iterator();
     }
 
@@ -158,24 +158,24 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
 
 
         /**
-         * Adds the given value together with its proof to the {@link PSSignatureOutput}.
+         * Adds the given part together with its proof to the {@link PSSignatureOutput}.
          *
-         * @param value the value that is add to the set
-         * @param proof the proof corresponding to the given value
+         * @param part the part that is add to the set
+         * @param proof the proof corresponding to the given part
          * @return a reference to this object
          */
-        public Builder add(byte[] value, byte[] proof) {
-            add(new SignedElement(proof, value));
+        public Builder add(byte[] part, byte[] proof) {
+            add(new SignedPart(proof, new PSMessagePart(part)));
             return this;
         }
 
         /**
-         * Adds a new {@link SignedElement} to the {@link PSSignatureOutput}.
+         * Adds a new {@link SignedPart} to the {@link PSSignatureOutput}.
          *
          * @param element the element that is added to the set
          * @return a reference to this object
          */
-        public Builder add(SignedElement element) {
+        public Builder add(SignedPart element) {
             psSignatureOutput.set.add(element);
             return this;
         }
@@ -185,7 +185,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
             return this;
         }
 
-        public Builder addAll(Collection<SignedElement> elements) {
+        public Builder addAll(Collection<SignedPart> elements) {
             psSignatureOutput.set.addAll(elements);
             return this;
         }
@@ -200,21 +200,21 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
         }
     }
 
-    static class SignedElement {
+    static class SignedPart {
         private final byte[] proof;
-        private final byte[] element;
+        private final PSMessagePart part;
 
-        SignedElement(byte[] proof, byte[] element) {
+        SignedPart(byte[] proof, PSMessagePart part) {
             this.proof = proof;
-            this.element = element;
+            this.part = part;
         }
 
         public byte[] getProof() {
             return proof;
         }
 
-        public byte[] getElement() {
-            return element;
+        public PSMessagePart getElement() {
+            return part;
         }
     }
 }
