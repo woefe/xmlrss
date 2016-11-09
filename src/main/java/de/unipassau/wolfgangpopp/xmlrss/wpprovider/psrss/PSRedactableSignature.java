@@ -49,23 +49,28 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     protected void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         setKeyPair(keyPair);
         this.random = random;
+        parts.clear();
     }
 
     protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
         setPublicKey(publicKey);
+        parts.clear();
     }
 
     protected void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
         setPublicKey(publicKey);
+        parts.clear();
     }
 
     protected void engineInitMerge(PublicKey publicKey) throws InvalidKeyException {
         setPublicKey(publicKey);
+        parts.clear();
     }
 
     @Override
     protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
         setKeyPair(keyPair);
+        parts.clear();
     }
 
     //TODO admissible is ignored
