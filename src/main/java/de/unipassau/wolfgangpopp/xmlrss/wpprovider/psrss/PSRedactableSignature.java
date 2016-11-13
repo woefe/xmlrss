@@ -178,7 +178,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         PSSignatureOutput sig = (PSSignatureOutput) signature;
         PSModificationInstruction psMod = (PSModificationInstruction) mod;
 
-        if (!sig.containsAll(psMod)) {
+        if (!sig.containsAll(psMod.getParts())) {
             throw new IllegalArgumentException("Redact Set is not a subset of the original set");
         }
 
@@ -186,7 +186,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
                 sig.getTag(), sig.getProofOfTag(), sig.getAccumulator());
 
         for (PSSignatureOutput.SignedPart signedPart : sig) {
-            if (!psMod.contains(signedPart.getElement())) {
+            if (!psMod.getParts().contains(signedPart.getElement())) {
                 builder.add(signedPart);
             }
         }
@@ -255,6 +255,11 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
     protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
         //TODO No parameters needed
+    }
+
+    @Override
+    protected ModificationInstruction engineNewModificationInstruction() {
+        return new PSModificationInstruction();
     }
 
     protected AlgorithmParameters engineGetParameters() {

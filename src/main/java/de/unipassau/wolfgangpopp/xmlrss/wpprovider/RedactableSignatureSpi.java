@@ -43,6 +43,8 @@ public abstract class RedactableSignatureSpi {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }
 
+    protected abstract ModificationInstruction engineNewModificationInstruction();
+
     protected abstract void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException;
 
     protected abstract AlgorithmParameters engineGetParameters();

@@ -152,6 +152,9 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         throw new SignatureException("not initialized for updating");
     }
 
+    ModificationInstruction newModificationInstruction(){
+        return engineNewModificationInstruction();
+    }
 
     public final String getAlgorithm() {
         return this.algorithm;
@@ -237,6 +240,11 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         @Override
         protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
             return rssSPI.engineUpdate(original);
+        }
+
+        @Override
+        protected ModificationInstruction engineNewModificationInstruction() {
+            return rssSPI.engineNewModificationInstruction();
         }
 
         @Override
