@@ -1,5 +1,6 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.ModificationInstruction;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
@@ -18,16 +19,23 @@ import static org.junit.Assert.assertTrue;
  * @author Wolfgang Popp
  */
 public class PSRedactableSignatureTest {
+
+    private static KeyPair keyPair;
+
     static {
         Security.insertProviderAt(new WPProvider(), 0);
+        KeyPairGenerator generator = null;
+        try {
+            generator = KeyPairGenerator.getInstance("PSRSS");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        generator.initialize(512);
+        keyPair = generator.generateKeyPair();
     }
 
-    private final KeyPair keyPair;
 
     public PSRedactableSignatureTest() throws NoSuchAlgorithmException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("PSRSS");
-        generator.initialize(512);
-        this.keyPair = generator.generateKeyPair();
     }
 
     @Test(expected = SignatureException.class)
@@ -75,6 +83,7 @@ public class PSRedactableSignatureTest {
 
     @Test
     public void engineRedact() throws Exception {
+        ModificationInstruction mod = ModificationInstruction.forAlgorithm("RSSwithPSA");
         RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
         rss.initSign(keyPair);
 
@@ -87,7 +96,6 @@ public class PSRedactableSignatureTest {
         SignatureOutput wholeMessage = rss.sign();
 
         rss.initRedact(keyPair.getPublic());
-        PSModificationInstruction mod = new PSModificationInstruction();
         mod.add("test4".getBytes());
         mod.add("test5".getBytes());
         SignatureOutput redacted1 = rss.redact(wholeMessage, mod);
@@ -110,14 +118,14 @@ public class PSRedactableSignatureTest {
         SignatureOutput wholeMessage = rss.sign();
 
         rss.initRedact(keyPair.getPublic());
-        PSModificationInstruction mod = new PSModificationInstruction();
+        ModificationInstruction mod = ModificationInstruction.forAlgorithm(rss);
         mod.add("test4".getBytes());
         mod.add("test5".getBytes());
         SignatureOutput redacted1 = rss.redact(wholeMessage, mod);
 
         rss = RedactableSignature.getInstance("RSSwithPSA");
         rss.initRedact(keyPair.getPublic());
-        mod = new PSModificationInstruction();
+        mod = ModificationInstruction.forAlgorithm(rss);
         mod.add("test2".getBytes());
         mod.add("test3".getBytes());
         SignatureOutput redacted2 = rss.redact(wholeMessage, mod);
