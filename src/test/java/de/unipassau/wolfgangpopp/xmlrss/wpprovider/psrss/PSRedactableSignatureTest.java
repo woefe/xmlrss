@@ -163,12 +163,12 @@ public class PSRedactableSignatureTest {
         rss.addPart("test1".getBytes(), false);
         rss.addPart("test2".getBytes(), false);
         rss.addPart("test3".getBytes(), false);
-        SignatureOutput wholeMessage = rss.sign();
+        SignatureOutput signedMessage = rss.sign();
 
         rss.initUpdate(keyPair);
         rss.addPart("test4".getBytes(), false);
         rss.addPart("test5".getBytes(), false);
-        SignatureOutput updated = rss.update(wholeMessage);
+        SignatureOutput updated = rss.update(signedMessage);
 
         rss.initVerify(keyPair.getPublic());
         assertTrue(rss.verify(updated));

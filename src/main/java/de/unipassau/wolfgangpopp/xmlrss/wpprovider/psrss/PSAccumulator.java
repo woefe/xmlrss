@@ -45,7 +45,7 @@ public class PSAccumulator extends AccumulatorSpi {
     private BigInteger accumulatorValue;
 
     @Override
-    protected byte[] engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
+    protected void engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
         setKeyPair(keyPair);
 
         SecureRandom random = new SecureRandom();
@@ -60,7 +60,6 @@ public class PSAccumulator extends AccumulatorSpi {
 
         accumulatorValueRaw = digest.toByteArray();
         accumulatorValue = new BigInteger(accumulatorValueRaw);
-        return Arrays.copyOf(accumulatorValueRaw, accumulatorValueRaw.length);
     }
 
     @Override

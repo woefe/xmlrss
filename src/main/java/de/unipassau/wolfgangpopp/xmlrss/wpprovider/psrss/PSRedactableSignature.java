@@ -109,8 +109,14 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
             ++i;
         }
         try {
-            acc = accumulator.initWitness(keyPair, pts);
+            accumulator.initWitness(keyPair, pts);
         } catch (InvalidKeyException e) {
+            throw new SignatureException(e);
+        }
+
+        try {
+            acc = accumulator.getAccumulatorValue();
+        } catch (AccumulatorException e) {
             throw new SignatureException(e);
         }
 

@@ -30,7 +30,7 @@ import java.security.PublicKey;
  * @author Wolfgang Popp
  */
 public abstract class AccumulatorSpi {
-    protected abstract byte[] engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException;
+    protected abstract void engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException;
 
     protected abstract void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException;
 
