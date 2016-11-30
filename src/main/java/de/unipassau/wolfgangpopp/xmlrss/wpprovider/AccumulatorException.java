@@ -23,22 +23,44 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 import java.security.GeneralSecurityException;
 
 /**
+ * This is the generic Accumulator exception.
+ *
  * @author Wolfgang Popp
  */
 public class AccumulatorException extends GeneralSecurityException {
 
+    /**
+     * Constructs a new AccumulatorException without a detail message.
+     */
     public AccumulatorException() {
         super();
     }
 
+    /**
+     * Constructs a new AccumulatorException with the given detail message.
+     *
+     * @param message the detail message
+     */
     public AccumulatorException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new AccumulatorException with the given detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause   the cause of this exception
+     */
     public AccumulatorException(String message, Throwable cause) {
         super(message, cause);
     }
 
+
+    /**
+     * Constructs a new AccumulatorException with the given cause.
+     *
+     * @param cause the cause of this exception
+     */
     public AccumulatorException(Throwable cause) {
         super(cause);
     }
