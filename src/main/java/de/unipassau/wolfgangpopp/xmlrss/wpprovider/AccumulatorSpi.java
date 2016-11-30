@@ -27,22 +27,87 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 
 /**
+ * This class defines the Service Provider Interface for the {@link Accumulator} class.
+ * <p>
+ * All abstract methods in this class must be implemented by cryptographic services providers who wish to supply the
+ * implementation of a particular accumulator algorithm.
+ *
  * @author Wolfgang Popp
  */
 public abstract class AccumulatorSpi {
+
+    /**
+     * Initializes this accumulator engine for creating witnesses for the given elements under the given keypair.
+     *
+     * @param keyPair  the keypair used for creating witnesses
+     * @param elements all elements that are accumulated
+     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     */
     protected abstract void engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException;
 
+    /**
+     * Initializes this accumulator engine for creating witnesses under the given keypair. This accumulator is
+     * initialized with an already existing accumulator value.
+     *
+     * @param keyPair          the keypair used for creating witnesses
+     * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
+     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     */
     protected abstract void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException;
 
+    /**
+     * Initializes this accumulator for verification (membership testing).
+     *
+     * @param publicKey        the public key of the keypair that was used for creating witnesses.
+     * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
+     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     */
     protected abstract void engineInitVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException;
 
+    /**
+     * Creates a witness for the given element.
+     *
+     * @param element the element
+     * @return the witness certifying the membership of the element in the accumulated set
+     * @throws AccumulatorException if the engine is not initialized properly or if this accumulator algorithm is unable
+     *                              to process the given element
+     */
     protected abstract byte[] engineCreateWitness(byte[] element) throws AccumulatorException;
 
+    /**
+     * Checks if the given witness certifies the membership of the given element in the accumulated set.
+     *
+     * @param witness the witness for the given element
+     * @param element the element whose set-membersip is verfied
+     * @return true if the given <code>witness</code> is indeed a witness for <code>element</code> being an element of
+     * the accumulated set.
+     * @throws AccumulatorException if the engine is not initialized properly or if this accumulator algorithm is unable
+     *                              to process the given element
+     */
     protected abstract boolean engineVerify(byte[] witness, byte[] element) throws AccumulatorException;
 
+    /**
+     * Returns the accumulator value of the accumulated elements.
+     *
+     * @return the accumulator value
+     * @throws AccumulatorException if the engine is not initialized properly
+     */
     protected abstract byte[] engineGetAccumulatorValue() throws AccumulatorException;
 
+    /**
+     * Returns the algorithm parameters used by this accumulator engine or null if this accumulator engine does not use
+     * any parameters.
+     *
+     * @return the algorithm parameters or null if this accumulator engine does not use any parameters.
+     */
     protected abstract AlgorithmParameters engineGetParameters();
 
-    protected abstract void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException;
+    /**
+     * Initializes this accumulator with the specified parameter set.
+     *
+     * @param parameters the parameters
+     * @throws InvalidAlgorithmParameterException if the given parameters are inappropriate for this algorithm
+     */
+    protected abstract void engineSetParameters(AlgorithmParameters parameters)
+            throws InvalidAlgorithmParameterException;
 }

@@ -193,7 +193,7 @@ public abstract class Accumulator extends AccumulatorSpi {
     }
 
     /**
-     * Initializes this object for verification (membership testing).
+     * Initializes this Accumulator object for verification (membership testing).
      * <p>
      * Note that the initialization discards all previous state, i.e. initialization is equivalent to creating a new
      * instance of that Accumulator.
@@ -213,7 +213,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      *
      * @param element the element
      * @return the witness bytes certifying the membership of the element in the accumulator
-     * @throws AccumulatorException if this Accumulator object is not initialized properly or if  this accumulator
+     * @throws AccumulatorException if this Accumulator object is not initialized properly or if this accumulator
      *                              algorithm is unable to process the given element
      */
     public final byte[] createWitness(byte[] element) throws AccumulatorException {
@@ -224,13 +224,14 @@ public abstract class Accumulator extends AccumulatorSpi {
     }
 
     /**
-     * Verifies if the given witness certifies the membership of the given element in the accumulated set. 
+     * Verifies if the given witness certifies the membership of the given element in the accumulated set.
      *
      * @param witness the witness for the given element
      * @param element the element whose set-membersip is verfied
      * @return true if the given <code>witness</code> is indeed a witness for <code>element</code> being an element of
      * the accumulated set.
-     * @throws AccumulatorException
+     * @throws AccumulatorException if this Accumulator object is not initialized properly or if this accumulator
+     *                              algorithm is unable to process the given element
      */
     public final boolean verify(byte[] witness, byte[] element) throws AccumulatorException {
         if (state == STATE.VERIFY) {
@@ -241,7 +242,10 @@ public abstract class Accumulator extends AccumulatorSpi {
 
     /**
      * Returns the accumulator value of the accumulated elements
+     *
      * @return the accumulator value
+     * @throws AccumulatorException if this Accumulator object is not initialized properly or if this accumulator
+     *                              algorithm is unable to process the given element
      */
     public final byte[] getAccumulatorValue() throws AccumulatorException {
         if (state != STATE.UNINITIALIZED) {
