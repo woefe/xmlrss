@@ -38,7 +38,9 @@ public abstract class RedactableSignatureSpi {
 
     protected abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
-    protected abstract void engineInitMerge(PublicKey publicKey) throws InvalidKeyException;
+    protected void engineInitMerge(PublicKey publicKey) throws InvalidKeyException {
+        throw new UnsupportedOperationException("This Redactable Signature Scheme does not support merging");
+    };
 
     protected void engineInitUpdate(KeyPair privateKey) throws InvalidKeyException {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
@@ -55,9 +57,11 @@ public abstract class RedactableSignatureSpi {
 
     protected abstract boolean engineVerify(SignatureOutput signature) throws SignatureException;
 
-    protected abstract SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException;
+    protected abstract SignatureOutput engineRedact(SignatureOutput signature) throws SignatureException;
 
-    protected abstract SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException;
+    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
+        throw new UnsupportedOperationException("This Redactable Signature Scheme does not support merging");
+    }
 
     protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");

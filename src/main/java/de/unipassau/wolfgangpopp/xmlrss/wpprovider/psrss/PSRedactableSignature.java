@@ -190,21 +190,16 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
     }
 
-    protected SignatureOutput engineRedact(SignatureOutput signature, ModificationInstruction mod) throws SignatureException {
+    protected SignatureOutput engineRedact(SignatureOutput signature) throws SignatureException {
         //verifySignature(key, original);
 
         if (!(signature instanceof PSSignatureOutput)) {
             throw new SignatureException("bad signature type");
         }
 
-        if (!(mod instanceof PSModificationInstruction)) {
-            throw new SignatureException("bad signature type");
-        }
-
         PSSignatureOutput sig = (PSSignatureOutput) signature;
-        PSModificationInstruction psMod = (PSModificationInstruction) mod;
 
-        if (!sig.containsAll(psMod.getParts())) {
+        if (!sig.containsAll(parts)) {
             throw new IllegalArgumentException("Redact Set is not a subset of the original set");
         }
 
@@ -212,7 +207,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
                 sig.getTag(), sig.getProofOfTag(), sig.getAccumulator());
 
         for (PSSignatureOutput.SignedPart signedPart : sig) {
-            if (!psMod.getParts().contains(signedPart.getElement())) {
+            if (!parts.contains(signedPart.getElement())) {
                 builder.add(signedPart);
             }
         }

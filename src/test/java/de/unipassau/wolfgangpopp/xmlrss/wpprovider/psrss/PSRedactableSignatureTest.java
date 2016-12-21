@@ -59,7 +59,7 @@ public class PSRedactableSignatureTest {
     }
 
     @Test(expected = SignatureException.class)
-    public void getInstance() throws Exception{
+    public void getInstance() throws Exception {
         RedactableSignature rss1 = RedactableSignature.getInstance("RSSwithPSA");
 
         try {
@@ -102,6 +102,33 @@ public class PSRedactableSignatureTest {
     }
 
     @Test
+    public void engineRedactNew() throws Exception {
+        byte[][] message = {
+                "test1".getBytes(),
+                "test2".getBytes(),
+                "test3".getBytes(),
+                "test4".getBytes(),
+                "test5".getBytes(),
+        };
+
+        byte[][] toRedact = {
+                "test1".getBytes(),
+                "test2".getBytes(),
+        };
+
+        RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
+        rss.initSign(keyPair);
+        rss.addParts(message);
+
+        SignatureOutput signedMessage = rss.sign();
+
+        rss.initRedact(keyPair.getPublic());
+        rss.addParts(toRedact);
+        SignatureOutput redactedMessage = rss.redact(signedMessage);
+
+    }
+
+    @Test
     public void engineRedact() throws Exception {
         ModificationInstruction mod = ModificationInstruction.forAlgorithm("RSSwithPSA");
         RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
@@ -118,7 +145,7 @@ public class PSRedactableSignatureTest {
         rss.initRedact(keyPair.getPublic());
         mod.add("test4".getBytes());
         mod.add("test5".getBytes());
-        SignatureOutput redacted1 = rss.redact(wholeMessage, mod);
+        SignatureOutput redacted1 = rss.redact(wholeMessage);
 
         rss.initVerify(keyPair.getPublic());
         assertTrue(rss.verify(redacted1));
@@ -141,14 +168,14 @@ public class PSRedactableSignatureTest {
         ModificationInstruction mod = ModificationInstruction.forAlgorithm(rss);
         mod.add("test4".getBytes());
         mod.add("test5".getBytes());
-        SignatureOutput redacted1 = rss.redact(wholeMessage, mod);
+        SignatureOutput redacted1 = rss.redact(wholeMessage);
 
         rss = RedactableSignature.getInstance("RSSwithPSA");
         rss.initRedact(keyPair.getPublic());
         mod = ModificationInstruction.forAlgorithm(rss);
         mod.add("test2".getBytes());
         mod.add("test3".getBytes());
-        SignatureOutput redacted2 = rss.redact(wholeMessage, mod);
+        SignatureOutput redacted2 = rss.redact(wholeMessage);
 
         rss.initMerge(keyPair.getPublic());
         rss.merge(redacted1, redacted2);

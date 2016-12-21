@@ -39,7 +39,7 @@ import java.util.List;
  * An Accumulator object can be used to create witnesses for a given value or to verify the membership of a given value
  * in the accumulated set. Witnesses certify the membership of a given value in the accumulator.
  * <p>
- * Accumulator object is used in two phases:
+ * An Accumulator object is used in two phases:
  * <ol>
  * <li> Initialization via: {@link #initWitness(KeyPair, byte[]...) initWitness},
  * {@link #initVerify(PublicKey, byte[]) initVerify}, {@link #restore(KeyPair, byte[]) restore}
@@ -79,7 +79,8 @@ public abstract class Accumulator extends AccumulatorSpi {
      *
      * @param algorithm the name of the requested algorithm
      * @return a new Accumulator object.
-     * @throws NoSuchAlgorithmException if no Provider supports a Signature implementation for the specified algorithm.
+     * @throws NoSuchAlgorithmException if no Provider supports a Accumulator implementation for the specified
+     *                                  algorithm.
      */
     public static Accumulator getInstance(String algorithm) throws NoSuchAlgorithmException {
         NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + "Accumulator not available");
@@ -295,7 +296,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     @Override
     public String toString() {
-        return "RedactableSignature (Algorithm: " + getAlgorithm() + ", Initialization state: " + state + ")";
+        return "Accumulator (Algorithm: " + getAlgorithm() + ", Initialization state: " + state + ")";
     }
 
     static class Delegate extends Accumulator {
