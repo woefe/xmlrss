@@ -22,7 +22,6 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.ModificationInstruction;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 
@@ -276,11 +275,6 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
     protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
         //TODO No parameters needed
-    }
-
-    @Override
-    protected ModificationInstruction engineNewModificationInstruction() {
-        return new PSModificationInstruction();
     }
 
     protected AlgorithmParameters engineGetParameters() {
