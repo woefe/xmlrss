@@ -27,7 +27,7 @@ import java.security.Provider;
 /**
  * @author Wolfgang Popp
  */
-public class WPProvider extends Provider{
+public class WPProvider extends Provider {
 
     public WPProvider() {
         super("WP", 0.1, "WP Provider (implements Redactable Signature Schemes, Accumulators)");
@@ -36,9 +36,14 @@ public class WPProvider extends Provider{
                 /*
                  * Signature engines
                  */
-                put("RedactableSignature.RSSwithPSAccumulator", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableSignature$RSSwithPSA");
+                put("RedactableSignature.RSSwithPSAccumulator",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableSignature$PSRSSwithPSA");
                 put("Alg.Alias.RedactableSignature.RSSwithACC", "RSSwithPSAccumulator");
                 put("Alg.Alias.RedactableSignature.RSSwithPSA", "RSSwithPSAccumulator");
+                put("Alg.Alias.RedactableSignature.PSRSSwithPSA", "RSSwithPSAccumulator");
+
+                put("RedactableXMLSignature.XMLPSRSSwithPSA",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableXMLSignature$XMLPSRSSwithPSA");
 
                 /*
                  *  Key Pair Generator engines
