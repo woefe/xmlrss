@@ -28,6 +28,7 @@ import org.jcp.xml.dsig.internal.dom.DOMUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.crypto.dsig.XMLSignatureException;
 import javax.xml.xpath.XPathExpressionException;
@@ -126,14 +127,55 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         proofOfTag.appendChild(doc.createTextNode(base64.encodeToString(output.getProofOfTag())));
         signatureValue.appendChild(proofOfTag);
 
+        Element accumulator = doc.createElement("Accumulator");
+        accumulator.appendChild(doc.createTextNode(base64.encodeToString(output.getAccumulator())));
+        signatureValue.appendChild(accumulator);
+
         signature.appendChild(references);
         signature.appendChild(signatureValue);
         root.appendChild(signature);
     }
 
     @Override
-    public boolean engineVerify() {
-        return false;
+    public boolean engineVerify() throws XPathExpressionException, SignatureException {
+        Base64.Decoder base64 = Base64.getDecoder();
+
+        //TODO Check returned nodes are indeed as expected
+        Document doc = DOMUtils.getOwnerDocument(root);
+        Node signatureNode = doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0);
+
+        // Enveloped signature; remove signature node from document, before doing any further processing
+        root.removeChild(signatureNode);
+
+        Node references = signatureNode.getFirstChild();
+        Node signatureValue = references.getNextSibling();
+
+        Node tagNode = signatureValue.getFirstChild();
+        Node proofOfTagNode = tagNode.getNextSibling();
+        Node accumulatorNode = proofOfTagNode.getNextSibling();
+
+        byte[] tag = base64.decode(tagNode.getFirstChild().getNodeValue());
+        byte[] proofOfTag = base64.decode(proofOfTagNode.getFirstChild().getNodeValue());
+        byte[] accumulator = base64.decode(accumulatorNode.getFirstChild().getNodeValue());
+
+        PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, accumulator);
+
+        NodeList referencesList = references.getChildNodes();
+        for (int i = 0; i < referencesList.getLength(); i++) {
+            Node node = referencesList.item(i);
+            if (node.getNodeName().equals("Reference")) {
+                String uri = node.getAttributes().getNamedItem("URI").getTextContent();
+                byte[] part = URIDereferencer.dereference(root, uri).getBytes();
+                byte[] proof = base64.decode(node.getFirstChild().getTextContent().getBytes());
+                builder.add(part, proof);
+            }
+        }
+
+        // TODO Copy root and do processing on copy instead of deleting/adding the signature node
+        root.appendChild(signatureNode);
+
+        PSSignatureOutput signatureOutput = builder.build();
+        return signature.verify(signatureOutput);
     }
 
     @Override

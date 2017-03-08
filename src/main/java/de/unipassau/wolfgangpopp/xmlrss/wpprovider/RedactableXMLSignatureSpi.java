@@ -49,7 +49,7 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineSign() throws XMLSignatureException, SignatureException;
 
-    public abstract boolean engineVerify();
+    public abstract boolean engineVerify() throws XPathExpressionException, SignatureException;
 
     public abstract void engineRedact();
 }

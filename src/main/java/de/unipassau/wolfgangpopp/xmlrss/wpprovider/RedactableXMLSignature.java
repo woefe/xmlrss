@@ -155,7 +155,7 @@ public abstract class RedactableXMLSignature {
         }
     }
 
-    public final boolean verify() throws XMLSignatureException {
+    public final boolean verify() throws XMLSignatureException, XPathExpressionException, SignatureException {
         if (state == STATE.VERIFY) {
             return engine.engineVerify();
         }
