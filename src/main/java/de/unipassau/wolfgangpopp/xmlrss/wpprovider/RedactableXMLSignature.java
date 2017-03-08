@@ -148,8 +148,9 @@ public abstract class RedactableXMLSignature {
     public final void sign() throws XMLSignatureException, SignatureException {
         if (state == STATE.SIGN) {
             engine.engineSign();
+        } else {
+            throw new XMLSignatureException("not initialized for signing");
         }
-        throw new XMLSignatureException("not initialized for signing");
     }
 
     public final boolean verify() throws XMLSignatureException {
@@ -162,8 +163,9 @@ public abstract class RedactableXMLSignature {
     public final void redact() throws XMLSignatureException {
         if (state == STATE.REDACT) {
             engine.engineRedact();
+        } else {
+            throw new XMLSignatureException("not initialized for redaction");
         }
-        throw new XMLSignatureException("not initialized for redaction");
     }
 
     //TODO algorithm parameters
