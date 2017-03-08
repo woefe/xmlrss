@@ -1,0 +1,12 @@
+<Vehicle>
+    <Aircraft>
+        <Glider>DG-800</Glider>
+        <Jet>Airbus A380</Jet>
+    </Aircraft>
+    <MotorVehicles>
+        <Car Brand="Audi" Model="A3"/>
+        <Car Brand="Audi" Model="A4"/>
+        <Car Brand="BMW" Model="i7"/>
+        <Motorcycle Brand="Honda" Model="RC212V"/>
+    </MotorVehicles>
+</Vehicle>
