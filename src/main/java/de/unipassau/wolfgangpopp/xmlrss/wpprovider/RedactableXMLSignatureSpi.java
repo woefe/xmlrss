@@ -23,6 +23,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 import org.w3c.dom.Node;
 
 import javax.xml.crypto.dsig.XMLSignatureException;
+import javax.xml.xpath.XPathExpressionException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -42,7 +43,7 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
-    public abstract void engineAddPartSelector(String uri);
+    public abstract void engineAddPartSelector(String uri) throws XMLSignatureException, XPathExpressionException, SignatureException;
 
     public abstract void engineSetRootNode(Node node);
 

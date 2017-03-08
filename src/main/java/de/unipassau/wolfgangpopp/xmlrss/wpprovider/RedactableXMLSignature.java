@@ -25,6 +25,7 @@ import org.w3c.dom.Node;
 import sun.security.jca.GetInstance;
 
 import javax.xml.crypto.dsig.XMLSignatureException;
+import javax.xml.xpath.XPathExpressionException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -56,7 +57,7 @@ public abstract class RedactableXMLSignature {
         this.state = STATE.UNINITIALIZED;
     }
 
-    public RedactableXMLSignature getInstance(String algorithm) throws NoSuchAlgorithmException {
+    public static RedactableXMLSignature getInstance(String algorithm) throws NoSuchAlgorithmException {
         NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + " RedactableXMLSignature not available");
         List<Provider.Service> services = GetInstance.getServices(TYPE, algorithm);
 
@@ -71,7 +72,7 @@ public abstract class RedactableXMLSignature {
         throw failure;
     }
 
-    public RedactableXMLSignature getInstance(String algorithm, String provider) throws NoSuchProviderException, NoSuchAlgorithmException {
+    public static RedactableXMLSignature getInstance(String algorithm, String provider) throws NoSuchProviderException, NoSuchAlgorithmException {
         GetInstance.Instance instance = GetInstance.getInstance(TYPE,
                 RedactableXMLSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
@@ -137,7 +138,7 @@ public abstract class RedactableXMLSignature {
         setRootNode(document.getDocumentElement());
     }
 
-    public final void addPartSelector(String uri) throws XMLSignatureException {
+    public final void addPartSelector(String uri) throws XMLSignatureException, XPathExpressionException, SignatureException {
         if (state != STATE.UNINITIALIZED) {
             engine.engineAddPartSelector(uri);
         } else {
