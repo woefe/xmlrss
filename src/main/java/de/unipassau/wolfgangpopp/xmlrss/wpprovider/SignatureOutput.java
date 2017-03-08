@@ -25,5 +25,8 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
  */
 public interface SignatureOutput {
 
+    boolean contains(byte[] part);
+
+    boolean containsAll(byte[]... part);
 
 }

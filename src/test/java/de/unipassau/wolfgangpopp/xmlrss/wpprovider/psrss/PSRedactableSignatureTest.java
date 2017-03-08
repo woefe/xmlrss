@@ -32,6 +32,7 @@ import java.security.Security;
 import java.security.SignatureException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -58,10 +59,10 @@ public class PSRedactableSignatureTest {
     public PSRedactableSignatureTest() throws NoSuchAlgorithmException {
     }
 
-    @Test(expected = SignatureException.class)
+    @Test
     public void getInstance() throws Exception {
         RedactableSignature rss1 = RedactableSignature.getInstance("RSSwithPSA");
-        assertEquals(rss1.getAlgorithm(), "RSSWithPSA");
+        assertEquals(rss1.getAlgorithm(), "RSSwithPSA");
     }
 
     @Test
@@ -69,12 +70,12 @@ public class PSRedactableSignatureTest {
         RedactableSignature rssWithPSA = RedactableSignature.getInstance("RSSwithPSA");
         rssWithPSA.initSign(keyPair);
 
-        rssWithPSA.addPart("test".getBytes(), false);
+        rssWithPSA.addPart("test1".getBytes(), false);
         rssWithPSA.addPart("test2".getBytes(), false);
 
         SignatureOutput signature = rssWithPSA.sign();
 
-        assertNotNull(signature);
+        assertTrue(signature.containsAll("test1".getBytes(), "test2".getBytes()));
     }
 
     @Test
@@ -93,7 +94,7 @@ public class PSRedactableSignatureTest {
     }
 
     @Test
-    public void engineRedactNew() throws Exception {
+    public void engineRedact() throws Exception {
         byte[][] message = {
                 "test1".getBytes(),
                 "test2".getBytes(),
@@ -117,41 +118,26 @@ public class PSRedactableSignatureTest {
         rss.addParts(toRedact);
         SignatureOutput redactedMessage = rss.redact(signedMessage);
 
-    }
-
-    @Test
-    public void engineRedact() throws Exception {
-        RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
-        rss.initSign(keyPair);
-
-        rss.addPart("test1".getBytes(), false);
-        rss.addPart("test2".getBytes(), false);
-        rss.addPart("test3".getBytes(), false);
-        rss.addPart("test4".getBytes(), false);
-        rss.addPart("test5".getBytes(), false);
-
-        SignatureOutput wholeMessage = rss.sign();
-
-        rss.initRedact(keyPair.getPublic());
-        rss.addPart("test4".getBytes());
-        rss.addPart("test5".getBytes());
-        SignatureOutput redacted1 = rss.redact(wholeMessage);
-
         rss.initVerify(keyPair.getPublic());
-        assertTrue(rss.verify(redacted1));
+        assertTrue(rss.verify(redactedMessage));
+        assertFalse(redactedMessage.contains(toRedact[0]));
+        assertFalse(redactedMessage.contains(toRedact[1]));
     }
 
     @Test
     public void engineMerge() throws Exception {
+        byte[][] message = {
+                "test1".getBytes(),
+                "test2".getBytes(),
+                "test3".getBytes(),
+                "test4".getBytes(),
+                "test5".getBytes(),
+        };
+
         RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
+
         rss.initSign(keyPair);
-
-        rss.addPart("test1".getBytes(), false);
-        rss.addPart("test2".getBytes(), false);
-        rss.addPart("test3".getBytes(), false);
-        rss.addPart("test4".getBytes(), false);
-        rss.addPart("test5".getBytes(), false);
-
+        rss.addParts(message);
         SignatureOutput wholeMessage = rss.sign();
 
         rss.initRedact(keyPair.getPublic());
@@ -159,15 +145,13 @@ public class PSRedactableSignatureTest {
         rss.addPart("test5".getBytes());
         SignatureOutput redacted1 = rss.redact(wholeMessage);
 
-        rss = RedactableSignature.getInstance("RSSwithPSA");
         rss.initRedact(keyPair.getPublic());
         rss.addPart("test2".getBytes());
         rss.addPart("test3".getBytes());
         SignatureOutput redacted2 = rss.redact(wholeMessage);
 
         rss.initMerge(keyPair.getPublic());
-        rss.merge(redacted1, redacted2);
-
+        SignatureOutput merged = rss.merge(redacted1, redacted2);
     }
 
     @Test

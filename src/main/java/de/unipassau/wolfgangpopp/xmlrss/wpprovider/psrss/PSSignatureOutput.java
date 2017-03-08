@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
 
 /**
@@ -83,6 +84,21 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     public boolean containsAll(Collection<PSMessagePart> c) {
         return values().containsAll(c);
     }
+
+    @Override
+    public boolean contains(byte[] part) {
+        return values().contains(new PSMessagePart(part));
+    }
+
+    @Override
+    public boolean containsAll(byte[]... part) {
+        Set<PSMessagePart> psMessageParts = new HashSet<>();
+        for (byte[] bytes : part) {
+            psMessageParts.add(new PSMessagePart(bytes));
+        }
+        return containsAll(psMessageParts);
+    }
+
 
     /**
      * Checks if the given collection and the values of this <code>SignedSet</code> are disjoint.
