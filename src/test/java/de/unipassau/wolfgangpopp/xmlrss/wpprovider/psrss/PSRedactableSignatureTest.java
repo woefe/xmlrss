@@ -29,11 +29,9 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
-import java.security.SignatureException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -171,5 +169,21 @@ public class PSRedactableSignatureTest {
 
         rss.initVerify(keyPair.getPublic());
         assertTrue(rss.verify(updated));
+    }
+
+    @Test
+    public void signAndThenSign() throws Exception {
+        RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
+
+        rss.initSign(keyPair);
+        rss.addPart("test1".getBytes(), false);
+        SignatureOutput output1 = rss.sign();
+
+        rss.addPart("test2".getBytes(), false);
+        SignatureOutput output2 = rss.sign();
+
+        assertTrue(output1.contains("test1".getBytes()));
+        assertTrue(output2.contains("test2".getBytes()));
+        assertFalse(output2.contains("test1".getBytes()));
     }
 }
