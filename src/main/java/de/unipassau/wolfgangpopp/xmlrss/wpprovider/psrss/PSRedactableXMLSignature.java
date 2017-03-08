@@ -21,8 +21,12 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableXMLSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.URIDereferencer;
+import org.jcp.xml.dsig.internal.dom.DOMUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import javax.xml.crypto.dsig.XMLSignatureException;
@@ -33,8 +37,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Wolfgang Popp
@@ -45,7 +50,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     private KeyPair keyPair;
     private PublicKey publicKey;
     private Node root;
-    private List<String> selectors = new LinkedList<>();
+    private Map<String, byte[]> selectorResults = new HashMap<>();
 
     PSRedactableXMLSignature(RedactableSignature signature) {
         this.signature = signature;
@@ -79,30 +84,51 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public void engineAddPartSelector(String uri) {
-        selectors.add(uri);
-    }
-
-    @Override
     public void engineSetRootNode(Node node) {
         root = node;
     }
 
     @Override
-    public void engineSign() throws XMLSignatureException, SignatureException {
-        /*
-        for (String selector : selectors) {
-            try {
-                signature.addPart(URIDereferencer.dereference(root, selector).getBytes());
-            } catch (SignatureException | XPathExpressionException e) {
-                throw new XMLSignatureException(e);
-            }
+    //TODO remove xpathexception
+    public void engineAddPartSelector(String uri) throws XMLSignatureException, XPathExpressionException, SignatureException {
+        if (root == null) {
+            throw new XMLSignatureException("root node not set");
         }
+        byte[] data = URIDereferencer.dereference(root, uri).getBytes();
+        selectorResults.put(uri, data);
+        signature.addPart(data);
+    }
+
+    @Override
+    public void engineSign() throws XMLSignatureException, SignatureException {
         PSSignatureOutput output = (PSSignatureOutput) signature.sign();
-        root.
-        root.appendChild()
-        //TODO Marshall output
-        */
+
+        Base64.Encoder base64 = Base64.getEncoder();
+        Document doc = DOMUtils.getOwnerDocument(root);
+        Element signature = doc.createElementNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
+        Element references = doc.createElement("References");
+        Element signatureValue = doc.createElement("SignatureValue");
+
+        for (String selector : selectorResults.keySet()) {
+            Element reference = doc.createElement("Reference");
+            reference.setAttribute("URI", selector);
+            Element proof = doc.createElement("Proof");
+            proof.appendChild(doc.createTextNode(base64.encodeToString(output.getProof(selectorResults.get(selector)))));
+            reference.appendChild(proof);
+            references.appendChild(reference);
+        }
+
+        Element tag = doc.createElement("Tag");
+        tag.appendChild(doc.createTextNode(base64.encodeToString(output.getTag())));
+        signatureValue.appendChild(tag);
+
+        Element proofOfTag = doc.createElement("ProofOfTag");
+        proofOfTag.appendChild(doc.createTextNode(base64.encodeToString(output.getProofOfTag())));
+        signatureValue.appendChild(proofOfTag);
+
+        signature.appendChild(references);
+        signature.appendChild(signatureValue);
+        root.appendChild(signature);
     }
 
     @Override
@@ -116,7 +142,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     private void reset() {
-        selectors.clear();
+        selectorResults.clear();
         root = null;
     }
 

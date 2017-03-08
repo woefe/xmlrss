@@ -42,6 +42,7 @@ import java.util.List;
 public abstract class RedactableXMLSignature {
 
     private static final String TYPE = "RedactableXMLSignature";
+    public static final String XML_NAMESPACE = "http://sec.uni-passau.de/2017/03/xmlpsrss";
     private Provider provider;
     private String algorithm;
     private STATE state;
