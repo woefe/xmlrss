@@ -140,6 +140,8 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         builder.addAll(map(signFunction, parts));
 
+        parts.clear();
+
         return builder.build();
     }
 
@@ -182,6 +184,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         Collection<Boolean> results = map(verifyFunction, sig);
 
+        parts.clear();
         try {
             return !results.contains(false) && accumulator.verify(sig.getProofOfTag(), sig.getTag());
         } catch (AccumulatorException e) {
@@ -211,6 +214,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
             }
         }
 
+        parts.clear();
         return builder.build();
     }
 
@@ -238,6 +242,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
             builder.add(signedPart);
         }
 
+        parts.clear();
         return builder.build();
     }
 
@@ -270,6 +275,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
             }
         }
 
+        parts.clear();
         return builder.build();
     }
 
