@@ -64,7 +64,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
     private Provider provider;
     private String algorithm;
     private STATE state;
-    private static String type = "RedactableSignature";
+    private static final String TYPE = "RedactableSignature";
 
     private enum STATE {
         UNINITIALIZED, SIGN, REDACT, VERIFY, UPDATE, MERGE
@@ -96,7 +96,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public static RedactableSignature getInstance(String algorithm) throws NoSuchAlgorithmException {
         NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + "RedactableSignature not available");
-        List<Provider.Service> services = GetInstance.getServices(type, algorithm);
+        List<Provider.Service> services = GetInstance.getServices(TYPE, algorithm);
 
         for (Provider.Service service : services) {
             try {
@@ -127,7 +127,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
     public static RedactableSignature getInstance(String algorithm, String provider)
             throws NoSuchProviderException, NoSuchAlgorithmException {
 
-        GetInstance.Instance instance = GetInstance.getInstance(type,
+        GetInstance.Instance instance = GetInstance.getInstance(TYPE,
                 RedactableSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }
@@ -146,7 +146,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      *                                  available from the specified provider.
      */
     public static RedactableSignature getInstance(String algorithm, Provider provider) throws NoSuchAlgorithmException {
-        GetInstance.Instance instance = GetInstance.getInstance(type,
+        GetInstance.Instance instance = GetInstance.getInstance(TYPE,
                 RedactableSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }

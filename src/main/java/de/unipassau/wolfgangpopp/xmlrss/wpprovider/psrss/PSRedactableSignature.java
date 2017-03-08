@@ -352,8 +352,8 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         R execute(E argument) throws Exception;
     }
 
-    public static final class RSSwithPSA extends PSRedactableSignature {
-        public RSSwithPSA() throws NoSuchAlgorithmException {
+    public static final class PSRSSwithPSA extends PSRedactableSignature {
+        public PSRSSwithPSA() throws NoSuchAlgorithmException {
             super(Accumulator.getInstance("PSA"));
         }
     }
