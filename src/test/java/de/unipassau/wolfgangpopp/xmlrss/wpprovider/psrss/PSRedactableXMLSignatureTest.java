@@ -32,14 +32,13 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import java.io.File;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Wolfgang Popp
@@ -80,6 +79,25 @@ public class PSRedactableXMLSignatureTest {
         trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         trans.transform(new DOMSource(document), new StreamResult(System.out));
 
+    }
+
+    @Test
+    public void engineVerify() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setNamespaceAware(true);
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        Document document = documentBuilder.parse(new File("vehicles.xml"));
+
+        sig.initSign(keyPair);
+        sig.setDocument(document);
+        sig.addPartSelector("/");
+        sig.sign();
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertTrue(sig.verify());
     }
 
 }
