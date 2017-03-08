@@ -25,12 +25,14 @@ import org.w3c.dom.Node;
 import sun.security.jca.GetInstance;
 
 import javax.xml.crypto.dsig.XMLSignatureException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.SignatureException;
 import java.util.List;
 
 /**
@@ -102,23 +104,23 @@ public abstract class RedactableXMLSignature {
         return algorithm;
     }
 
-    public final void initSign(KeyPair keyPair) {
+    public final void initSign(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.SIGN;
         engine.engineInitSign(keyPair);
     }
 
-    public final void initSign(KeyPair keyPair, SecureRandom random) {
+    public final void initSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         state = STATE.SIGN;
         engine.engineInitSign(keyPair, random);
     }
 
-    public final void initVerify(PublicKey publicKey) {
+    public final void initVerify(PublicKey publicKey) throws InvalidKeyException {
         state = STATE.VERIFY;
         engine.engineInitVerify(publicKey);
 
     }
 
-    public final void initRedact(PublicKey publicKey) {
+    public final void initRedact(PublicKey publicKey) throws InvalidKeyException {
         state = STATE.REDACT;
         engine.engineInitRedact(publicKey);
     }
@@ -143,7 +145,7 @@ public abstract class RedactableXMLSignature {
         }
     }
 
-    public final void sign() throws XMLSignatureException {
+    public final void sign() throws XMLSignatureException, SignatureException {
         if (state == STATE.SIGN) {
             engine.engineSign();
         }

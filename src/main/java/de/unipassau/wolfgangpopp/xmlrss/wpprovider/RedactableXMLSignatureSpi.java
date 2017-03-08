@@ -22,28 +22,31 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 
 import org.w3c.dom.Node;
 
+import javax.xml.crypto.dsig.XMLSignatureException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.SignatureException;
 
 /**
  * @author Wolfgang Popp
  */
 public abstract class RedactableXMLSignatureSpi {
 
-    public abstract void engineInitSign(KeyPair keyPair);
+    public abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
 
-    public abstract void engineInitSign(KeyPair keyPair, SecureRandom random);
+    public abstract void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException;
 
-    public abstract void engineInitVerify(PublicKey publicKey);
+    public abstract void engineInitVerify(PublicKey publicKey) throws InvalidKeyException;
 
-    public abstract void engineInitRedact(PublicKey publicKey);
-
-    public abstract void engineSign();
+    public abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
     public abstract void engineAddPartSelector(String uri);
 
     public abstract void engineSetRootNode(Node node);
+
+    public abstract void engineSign() throws XMLSignatureException, SignatureException;
 
     public abstract boolean engineVerify();
 
