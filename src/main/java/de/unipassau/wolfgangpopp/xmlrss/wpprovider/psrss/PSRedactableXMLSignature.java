@@ -41,6 +41,7 @@ import java.security.SignatureException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Wolfgang Popp
@@ -180,7 +181,23 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineRedact() {
+        Document doc = DOMUtils.getOwnerDocument(root);
+        Node signatureNode = doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0);
 
+        Node references = signatureNode.getFirstChild();
+        NodeList referencesList = references.getChildNodes();
+
+        Set<String> selectors = selectorResults.keySet();
+
+        for (int i = 0; i < referencesList.getLength(); i++) {
+            Node node = referencesList.item(i);
+            if (node.getNodeName().equals("Reference")) {
+                String uri = node.getAttributes().getNamedItem("URI").getTextContent();
+                if (selectors.contains(uri)) {
+                    references.removeChild(node);
+                }
+            }
+        }
     }
 
     private void reset() {
