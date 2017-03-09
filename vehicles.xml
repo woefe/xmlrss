@@ -3,6 +3,10 @@
         <Glider>DG-800</Glider>
         <Jet>Airbus A380</Jet>
     </Aircraft>
+    <Watercraft>
+        <Sailboat>Bavaria 36</Sailboat>
+        <Motorboat>Bavaria Sport 29</Motorboat>
+    </Watercraft>
     <MotorVehicles>
         <Car Brand="Audi" Model="A3"/>
         <Car Brand="Audi" Model="A4"/>

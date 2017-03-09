@@ -69,7 +69,9 @@ public class PSRedactableXMLSignatureTest {
 
         sig.initSign(keyPair);
         sig.setDocument(document);
-        sig.addPartSelector("/");
+        sig.addPartSelector("/Vehicle/Aircraft/Glider");
+        sig.addPartSelector("/Vehicle/Aircraft/Jet");
+        sig.addPartSelector("/Vehicle/Watercraft");
         sig.sign();
 
 
@@ -92,7 +94,9 @@ public class PSRedactableXMLSignatureTest {
 
         sig.initSign(keyPair);
         sig.setDocument(document);
-        sig.addPartSelector("/");
+        sig.addPartSelector("/Vehicle/Aircraft/Glider");
+        sig.addPartSelector("/Vehicle/Aircraft/Jet");
+        sig.addPartSelector("/Vehicle/Watercraft");
         sig.sign();
 
         sig.initVerify(keyPair.getPublic());
@@ -100,4 +104,35 @@ public class PSRedactableXMLSignatureTest {
         assertTrue(sig.verify());
     }
 
+    @Test
+    public void engineRedact() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setNamespaceAware(true);
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        Document document = documentBuilder.parse(new File("vehicles.xml"));
+
+        sig.initSign(keyPair);
+        sig.setDocument(document);
+        sig.addPartSelector("/Vehicle/Aircraft/Glider");
+        sig.addPartSelector("/Vehicle/Aircraft/Jet");
+        sig.addPartSelector("/Vehicle/Watercraft");
+        sig.sign();
+
+        sig.initRedact(keyPair.getPublic());
+        sig.setDocument(document);
+        sig.addPartSelector("/Vehicle/Watercraft");
+        sig.redact();
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertTrue(sig.verify());
+
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer trans = tf.newTransformer();
+        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        trans.transform(new DOMSource(document), new StreamResult(System.out));
+    }
 }
