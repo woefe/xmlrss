@@ -20,7 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableXMLSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import org.junit.Test;
 import org.w3c.dom.Document;

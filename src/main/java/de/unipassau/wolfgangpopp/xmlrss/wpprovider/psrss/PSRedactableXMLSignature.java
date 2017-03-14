@@ -21,9 +21,9 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableXMLSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableXMLSignatureSpi;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.URIDereferencer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
 import org.jcp.xml.dsig.internal.dom.DOMUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

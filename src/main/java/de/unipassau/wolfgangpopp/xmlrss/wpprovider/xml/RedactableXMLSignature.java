@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
