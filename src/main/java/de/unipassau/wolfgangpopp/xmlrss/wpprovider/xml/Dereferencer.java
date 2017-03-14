@@ -24,9 +24,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-
 /**
  * @author Wolfgang Popp
  */
@@ -50,8 +47,6 @@ class Dereferencer {
     }
 
     public static Node dereference(String xPointer, Node root) throws RedactableXMLSignatureException {
-        //TODO c14n
-
         if (xPointer == null || xPointer.length() == 0 || isRootNodeXPointer(xPointer)) {
             return root;
         } else if (isIdXPointer(xPointer)) {
