@@ -20,6 +20,8 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
+import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
+import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import sun.security.jca.GetInstance;
@@ -139,34 +141,34 @@ public abstract class RedactableXMLSignature {
         setRootNode(document.getDocumentElement());
     }
 
-    public final void addPartSelector(String uri) throws XMLSignatureException, XPathExpressionException, SignatureException {
+    public final void addPartSelector(String uri) throws RedactableXMLSignatureException {
         if (state != STATE.UNINITIALIZED) {
             engine.engineAddPartSelector(uri);
         } else {
-            throw new XMLSignatureException("not initialized");
+            throw new RedactableXMLSignatureException("not initialized");
         }
     }
 
-    public final void sign() throws XMLSignatureException, SignatureException {
+    public final void sign() throws RedactableXMLSignatureException {
         if (state == STATE.SIGN) {
             engine.engineSign();
         } else {
-            throw new XMLSignatureException("not initialized for signing");
+            throw new RedactableXMLSignatureException("not initialized for signing");
         }
     }
 
-    public final boolean verify() throws XMLSignatureException, XPathExpressionException, SignatureException {
+    public final boolean verify() throws RedactableXMLSignatureException {
         if (state == STATE.VERIFY) {
             return engine.engineVerify();
         }
-        throw new XMLSignatureException("not initialized for verification");
+        throw new RedactableXMLSignatureException("not initialized for verification");
     }
 
-    public final void redact() throws XMLSignatureException {
+    public final void redact() throws RedactableXMLSignatureException {
         if (state == STATE.REDACT) {
             engine.engineRedact();
         } else {
-            throw new XMLSignatureException("not initialized for redaction");
+            throw new RedactableXMLSignatureException("not initialized for redaction");
         }
     }
 

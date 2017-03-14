@@ -20,20 +20,45 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
+import com.sun.org.apache.xml.internal.security.Init;
+import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
+import com.sun.org.apache.xml.internal.security.c14n.Canonicalizer;
+import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Node;
 
-import javax.xml.crypto.dsig.XMLSignatureException;
-import javax.xml.xpath.XPathExpressionException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 
 /**
  * @author Wolfgang Popp
  */
 public abstract class RedactableXMLSignatureSpi {
+
+    private Canonicalizer canonicalizer;
+
+    protected RedactableXMLSignatureSpi() throws RedactableXMLSignatureException {
+        Init.init();
+        try {
+            canonicalizer = Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS);
+        } catch (InvalidCanonicalizerException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+    }
+
+    protected Node dereference(String uri, Node root) throws RedactableXMLSignatureException {
+        return Dereferencer.dereference(uri, root);
+    }
+
+    protected byte[] canonicalize(Node node) throws RedactableXMLSignatureException {
+        try {
+            return canonicalizer.canonicalizeSubtree(node);
+        } catch (CanonicalizationException e) {
+            throw new RedactableXMLSignatureException("Cannot canonicalize the given node");
+        }
+    }
 
     public abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
 
@@ -43,13 +68,13 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
-    public abstract void engineAddPartSelector(String uri) throws XMLSignatureException, XPathExpressionException, SignatureException;
+    public abstract void engineAddPartSelector(String uri) throws RedactableXMLSignatureException;
 
     public abstract void engineSetRootNode(Node node);
 
-    public abstract void engineSign() throws XMLSignatureException, SignatureException;
+    public abstract void engineSign() throws RedactableXMLSignatureException;
 
-    public abstract boolean engineVerify() throws XPathExpressionException, SignatureException;
+    public abstract boolean engineVerify() throws RedactableXMLSignatureException;
 
-    public abstract void engineRedact();
+    public abstract void engineRedact() throws RedactableXMLSignatureException;
 }

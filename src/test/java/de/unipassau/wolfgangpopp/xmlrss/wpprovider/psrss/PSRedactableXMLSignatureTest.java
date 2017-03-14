@@ -69,9 +69,9 @@ public class PSRedactableXMLSignatureTest {
 
         sig.initSign(keyPair);
         sig.setDocument(document);
-        sig.addPartSelector("/Vehicle/Aircraft/Glider");
-        sig.addPartSelector("/Vehicle/Aircraft/Jet");
-        sig.addPartSelector("/Vehicle/Watercraft");
+        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.addPartSelector("#xpointer(id('a2'))");
+        sig.addPartSelector("#xpointer(id('a3'))");
         sig.sign();
 
 
@@ -94,9 +94,9 @@ public class PSRedactableXMLSignatureTest {
 
         sig.initSign(keyPair);
         sig.setDocument(document);
-        sig.addPartSelector("/Vehicle/Aircraft/Glider");
-        sig.addPartSelector("/Vehicle/Aircraft/Jet");
-        sig.addPartSelector("/Vehicle/Watercraft");
+        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.addPartSelector("#xpointer(id('a2'))");
+        sig.addPartSelector("#xpointer(id('a3'))");
         sig.sign();
 
         sig.initVerify(keyPair.getPublic());
@@ -115,14 +115,14 @@ public class PSRedactableXMLSignatureTest {
 
         sig.initSign(keyPair);
         sig.setDocument(document);
-        sig.addPartSelector("/Vehicle/Aircraft/Glider");
-        sig.addPartSelector("/Vehicle/Aircraft/Jet");
-        sig.addPartSelector("/Vehicle/Watercraft");
+        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.addPartSelector("#xpointer(id('a2'))");
+        sig.addPartSelector("#xpointer(id('a3'))");
         sig.sign();
 
         sig.initRedact(keyPair.getPublic());
         sig.setDocument(document);
-        sig.addPartSelector("/Vehicle/Watercraft");
+        sig.addPartSelector("#xpointer(id('a3'))");
         sig.redact();
 
         sig.initVerify(keyPair.getPublic());

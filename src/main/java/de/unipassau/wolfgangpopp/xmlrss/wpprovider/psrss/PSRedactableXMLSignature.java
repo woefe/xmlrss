@@ -30,8 +30,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.crypto.dsig.XMLSignatureException;
-import javax.xml.xpath.XPathExpressionException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -40,6 +38,7 @@ import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,9 +51,10 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     private KeyPair keyPair;
     private PublicKey publicKey;
     private Node root;
-    private Map<String, byte[]> selectorResults = new HashMap<>();
+    private Map<Element, byte[]> selectorResults = new HashMap<>();
 
-    PSRedactableXMLSignature(RedactableSignature signature) {
+    PSRedactableXMLSignature(RedactableSignature signature) throws RedactableXMLSignatureException {
+        super();
         this.signature = signature;
     }
 
@@ -92,18 +92,45 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     //TODO remove xpathexception
-    public void engineAddPartSelector(String uri) throws XMLSignatureException, XPathExpressionException, SignatureException {
+    public void engineAddPartSelector(String uri) throws RedactableXMLSignatureException {
         if (root == null) {
-            throw new XMLSignatureException("root node not set");
+            throw new RedactableXMLSignatureException("root node not set");
         }
-        byte[] data = URIDereferencer.dereference(root, uri).getBytes();
-        selectorResults.put(uri, data);
-        signature.addPart(data);
+        //TODO Improvement: Selector results not needed for verification and redaction
+        // Could however be used to check if uri is valid.
+        byte[] data = canonicalize(dereference(uri, root));
+
+        Document doc = DOMUtils.getOwnerDocument(root);
+        Element pointer = doc.createElement("Pointer");
+        pointer.setAttribute("URI", uri);
+
+        byte[] pointerConcatData = concat(pointer, data);
+
+        selectorResults.put(pointer, pointerConcatData);
+        try {
+            signature.addPart(pointerConcatData);
+        } catch (SignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    private byte[] concat(Node pointer, byte[] data) throws RedactableXMLSignatureException {
+        byte[] c14nPointer = canonicalize(pointer);
+        byte[] pointerConcatData = new byte[c14nPointer.length + data.length];
+        System.arraycopy(c14nPointer, 0, pointerConcatData, 0, c14nPointer.length);
+        System.arraycopy(data, 0, pointerConcatData, c14nPointer.length, data.length);
+
+        return pointerConcatData;
     }
 
     @Override
-    public void engineSign() throws XMLSignatureException, SignatureException {
-        PSSignatureOutput output = (PSSignatureOutput) signature.sign();
+    public void engineSign() throws RedactableXMLSignatureException {
+        PSSignatureOutput output;
+        try {
+            output = (PSSignatureOutput) signature.sign();
+        } catch (SignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
 
         Base64.Encoder base64 = Base64.getEncoder();
         Document doc = DOMUtils.getOwnerDocument(root);
@@ -111,11 +138,13 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         Element references = doc.createElement("References");
         Element signatureValue = doc.createElement("SignatureValue");
 
-        for (String selector : selectorResults.keySet()) {
+        for (Element pointer : selectorResults.keySet()) {
             Element reference = doc.createElement("Reference");
-            reference.setAttribute("URI", selector);
+
             Element proof = doc.createElement("Proof");
-            proof.appendChild(doc.createTextNode(base64.encodeToString(output.getProof(selectorResults.get(selector)))));
+            proof.appendChild(doc.createTextNode(base64.encodeToString(output.getProof(selectorResults.get(pointer)))));
+
+            reference.appendChild(pointer);
             reference.appendChild(proof);
             references.appendChild(reference);
         }
@@ -138,7 +167,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public boolean engineVerify() throws XPathExpressionException, SignatureException {
+    public boolean engineVerify() throws RedactableXMLSignatureException {
         Base64.Decoder base64 = Base64.getDecoder();
 
         //TODO Check returned nodes are indeed as expected
@@ -164,19 +193,26 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         NodeList referencesList = references.getChildNodes();
         for (int i = 0; i < referencesList.getLength(); i++) {
             Node node = referencesList.item(i);
-            if (node.getNodeName().equals("Reference")) {
-                String uri = node.getAttributes().getNamedItem("URI").getTextContent();
-                byte[] part = URIDereferencer.dereference(root, uri).getBytes();
-                byte[] proof = base64.decode(node.getFirstChild().getTextContent().getBytes());
-                builder.add(part, proof);
+            Node pointer = node.getFirstChild();
+            if (node.getNodeName().equals("Reference") && pointer != null && pointer.getNodeName().equals("Pointer")) {
+                Node proofNode = pointer.getNextSibling(); // TODO Check if actually proofnode
+                String uri = pointer.getAttributes().getNamedItem("URI").getTextContent();
+                byte[] part = canonicalize(dereference(uri, root));
+                byte[] proof = base64.decode(proofNode.getTextContent().getBytes());
+                builder.add(concat(pointer, part), proof);
             }
+            // TODO else throw exception
         }
 
         // TODO Copy root and do processing on copy instead of deleting/adding the signature node
         root.appendChild(signatureNode);
 
         PSSignatureOutput signatureOutput = builder.build();
-        return signature.verify(signatureOutput);
+        try {
+            return signature.verify(signatureOutput);
+        } catch (SignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
     }
 
     @Override
@@ -187,14 +223,21 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         Node references = signatureNode.getFirstChild();
         NodeList referencesList = references.getChildNodes();
 
-        Set<String> selectors = selectorResults.keySet();
+        Set<Element> elements = selectorResults.keySet();
+
+        Set<String> selectors = new HashSet<>();
+
+        for (Element element : elements) {
+            selectors.add(element.getAttribute("URI"));
+        }
 
         for (int i = 0; i < referencesList.getLength(); i++) {
-            Node node = referencesList.item(i);
-            if (node.getNodeName().equals("Reference")) {
-                String uri = node.getAttributes().getNamedItem("URI").getTextContent();
+            Node reference = referencesList.item(i);
+            Node pointer = reference.getFirstChild();
+            if (reference.getNodeName().equals("Reference") && pointer != null && pointer.getNodeName().equals("Pointer")) {
+                String uri = pointer.getAttributes().getNamedItem("URI").getTextContent();
                 if (selectors.contains(uri)) {
-                    references.removeChild(node);
+                    references.removeChild(reference);
                 }
             }
         }
@@ -206,7 +249,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     public static class XMLPSRSSwithPSA extends PSRedactableXMLSignature {
-        public XMLPSRSSwithPSA() throws NoSuchAlgorithmException {
+        public XMLPSRSSwithPSA() throws NoSuchAlgorithmException, RedactableXMLSignatureException {
             super(RedactableSignature.getInstance("PSRSSwithPSA"));
         }
     }

@@ -84,7 +84,7 @@ public class XMLdsigTest {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("cars.xml"));
+        Document document = documentBuilder.parse(new File("vehicles.xml"));
 
         // Generate DSA Keypair
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
@@ -101,7 +101,7 @@ public class XMLdsigTest {
                 null,
                 null);
 
-        Reference internalReference = factory.newReference("",
+        Reference internalReference = factory.newReference("#xpointer(id('a1'))",
                 factory.newDigestMethod(DigestMethod.SHA512, null),
                 Collections.singletonList(factory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
                 null,

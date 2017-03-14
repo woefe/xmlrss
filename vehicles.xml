@@ -1,13 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE Vehicle [
+        <!ELEMENT Vehicle (Aircraft | Watercraft | MotorVehicles)+>
+        <!ELEMENT Aircraft (Glider | Jet)+>
+        <!ELEMENT Watercraft (Sailboat | Motorboat)+>
+        <!ELEMENT MotorVehicles (Car | Motorcycle)+>
+        <!ELEMENT Glider (#PCDATA)>
+        <!ELEMENT Jet (#PCDATA)>
+        <!ELEMENT Motorboat (#PCDATA)>
+        <!ELEMENT Sailboat (#PCDATA)>
+        <!ELEMENT Motorcycle (#PCDATA)>
+        <!ELEMENT Car (#PCDATA)>
+
+        <!ATTLIST Aircraft id ID #IMPLIED>
+        <!ATTLIST Watercraft id ID #IMPLIED>
+        <!ATTLIST MotorVehicles id ID #IMPLIED>
+        <!ATTLIST Car Brand CDATA #REQUIRED
+                Model CDATA #REQUIRED>
+        <!ATTLIST Motorcycle Brand CDATA #REQUIRED
+                Model CDATA #REQUIRED>
+        ]>
 <Vehicle>
-    <Aircraft>
+    <Aircraft id="a1">
         <Glider>DG-800</Glider>
         <Jet>Airbus A380</Jet>
     </Aircraft>
-    <Watercraft>
+    <Watercraft id="a2">
         <Sailboat>Bavaria 36</Sailboat>
         <Motorboat>Bavaria Sport 29</Motorboat>
     </Watercraft>
-    <MotorVehicles>
+    <MotorVehicles id="a3">
         <Car Brand="Audi" Model="A3"/>
         <Car Brand="Audi" Model="A4"/>
         <Car Brand="BMW" Model="i7"/>
