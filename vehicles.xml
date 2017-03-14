@@ -1,24 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE Vehicle [
-        <!ELEMENT Vehicle (Aircraft | Watercraft | MotorVehicles)+>
-        <!ELEMENT Aircraft (Glider | Jet)+>
-        <!ELEMENT Watercraft (Sailboat | Motorboat)+>
-        <!ELEMENT MotorVehicles (Car | Motorcycle)+>
-        <!ELEMENT Glider (#PCDATA)>
-        <!ELEMENT Jet (#PCDATA)>
-        <!ELEMENT Motorboat (#PCDATA)>
-        <!ELEMENT Sailboat (#PCDATA)>
-        <!ELEMENT Motorcycle (#PCDATA)>
-        <!ELEMENT Car (#PCDATA)>
-
-        <!ATTLIST Aircraft id ID #IMPLIED>
-        <!ATTLIST Watercraft id ID #IMPLIED>
-        <!ATTLIST MotorVehicles id ID #IMPLIED>
-        <!ATTLIST Car Brand CDATA #REQUIRED
-                Model CDATA #REQUIRED>
-        <!ATTLIST Motorcycle Brand CDATA #REQUIRED
-                Model CDATA #REQUIRED>
-        ]>
+<!DOCTYPE Vehicle SYSTEM "vehicles.dtd">
 <Vehicle>
     <Aircraft id="a1">
         <Glider>DG-800</Glider>
