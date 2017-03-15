@@ -21,7 +21,6 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
 import org.jcp.xml.dsig.internal.dom.DOMUtils;
@@ -47,6 +46,7 @@ import java.util.Set;
  */
 abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
+    public static final String XML_NAMESPACE = "http://sec.uni-passau.de/2017/03/xmlpsrss";
     private RedactableSignature signature;
     private KeyPair keyPair;
     private PublicKey publicKey;
@@ -101,7 +101,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         byte[] data = canonicalize(dereference(uri, root));
 
         Document doc = DOMUtils.getOwnerDocument(root);
-        Element pointer = doc.createElement("Pointer");
+        Element pointer = doc.createElementNS(XML_NAMESPACE, "Pointer");
         pointer.setAttribute("URI", uri);
 
         byte[] pointerConcatData = concat(pointer, data);
@@ -134,14 +134,14 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
         Base64.Encoder base64 = Base64.getEncoder();
         Document doc = DOMUtils.getOwnerDocument(root);
-        Element signature = doc.createElementNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
-        Element references = doc.createElement("References");
-        Element signatureValue = doc.createElement("SignatureValue");
+        Element signature = doc.createElementNS(XML_NAMESPACE, "Signature");
+        Element references = doc.createElementNS(XML_NAMESPACE,"References");
+        Element signatureValue = doc.createElementNS(XML_NAMESPACE, "SignatureValue");
 
         for (Element pointer : selectorResults.keySet()) {
-            Element reference = doc.createElement("Reference");
+            Element reference = doc.createElementNS(XML_NAMESPACE, "Reference");
 
-            Element proof = doc.createElement("Proof");
+            Element proof = doc.createElementNS(XML_NAMESPACE, "Proof");
             proof.appendChild(doc.createTextNode(base64.encodeToString(output.getProof(selectorResults.get(pointer)))));
 
             reference.appendChild(pointer);
@@ -149,15 +149,15 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             references.appendChild(reference);
         }
 
-        Element tag = doc.createElement("Tag");
+        Element tag = doc.createElementNS(XML_NAMESPACE,"Tag");
         tag.appendChild(doc.createTextNode(base64.encodeToString(output.getTag())));
         signatureValue.appendChild(tag);
 
-        Element proofOfTag = doc.createElement("ProofOfTag");
+        Element proofOfTag = doc.createElementNS(XML_NAMESPACE,"ProofOfTag");
         proofOfTag.appendChild(doc.createTextNode(base64.encodeToString(output.getProofOfTag())));
         signatureValue.appendChild(proofOfTag);
 
-        Element accumulator = doc.createElement("Accumulator");
+        Element accumulator = doc.createElementNS(XML_NAMESPACE, "Accumulator");
         accumulator.appendChild(doc.createTextNode(base64.encodeToString(output.getAccumulator())));
         signatureValue.appendChild(accumulator);
 
@@ -172,7 +172,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
         //TODO Check returned nodes are indeed as expected
         Document doc = DOMUtils.getOwnerDocument(root);
-        Node signatureNode = doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0);
+        Node signatureNode = doc.getElementsByTagNameNS(XML_NAMESPACE, "Signature").item(0);
 
         // Enveloped signature; remove signature node from document, before doing any further processing
         root.removeChild(signatureNode);
@@ -218,7 +218,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     @Override
     public void engineRedact() {
         Document doc = DOMUtils.getOwnerDocument(root);
-        Node signatureNode = doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0);
+        Node signatureNode = doc.getElementsByTagNameNS(XML_NAMESPACE, "Signature").item(0);
 
         Node references = signatureNode.getFirstChild();
         NodeList referencesList = references.getChildNodes();
