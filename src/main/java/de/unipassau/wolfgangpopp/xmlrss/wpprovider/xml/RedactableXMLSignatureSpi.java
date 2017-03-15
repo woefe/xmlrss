@@ -24,6 +24,7 @@ import com.sun.org.apache.xml.internal.security.Init;
 import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
 import com.sun.org.apache.xml.internal.security.c14n.Canonicalizer;
 import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import java.security.InvalidKeyException;
@@ -58,6 +59,38 @@ public abstract class RedactableXMLSignatureSpi {
         } catch (CanonicalizationException e) {
             throw new RedactableXMLSignatureException("Cannot canonicalize the given node");
         }
+    }
+
+    protected Node getFirstChildSafe(Node parent, String expectedNodeName) throws RedactableXMLSignatureException {
+        return checkNode(parent.getFirstChild(), expectedNodeName);
+    }
+
+    protected Node getNextSiblingSafe(Node sibling, String expectedNodeName) throws RedactableXMLSignatureException{
+        return checkNode(sibling.getNextSibling(), expectedNodeName);
+    }
+
+    protected Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
+        if (node == null || !node.getNodeName().equals(expectedNodeName)) {
+            throw new RedactableXMLSignatureException("Cannot find expected node " + expectedNodeName);
+        }
+
+        return node;
+    }
+
+    protected String getText(Node node) throws RedactableXMLSignatureException {
+        Node textNode = node.getFirstChild();
+        if (textNode.getNodeType() != Node.TEXT_NODE) {
+            throw new RedactableXMLSignatureException("Cannot get text from node" + node.getNodeName());
+        }
+
+        return textNode.getNodeValue();
+    }
+
+    protected Document getOwnerDocument(Node node) {
+        if(node.getNodeType() == Node.DOCUMENT_NODE){
+            return (Document) node;
+        }
+        return node.getOwnerDocument();
     }
 
     public abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
