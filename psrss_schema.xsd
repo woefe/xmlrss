@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:drs="http://sec.uni-passau.de/2017/03/xmlpsrss"
+        targetNamespace="http://sec.uni-passau.de/2017/03/xmlpsrss"
+        version="0.1" elementFormDefault="qualified">
+
+<element name="Signature" type="drs:SignatureType"/>
+<complexType name="SignatureType">
+    <sequence>
+        <element ref="drs:References"/>
+        <element ref="drs:SignatureValue" />
+        <element ref="drs:KeyInfo" minOccurs="0" maxOccurs="unbounded"/>
+    </sequence>
+</complexType>
+
+<element name="References" type="drs:ReferencesType"/>
+<complexType name="ReferencesType">
+    <sequence>
+        <element ref="drs:Reference" maxOccurs="unbounded"/>
+    </sequence>
+</complexType>
+
+<element name="Reference" type="drs:ReferenceType"/>
+<complexType name="ReferenceType">
+    <sequence>
+        <element ref="drs:Pointer"/>
+        <element name="Proof" type="string" />
+    </sequence>
+</complexType>
+
+<element name="Pointer" type="drs:PointerType"/>
+<complexType name="PointerType">
+    <attribute name="Id" type="ID" use="optional"/>
+    <attribute name="URI" type="anyURI" use="optional"/>
+    <attribute name="Redactable" type="boolean" use="optional"/>
+</complexType>
+
+<element name="SignatureValue">
+    <complexType>
+        <sequence>
+            <any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+        </sequence>
+    </complexType>
+</element>
+
+<element name="KeyInfo">
+    <complexType>
+        <sequence>
+            <any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+        </sequence>
+    </complexType>
+</element>
+</schema>

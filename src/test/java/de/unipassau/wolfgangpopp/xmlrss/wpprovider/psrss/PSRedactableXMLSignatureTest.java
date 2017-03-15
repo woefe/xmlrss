@@ -24,8 +24,10 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -33,7 +35,11 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.Security;
@@ -71,16 +77,23 @@ public class PSRedactableXMLSignatureTest {
         sig.addPartSelector("#xpointer(id('a3'))");
         sig.sign();
 
-        NodeList nodeList = document.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
+        NodeList nodeList = document.getElementsByTagNameNS(PSRedactableXMLSignature.XML_NAMESPACE, "Signature");
         assertEquals(nodeList.getLength(), 1);
-        assertEquals(nodeList.item(0).getChildNodes().getLength(), 2);
+
+        Node signature = nodeList.item(0);
+        assertEquals(signature.getChildNodes().getLength(), 2);
+
+        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        Schema schema = schemaFactory.newSchema(new File("psrss_schema.xsd"));
+        Validator validator = schema.newValidator();
+        validator.validate(new DOMSource(signature));
 
 //        TransformerFactory tf = TransformerFactory.newInstance();
 //        Transformer trans = tf.newTransformer();
 //        trans.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "vehicles.dtd");
 ////        trans.setOutputProperty(OutputKeys.INDENT, "yes");
 ////        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-//        trans.transform(new DOMSource(document), new StreamResult(new FileOutputStream("vehicles.sig.xml")));
+//        trans.transform(new DOMSource(document), new StreamResult(System.out));
     }
 
     @Test
