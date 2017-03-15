@@ -185,7 +185,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             Node node = checkNode(referencesList.item(i), "Reference");
             Node pointer = getFirstChildSafe(node, "Pointer");
             Node proofNode = getNextSiblingSafe(pointer, "Proof");
-            String uri = pointer.getAttributes().getNamedItem("URI").getTextContent(); //TODO Support null reference
+            String uri = getAttributeValue(pointer, "URI");
             byte[] part = canonicalize(dereference(uri, root));
             byte[] proof = base64.decode(getText(proofNode));
             builder.add(concat(pointer, part), proof);
@@ -218,7 +218,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         for (int i = 0; i < referencesList.getLength(); i++) {
             Node reference = checkNode(referencesList.item(i), "Reference");
             Node pointer = getFirstChildSafe(reference, "Pointer");
-            String uri = pointer.getAttributes().getNamedItem("URI").getTextContent();
+            String uri = getAttributeValue(pointer, "URI");
             if (selectors.contains(uri)) {
                 references.removeChild(reference);
             }

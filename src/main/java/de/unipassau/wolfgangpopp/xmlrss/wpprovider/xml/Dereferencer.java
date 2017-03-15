@@ -46,8 +46,10 @@ class Dereferencer {
         return xPointer.substring(XPOINTER_BEGIN_LEN + 1, xPointer.length() - XPOINTER_END_LEN - 1);
     }
 
-    public static Node dereference(String xPointer, Node root) throws RedactableXMLSignatureException {
-        if (xPointer == null || xPointer.length() == 0 || isRootNodeXPointer(xPointer)) {
+    static Node dereference(String xPointer, Node root) throws RedactableXMLSignatureException {
+        if (xPointer == null || xPointer.length() == 0) {
+            throw new RedactableXMLSignatureException("unsupported URI");
+        } else if (isRootNodeXPointer(xPointer)) {
             return root;
         } else if (isIdXPointer(xPointer)) {
             Document doc = root.getOwnerDocument();

@@ -65,7 +65,7 @@ public abstract class RedactableXMLSignatureSpi {
         return checkNode(parent.getFirstChild(), expectedNodeName);
     }
 
-    protected Node getNextSiblingSafe(Node sibling, String expectedNodeName) throws RedactableXMLSignatureException{
+    protected Node getNextSiblingSafe(Node sibling, String expectedNodeName) throws RedactableXMLSignatureException {
         return checkNode(sibling.getNextSibling(), expectedNodeName);
     }
 
@@ -87,10 +87,18 @@ public abstract class RedactableXMLSignatureSpi {
     }
 
     protected Document getOwnerDocument(Node node) {
-        if(node.getNodeType() == Node.DOCUMENT_NODE){
+        if (node.getNodeType() == Node.DOCUMENT_NODE) {
             return (Document) node;
         }
         return node.getOwnerDocument();
+    }
+
+    protected String getAttributeValue(Node node, String attribute) throws RedactableXMLSignatureException {
+        Node attributeNode = node.getAttributes().getNamedItem(attribute);
+        if (attributeNode == null) {
+            throw new RedactableXMLSignatureException("Cannot find attribute " + attribute);
+        }
+        return attributeNode.getTextContent();
     }
 
     public abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
