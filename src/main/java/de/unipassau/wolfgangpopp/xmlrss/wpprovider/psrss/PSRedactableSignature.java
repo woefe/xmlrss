@@ -22,6 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 
@@ -32,7 +33,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -94,11 +94,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
     //TODO admissible is ignored
     //TODO Error when part is added twice
-    protected void engineAddPart(byte[] part, boolean admissible) throws SignatureException {
-        parts.add(new PSMessagePart(part));
+    protected void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
+        if (!parts.add(new PSMessagePart(part))) {
+            throw new PSRSSException("Each part can only be added once");
+        }
     }
 
-    protected SignatureOutput engineSign() throws SignatureException {
+    protected SignatureOutput engineSign() throws RedactableSignatureException {
         final byte[] acc;
         byte[][] pts = new byte[parts.size()][];
 
@@ -110,13 +112,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         try {
             accumulator.initWitness(keyPair, pts);
         } catch (InvalidKeyException e) {
-            throw new SignatureException(e);
+            throw new RedactableSignatureException(e);
         }
 
         try {
             acc = accumulator.getAccumulatorValue();
         } catch (AccumulatorException e) {
-            throw new SignatureException(e);
+            throw new RedactableSignatureException(e);
         }
 
         final byte[] tag = new byte[publicKey.getKey().bitLength()];
@@ -126,7 +128,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         try {
             proofOfTag = accumulator.createWitness(tag);
         } catch (AccumulatorException e) {
-            throw new SignatureException(e);
+            throw new RedactableSignatureException(e);
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, acc);
@@ -157,16 +159,16 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return concat;
     }
 
-    protected boolean engineVerify(SignatureOutput signature) throws SignatureException {
+    protected boolean engineVerify(SignatureOutput signature) throws RedactableSignatureException {
         PSSignatureOutput sig;
         if (!(signature instanceof PSSignatureOutput)) {
-            throw new SignatureException("bad signature type");
+            throw new RedactableSignatureException("bad signature type");
         }
         sig = ((PSSignatureOutput) signature);
         try {
             accumulator.initVerify(publicKey, sig.getAccumulator());
         } catch (InvalidKeyException e) {
-            throw new SignatureException(e);
+            throw new RedactableSignatureException(e);
         }
 
         final byte tag[] = sig.getTag();
@@ -188,15 +190,15 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         try {
             return !results.contains(false) && accumulator.verify(sig.getProofOfTag(), sig.getTag());
         } catch (AccumulatorException e) {
-            throw new SignatureException(e);
+            throw new RedactableSignatureException(e);
         }
     }
 
-    protected SignatureOutput engineRedact(SignatureOutput signature) throws SignatureException {
+    protected SignatureOutput engineRedact(SignatureOutput signature) throws RedactableSignatureException {
         //verifySignature(key, original);
 
         if (!(signature instanceof PSSignatureOutput)) {
-            throw new SignatureException("bad signature type");
+            throw new RedactableSignatureException("bad signature type");
         }
 
         PSSignatureOutput sig = (PSSignatureOutput) signature;
@@ -218,28 +220,30 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return builder.build();
     }
 
-    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
+    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
         //verifySignature(key, s);
         //verifySignature(key, t);
 
         if (!(signature1 instanceof PSSignatureOutput)) {
-            throw new SignatureException("bad signature type");
+            throw new RedactableSignatureException("bad signature type");
         }
 
         if (!(signature2 instanceof PSSignatureOutput)) {
-            throw new SignatureException("bad signature type");
+            throw new RedactableSignatureException("bad signature type");
         }
 
         PSSignatureOutput psSignature1 = (PSSignatureOutput) signature1;
         PSSignatureOutput psSignature2 = (PSSignatureOutput) signature2;
 
         if (!Arrays.equals(psSignature1.getTag(), psSignature2.getTag())) {
-            throw new SignatureException("the tags of the given signatures differ");
+            throw new PSRSSException("the tags of the given signatures differ");
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSignature1);
         for (PSSignatureOutput.SignedPart signedPart : psSignature2) {
-            builder.add(signedPart);
+            if (!psSignature1.contains(signedPart.getElement().getArray())) {
+                builder.add(signedPart);
+            }
         }
 
         parts.clear();
@@ -247,11 +251,11 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     @Override
-    protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
+    protected SignatureOutput engineUpdate(SignatureOutput original) throws RedactableSignatureException {
         //verifySignature(keyPair.getPublic(), original);
 
         if (!(original instanceof PSSignatureOutput)) {
-            throw new SignatureException("bad signature type");
+            throw new PSRSSException("bad signature type");
         }
 
         PSSignatureOutput psSig = (PSSignatureOutput) original;
@@ -263,7 +267,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         try {
             accumulator.restore(keyPair, psSig.getAccumulator());
         } catch (InvalidKeyException e) {
-            throw new SignatureException(e);
+            throw new PSRSSException(e);
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSig);
@@ -271,7 +275,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
             try {
                 builder.add(signPart(part, psSig.getTag()));
             } catch (AccumulatorException e) {
-                throw new SignatureException(e);
+                throw new PSRSSException(e);
             }
         }
 
@@ -312,9 +316,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
      * @param <E>        Input (argument) type
      * @param <R>        Result type
      * @return a collection of results of the function
-     * @throws SignatureException
+     * @throws PSRSSException
      */
-    private <E, R> Collection<R> map(final Function<E, R> function, Iterable<E> collection) throws SignatureException {
+    private <E, R> Collection<R> map(final Function<E, R> function, Iterable<E> collection) throws PSRSSException {
         ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
         Collection<Callable<R>> tasks = new LinkedList<>();
 
@@ -335,10 +339,10 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
                 try {
                     results.add(future.get());
                 } catch (InterruptedException | ExecutionException e) {
-                    throw new SignatureException(e);
+                    throw new PSRSSException(e);
                 }
             } else {
-                throw new SignatureException("Parallel execution failed");
+                throw new PSRSSException("Parallel execution failed");
             }
         }
 

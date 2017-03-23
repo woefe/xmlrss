@@ -31,7 +31,6 @@ import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 import java.util.List;
 
 /**
@@ -269,22 +268,22 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
     /**
      * @param part
      * @param isRedactable a boolean indicating whether the given part can be redacted from the signed message.
-     * @throws SignatureException if this RedactableSignature object is not initialized properly or if this redactable
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this redactable
      *                            signature algorithm is unable to process the given element.
      */
-    public final void addPart(byte[] part, boolean isRedactable) throws SignatureException {
+    public final void addPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
         if (state != STATE.UNINITIALIZED) {
             engineAddPart(part, isRedactable);
         } else {
-            throw new SignatureException("not initialized");
+            throw new RedactableSignatureException("not initialized");
         }
     }
 
-    public final void addPart(byte[] part) throws SignatureException {
+    public final void addPart(byte[] part) throws RedactableSignatureException {
         addPart(part, true);
     }
 
-    public final void addParts(byte[]... parts) throws SignatureException {
+    public final void addParts(byte[]... parts) throws RedactableSignatureException {
         for (byte[] part : parts) {
             addPart(part);
         }
@@ -294,14 +293,14 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      * Signs the elements that were added via a {@link #addPart(byte[]) addPart} method against.
      *
      * @return the SignatureOutput that contains the signature of the added elements.
-     * @throws SignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
      *                            signature algorithm cannot process the elements to be signed.
      */
-    public final SignatureOutput sign() throws SignatureException {
+    public final SignatureOutput sign() throws RedactableSignatureException {
         if (state == STATE.SIGN) {
             return engineSign();
         }
-        throw new SignatureException("not initialized for signing");
+        throw new RedactableSignatureException("not initialized for signing");
     }
 
     /**
@@ -309,14 +308,14 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      *
      * @param signature the signature to be verified
      * @return true if the signature verifies, false otherwise
-     * @throws SignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
      *                            signature algorithm cannot process the elements to be verified.
      */
-    public final boolean verify(SignatureOutput signature) throws SignatureException {
+    public final boolean verify(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.VERIFY) {
             return engineVerify(signature);
         }
-        throw new SignatureException("not initialized for verification");
+        throw new RedactableSignatureException("not initialized for verification");
     }
 
     /**
@@ -325,14 +324,14 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      *
      * @param signature the signature which should be redacted
      * @return the redacted SignatureOutput
-     * @throws SignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
      *                            signature algorithm cannot process the elements to be redacted.
      */
-    public final SignatureOutput redact(SignatureOutput signature) throws SignatureException {
+    public final SignatureOutput redact(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.REDACT) {
             return engineRedact(signature);
         }
-        throw new SignatureException("not initialized for redaction");
+        throw new RedactableSignatureException("not initialized for redaction");
     }
 
     /**
@@ -342,14 +341,14 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      * @param signature1 a redacted version of a signature output
      * @param signature2 another redacted version of the same original signature output as <code>signature1</code>
      * @return the merged SignatureOutput of signature1 and signature2
-     * @throws SignatureException if this RedactableSignature object is not initialized properly. Or if the two
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if the two
      *                            signatures cannot be merged
      */
-    public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
+    public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
         if (state == STATE.MERGE) {
             return engineMerge(signature1, signature2);
         }
-        throw new SignatureException("not initialized for merging");
+        throw new RedactableSignatureException("not initialized for merging");
     }
 
     /**
@@ -357,14 +356,14 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      *
      * @param signature the signature which should be updated
      * @return teh updated SignatureOutput object
-     * @throws SignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
      *                            signature algorithm cannot process the elements to be updated.
      */
-    public SignatureOutput update(SignatureOutput signature) throws SignatureException {
+    public SignatureOutput update(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.UPDATE) {
             return engineUpdate(signature);
         }
-        throw new SignatureException("not initialized for updating");
+        throw new RedactableSignatureException("not initialized for updating");
     }
 
     /**
@@ -424,12 +423,12 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected void engineAddPart(byte[] part, boolean admissible) throws SignatureException {
+        protected void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
             rssSPI.engineAddPart(part, admissible);
         }
 
         @Override
-        protected SignatureOutput engineSign() throws SignatureException {
+        protected SignatureOutput engineSign() throws RedactableSignatureException {
             return rssSPI.engineSign();
         }
 
@@ -439,7 +438,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected boolean engineVerify(SignatureOutput signature) throws SignatureException {
+        protected boolean engineVerify(SignatureOutput signature) throws RedactableSignatureException {
             return rssSPI.engineVerify(signature);
         }
 
@@ -459,17 +458,17 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
         }
 
         @Override
-        protected SignatureOutput engineRedact(SignatureOutput signature) throws SignatureException {
+        protected SignatureOutput engineRedact(SignatureOutput signature) throws RedactableSignatureException {
             return rssSPI.engineRedact(signature);
         }
 
         @Override
-        protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws SignatureException {
+        protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
             return rssSPI.engineMerge(signature1, signature2);
         }
 
         @Override
-        protected SignatureOutput engineUpdate(SignatureOutput original) throws SignatureException {
+        protected SignatureOutput engineUpdate(SignatureOutput original) throws RedactableSignatureException {
             return rssSPI.engineUpdate(original);
         }
 

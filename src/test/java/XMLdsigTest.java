@@ -107,11 +107,17 @@ public class XMLdsigTest {
                 null,
                 null);
 
+        Reference xpathReference = factory.newReference("/Vehicle/Aircraft",
+                factory.newDigestMethod(DigestMethod.SHA512, null),
+                Collections.singletonList(factory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
+                null,
+                null);
+
         // SignedInfo is the part that actually gets signed. It contains the above reference
         SignedInfo signedInfo = factory.newSignedInfo(
                 factory.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE_WITH_COMMENTS, (C14NMethodParameterSpec) null),
                 factory.newSignatureMethod(SignatureMethod.DSA_SHA1, null),
-                Arrays.asList(externalReference, internalReference));
+                Arrays.asList(externalReference, internalReference, xpathReference));
 
         // Optional Keyinfo
         KeyInfoFactory keyInfoFactory = factory.getKeyInfoFactory();
@@ -126,9 +132,9 @@ public class XMLdsigTest {
         // Pretty print and save document
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer trans = tf.newTransformer();
-        //trans.setOutputProperty(OutputKeys.INDENT, "yes");
-        //trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        trans.transform(new DOMSource(document), new StreamResult(new FileOutputStream(new File("cars.xml.sig"))));
+        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        trans.transform(new DOMSource(document), new StreamResult(System.out));
     }
 
     @Test

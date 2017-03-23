@@ -10,7 +10,7 @@
         <Motorboat>Bavaria Sport 29</Motorboat>
     </Watercraft>
     <MotorVehicles id="a3">
-        <Car Brand="Audi" Model="A3"/>
+        <Car Model="A3" Brand="Audi"/>
         <Car Brand="Audi" Model="A4"/>
         <Car Brand="BMW" Model="i7"/>
         <Motorcycle Brand="Honda" Model="RC212V"/>

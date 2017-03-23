@@ -22,29 +22,33 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.Security;
 
-import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -76,7 +80,18 @@ public class PSRedactableXMLSignatureTest {
         sig.addPartSelector("#xpointer(id('a3'))");
         sig.sign();
 
-        NodeList nodeList = document.getElementsByTagNameNS(PSRedactableXMLSignature.XML_NAMESPACE, "Signature");
+        validateXSD(document);
+
+//        TransformerFactory tf = TransformerFactory.newInstance();
+//        Transformer trans = tf.newTransformer();
+//        trans.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "vehicles.dtd");
+//        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+//        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+//        trans.transform(new DOMSource(document), new StreamResult(System.out));
+    }
+
+    private void validateXSD(Document signedDoc) throws SAXException, IOException {
+        NodeList nodeList = signedDoc.getElementsByTagNameNS(PSRedactableXMLSignature.XML_NAMESPACE, "Signature");
         assertEquals(nodeList.getLength(), 1);
 
         Node signature = nodeList.item(0);
@@ -86,34 +101,33 @@ public class PSRedactableXMLSignatureTest {
         Schema schema = schemaFactory.newSchema(new File("psrss_schema.xsd"));
         Validator validator = schema.newValidator();
         validator.validate(new DOMSource(signature));
+    }
 
-//        TransformerFactory tf = TransformerFactory.newInstance();
-//        Transformer trans = tf.newTransformer();
-//        trans.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "vehicles.dtd");
-////        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-////        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-//        trans.transform(new DOMSource(document), new StreamResult(System.out));
+    @Test(expected = RedactableXMLSignatureException.class)
+    public void engineAddPartSelectorDuplicate() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("vehicles.xml"));
+        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addPartSelector("#xpointer(id('a3'))"); // throws RedactableXMLSignatureException
     }
 
     @Test
     public void engineVerify() throws Exception {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        documentBuilderFactory.setNamespaceAware(true);
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("vehicles.xml"));
-
         sig.initSign(keyPair);
-        sig.setDocument(document);
+        sig.setDocument(new FileInputStream("vehicles.xml"));
         sig.addPartSelector("#xpointer(id('a1'))");
         sig.addPartSelector("#xpointer(id('a2'))");
         sig.addPartSelector("#xpointer(id('a3'))");
-        sig.sign();
+        Document signedDocument = sig.sign();
 
         sig.initVerify(keyPair.getPublic());
-        sig.setDocument(document);
+        sig.setDocument(signedDocument);
         assertTrue(sig.verify());
+        validateXSD(signedDocument);
     }
 
     @Test
@@ -131,37 +145,40 @@ public class PSRedactableXMLSignatureTest {
         sig.initVerify(keyPair.getPublic());
         sig.setDocument(document);
         assertFalse(sig.verify());
+        validateXSD(document);
     }
 
     @Test
     public void engineRedact() throws Exception {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        documentBuilderFactory.setNamespaceAware(true);
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("vehicles.xml"));
-
         sig.initSign(keyPair);
-        sig.setDocument(document);
+        sig.setDocument(new FileInputStream("vehicles.xml"));
         sig.addPartSelector("#xpointer(id('a1'))");
         sig.addPartSelector("#xpointer(id('a2'))");
         sig.addPartSelector("#xpointer(id('a3'))");
-        sig.sign();
+        Document document = sig.sign();
 
         sig.initRedact(keyPair.getPublic());
         sig.setDocument(document);
         sig.addPartSelector("#xpointer(id('a3'))");
         sig.redact();
 
+        validateXSD(document);
+
         sig.initVerify(keyPair.getPublic());
         sig.setDocument(document);
         assertTrue(sig.verify());
 
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer trans = tf.newTransformer();
-        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        trans.transform(new DOMSource(document), new StreamResult(System.out));
+        // ensure that a3 is actually removed
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        assertNull(xPath.evaluate("//*[@id='a3']", document, XPathConstants.NODE));
+        assertNull(xPath.evaluate("//*[@URI=\"#xpointer(id('a3'))\"]", document, XPathConstants.NODE));
+
+//        TransformerFactory tf = TransformerFactory.newInstance();
+//        Transformer trans = tf.newTransformer();
+//        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+//        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+//        trans.transform(new DOMSource(document), new StreamResult(System.out));
     }
 }

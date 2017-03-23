@@ -220,25 +220,25 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
          * @param proof the proof corresponding to the given part
          * @return a reference to this object
          */
-        public Builder add(byte[] part, byte[] proof) {
+        public Builder add(byte[] part, byte[] proof) throws PSRSSException {
             return add(new PSMessagePart(part), proof);
         }
 
-        public Builder add(SignedPart signedPart) {
+        public Builder add(SignedPart signedPart) throws PSRSSException {
             return add(signedPart.getElement(), signedPart.getProof());
         }
 
-        public Builder add(PSMessagePart part, byte[] proof) {
+        public Builder add(PSMessagePart part, byte[] proof) throws PSRSSException {
+
+            if (psSignatureOutput.signedParts.containsKey(part)) {
+                throw new PSRSSException("Every part can be added only once");
+            }
+
             psSignatureOutput.signedParts.put(part, proof);
             return this;
         }
 
-        public Builder addAll(PSSignatureOutput signature) {
-            psSignatureOutput.signedParts.putAll(signature.signedParts);
-            return this;
-        }
-
-        public Builder addAll(Collection<SignedPart> elements) {
+        public Builder addAll(Collection<SignedPart> elements) throws PSRSSException {
             for (SignedPart element : elements) {
                 add(element);
             }

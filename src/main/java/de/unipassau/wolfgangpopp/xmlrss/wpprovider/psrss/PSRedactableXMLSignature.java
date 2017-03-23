@@ -21,6 +21,7 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
 import org.w3c.dom.Document;
@@ -33,7 +34,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,7 +84,6 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    //TODO remove xpathexception
     public void engineAddPartSelector(String uri) throws RedactableXMLSignatureException {
         if (root == null) {
             throw new RedactableXMLSignatureException("root node not set");
@@ -102,7 +101,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         selectorResults.put(pointer, pointerConcatData);
         try {
             signature.addPart(pointerConcatData);
-        } catch (SignatureException e) {
+        } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
     }
@@ -117,11 +116,11 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public void engineSign() throws RedactableXMLSignatureException {
+    public Document engineSign() throws RedactableXMLSignatureException {
         PSSignatureOutput output;
         try {
             output = (PSSignatureOutput) signature.sign();
-        } catch (SignatureException e) {
+        } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
 
@@ -157,6 +156,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         signature.appendChild(references);
         signature.appendChild(signatureValue);
         root.appendChild(signature);
+        return doc;
     }
 
     @Override
@@ -188,7 +188,11 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             String uri = getAttributeValue(pointer, "URI");
             byte[] part = canonicalize(dereference(uri, root));
             byte[] proof = base64.decode(getText(proofNode));
-            builder.add(concat(pointer, part), proof);
+            try {
+                builder.add(concat(pointer, part), proof);
+            } catch (PSRSSException e) {
+                throw new RedactableXMLSignatureException(e);
+            }
         }
 
         // TODO Copy root and do processing on copy instead of deleting/adding the signature node
@@ -197,7 +201,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         PSSignatureOutput signatureOutput = builder.build();
         try {
             return signature.verify(signatureOutput);
-        } catch (SignatureException e) {
+        } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
     }
@@ -221,6 +225,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             String uri = getAttributeValue(pointer, "URI");
             if (selectors.contains(uri)) {
                 references.removeChild(reference);
+                root.removeChild(dereference(uri, root));
             }
         }
     }

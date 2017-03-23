@@ -20,14 +20,16 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
-import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
-import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 import sun.security.jca.GetInstance;
 
-import javax.xml.crypto.dsig.XMLSignatureException;
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -35,7 +37,6 @@ import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 import java.util.List;
 
 /**
@@ -128,17 +129,33 @@ public abstract class RedactableXMLSignature {
         engine.engineInitRedact(publicKey);
     }
 
-    public final void setRootNode(Node node) throws XMLSignatureException {
+    public final void setRootNode(Node node) throws RedactableXMLSignatureException {
         if (state != STATE.UNINITIALIZED) {
             engine.engineSetRootNode(node);
         } else {
-            throw new XMLSignatureException("not initialized");
+            throw new RedactableXMLSignatureException("not initialized");
         }
     }
 
-    public final void setDocument(Document document) throws XMLSignatureException {
+    public final void setDocument(Document document) throws RedactableXMLSignatureException {
         setRootNode(document.getDocumentElement());
     }
+
+    public final void setDocument(InputStream inputStream) throws RedactableXMLSignatureException {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setNamespaceAware(true);
+        documentBuilderFactory.setValidating(true);
+        documentBuilderFactory.setIgnoringElementContentWhitespace(true);
+
+        try {
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            setDocument(documentBuilder.parse(inputStream));
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    //TODO setDocument function that can handle xsd validation
 
     public final void addPartSelector(String uri) throws RedactableXMLSignatureException {
         if (state != STATE.UNINITIALIZED) {
@@ -148,9 +165,9 @@ public abstract class RedactableXMLSignature {
         }
     }
 
-    public final void sign() throws RedactableXMLSignatureException {
+    public final Document sign() throws RedactableXMLSignatureException {
         if (state == STATE.SIGN) {
-            engine.engineSign();
+            return engine.engineSign();
         } else {
             throw new RedactableXMLSignatureException("not initialized for signing");
         }

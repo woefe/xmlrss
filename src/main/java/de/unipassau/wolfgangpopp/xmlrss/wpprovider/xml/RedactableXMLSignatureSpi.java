@@ -113,7 +113,7 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineSetRootNode(Node node);
 
-    public abstract void engineSign() throws RedactableXMLSignatureException;
+    public abstract Document engineSign() throws RedactableXMLSignatureException;
 
     public abstract boolean engineVerify() throws RedactableXMLSignatureException;
 

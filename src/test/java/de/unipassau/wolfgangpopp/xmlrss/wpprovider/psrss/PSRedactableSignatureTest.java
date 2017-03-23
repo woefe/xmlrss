@@ -25,8 +25,8 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
@@ -43,16 +43,10 @@ public class PSRedactableSignatureTest {
 
     static {
         Security.insertProviderAt(new WPProvider(), 0);
-        KeyPairGenerator generator = null;
-        try {
-            generator = KeyPairGenerator.getInstance("PSRSS");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        generator.initialize(512);
-        keyPair = generator.generateKeyPair();
+        PSRSSPublicKey publicKey256 = new PSRSSPublicKey(new BigInteger("7249349928048807500024891411067629370056303429447255270046802991880425543412906735607605108373982421012500888307062421310001762155422489671132976679912849"));
+        PSRSSPrivateKey privateKey256 = new PSRSSPrivateKey(new BigInteger("7249349928048807500024891411067629370056303429447255270046802991880425543412734960638035580933850038621738468566657503090109097536944629352405060890801636"));
+        keyPair = new KeyPair(publicKey256, privateKey256);
     }
-
 
     public PSRedactableSignatureTest() throws NoSuchAlgorithmException {
     }
@@ -74,6 +68,17 @@ public class PSRedactableSignatureTest {
         SignatureOutput signature = rssWithPSA.sign();
 
         assertTrue(signature.containsAll("test1".getBytes(), "test2".getBytes()));
+        assertEquals(signature.size(), 2);
+    }
+
+    @Test(expected = PSRSSException.class)
+    public void engineAddPartDuplicates() throws Exception {
+        RedactableSignature rssWithPSA = RedactableSignature.getInstance("RSSwithPSA");
+        rssWithPSA.initSign(keyPair);
+
+        rssWithPSA.addPart("test1".getBytes(), false);
+        rssWithPSA.addPart("test2".getBytes(), false);
+        rssWithPSA.addPart("test2".getBytes(), false);
     }
 
     @Test
@@ -169,6 +174,14 @@ public class PSRedactableSignatureTest {
 
         rss.initVerify(keyPair.getPublic());
         assertTrue(rss.verify(updated));
+        assertEquals(updated.size(), 5);
+        assertTrue(updated.containsAll(
+                "test1".getBytes(),
+                "test2".getBytes(),
+                "test3".getBytes(),
+                "test4".getBytes(),
+                "test5".getBytes()
+        ));
     }
 
     @Test
