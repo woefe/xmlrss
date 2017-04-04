@@ -2,8 +2,8 @@
 <!DOCTYPE Vehicle SYSTEM "vehicles.dtd">
 <Vehicle>
     <Aircraft id="a1">
-        <Glider>DG-800</Glider>
-        <Jet>Airbus A380</Jet>
+        <Glider id="g1">DG-800</Glider>
+        <Jet id="j1">Airbus A380</Jet>
     </Aircraft>
     <Watercraft id="a2">
         <Sailboat>Bavaria 36</Sailboat>

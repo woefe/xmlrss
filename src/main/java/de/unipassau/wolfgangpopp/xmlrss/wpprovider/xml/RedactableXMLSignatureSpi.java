@@ -26,6 +26,7 @@ import com.sun.org.apache.xml.internal.security.c14n.Canonicalizer;
 import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -51,6 +52,25 @@ public abstract class RedactableXMLSignatureSpi {
 
     protected Node dereference(String uri, Node root) throws RedactableXMLSignatureException {
         return Dereferencer.dereference(uri, root);
+    }
+
+    /**
+     * Checks whether the given ancestor has the given child.
+     * @param ancestor
+     * @param child
+     * @return
+     */
+    protected boolean isChild(Node ancestor, Node child){
+        NodeList childNodes = ancestor.getChildNodes();
+        if (childNodes.getLength() == 0) {
+            return ancestor.equals(child);
+        }
+
+        boolean isChild = false;
+        for (int i = 0; i < childNodes.getLength(); i++){
+            isChild = isChild || isChild(childNodes.item(i), child);
+        }
+        return isChild;
     }
 
     protected byte[] canonicalize(Node node) throws RedactableXMLSignatureException {

@@ -33,6 +33,8 @@
 <!ATTLIST Aircraft id ID #IMPLIED>
 <!ATTLIST Watercraft id ID #IMPLIED>
 <!ATTLIST MotorVehicles id ID #IMPLIED>
+<!ATTLIST Jet id ID #IMPLIED>
+<!ATTLIST Glider id ID #IMPLIED>
 <!ATTLIST Car Brand CDATA #REQUIRED
         Model CDATA #REQUIRED>
 <!ATTLIST Motorcycle Brand CDATA #REQUIRED

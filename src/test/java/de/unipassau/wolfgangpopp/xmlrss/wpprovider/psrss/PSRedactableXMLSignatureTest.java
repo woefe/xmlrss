@@ -32,7 +32,12 @@ import org.xml.sax.SAXException;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -82,12 +87,7 @@ public class PSRedactableXMLSignatureTest {
 
         validateXSD(document);
 
-//        TransformerFactory tf = TransformerFactory.newInstance();
-//        Transformer trans = tf.newTransformer();
-//        trans.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "vehicles.dtd");
-//        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-//        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-//        trans.transform(new DOMSource(document), new StreamResult(System.out));
+        //printDocument(document)
     }
 
     private void validateXSD(Document signedDoc) throws SAXException, IOException {
@@ -175,10 +175,39 @@ public class PSRedactableXMLSignatureTest {
         assertNull(xPath.evaluate("//*[@id='a3']", document, XPathConstants.NODE));
         assertNull(xPath.evaluate("//*[@URI=\"#xpointer(id('a3'))\"]", document, XPathConstants.NODE));
 
-//        TransformerFactory tf = TransformerFactory.newInstance();
-//        Transformer trans = tf.newTransformer();
-//        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-//        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-//        trans.transform(new DOMSource(document), new StreamResult(System.out));
+        //printDocument(document)
     }
+
+    @Test
+    public void engineRedactOverlap() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("vehicles.xml"));
+        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.addPartSelector("#xpointer(id('g1'))");
+        sig.addPartSelector("#xpointer(id('j1'))");
+        sig.addPartSelector("#xpointer(id('a2'))");
+        Document document = sig.sign();
+
+        sig.initRedact(keyPair.getPublic());
+        sig.setDocument(document);
+        sig.addPartSelector("#xpointer(id('j1'))");
+        sig.addPartSelector("#xpointer(id('g1'))");
+        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.redact();
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertTrue(sig.verify());
+    }
+
+    private void printDocument(Document document) throws TransformerException {
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer trans = tf.newTransformer();
+        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        trans.transform(new DOMSource(document), new StreamResult(System.out));
+    }
+
 }

@@ -34,9 +34,14 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -208,15 +213,31 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineRedact() throws RedactableXMLSignatureException {
-        Node signatureNode = getSignatureNode();
-        Node references = signatureNode.getFirstChild();
+        Node references = checkNode(getSignatureNode().getFirstChild(), "References");
         NodeList referencesList = references.getChildNodes();
-
-        Set<Element> elements = selectorResults.keySet();
+        Set<Element> pointerElements = selectorResults.keySet();
         Set<String> selectors = new HashSet<>();
+        List<Node> selectedNodes = new ArrayList<>(pointerElements.size());
+        List<Node> referencesToRemove = new LinkedList<>();
 
-        for (Element element : elements) {
-            selectors.add(element.getAttribute("URI"));
+        for (Element element : pointerElements) {
+            String uri = element.getAttribute("URI");
+            selectors.add(uri);
+            selectedNodes.add(dereference(uri, root));
+        }
+
+        Collections.sort(selectedNodes, new Comparator<Node>() {
+            @Override
+            public int compare(Node node1, Node node2) {
+                if (isChild(node1, node2)) {
+                   return 1;
+                }
+                return -1;
+            }
+        });
+
+        for (Node selectedNode : selectedNodes) {
+            selectedNode.getParentNode().removeChild(selectedNode);
         }
 
         for (int i = 0; i < referencesList.getLength(); i++) {
@@ -224,9 +245,14 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             Node pointer = getFirstChildSafe(reference, "Pointer");
             String uri = getAttributeValue(pointer, "URI");
             if (selectors.contains(uri)) {
-                references.removeChild(reference);
-                root.removeChild(dereference(uri, root));
+                // Don't remove the reference here, since that changes the referencesList and breaks the iteration.
+                // Instead, save the reference and remove it later.
+                referencesToRemove.add(reference);
             }
+        }
+
+        for (Node node : referencesToRemove) {
+            node.getParentNode().removeChild(node);
         }
     }
 
