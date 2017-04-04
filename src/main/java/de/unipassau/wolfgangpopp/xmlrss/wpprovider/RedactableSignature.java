@@ -56,13 +56,14 @@ import java.util.List;
  *
  * @author Wolfgang Popp
  */
-public abstract class RedactableSignature extends RedactableSignatureSpi {
+public abstract class RedactableSignature {
 
     //TODO Debug mode
 
     private Provider provider;
     private String algorithm;
     private STATE state;
+    private final RedactableSignatureSpi engine;
     private static final String TYPE = "RedactableSignature";
 
     private enum STATE {
@@ -74,8 +75,9 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      *
      * @param algorithm the algorithm of this redactable signature
      */
-    protected RedactableSignature(String algorithm) {
+    protected RedactableSignature(RedactableSignatureSpi engine, String algorithm) {
         this.algorithm = algorithm;
+        this.engine = engine;
         this.state = STATE.UNINITIALIZED;
     }
 
@@ -184,7 +186,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final void initSign(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.SIGN;
-        engineInitSign(keyPair);
+        engine.engineInitSign(keyPair);
     }
 
     /**
@@ -200,7 +202,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final void initSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         state = STATE.SIGN;
-        engineInitSign(keyPair, random);
+        engine.engineInitSign(keyPair, random);
     }
 
     /**
@@ -215,7 +217,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final void initVerify(PublicKey publicKey) throws InvalidKeyException {
         state = STATE.VERIFY;
-        engineInitVerify(publicKey);
+        engine.engineInitVerify(publicKey);
     }
 
     /**
@@ -230,7 +232,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final void initRedact(PublicKey publicKey) throws InvalidKeyException {
         state = STATE.REDACT;
-        engineInitRedact(publicKey);
+        engine.engineInitRedact(publicKey);
     }
 
     /**
@@ -246,7 +248,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public void initMerge(PublicKey publicKey) throws InvalidKeyException {
         state = STATE.MERGE;
-        engineInitMerge(publicKey);
+        engine.engineInitMerge(publicKey);
     }
 
     /**
@@ -262,7 +264,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public void initUpdate(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.UPDATE;
-        engineInitUpdate(keyPair);
+        engine.engineInitUpdate(keyPair);
     }
 
     /**
@@ -273,7 +275,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final void addPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
         if (state != STATE.UNINITIALIZED) {
-            engineAddPart(part, isRedactable);
+            engine.engineAddPart(part, isRedactable);
         } else {
             throw new RedactableSignatureException("not initialized");
         }
@@ -298,7 +300,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final SignatureOutput sign() throws RedactableSignatureException {
         if (state == STATE.SIGN) {
-            return engineSign();
+            return engine.engineSign();
         }
         throw new RedactableSignatureException("not initialized for signing");
     }
@@ -313,7 +315,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final boolean verify(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.VERIFY) {
-            return engineVerify(signature);
+            return engine.engineVerify(signature);
         }
         throw new RedactableSignatureException("not initialized for verification");
     }
@@ -329,7 +331,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public final SignatureOutput redact(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.REDACT) {
-            return engineRedact(signature);
+            return engine.engineRedact(signature);
         }
         throw new RedactableSignatureException("not initialized for redaction");
     }
@@ -346,7 +348,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
         if (state == STATE.MERGE) {
-            return engineMerge(signature1, signature2);
+            return engine.engineMerge(signature1, signature2);
         }
         throw new RedactableSignatureException("not initialized for merging");
     }
@@ -361,7 +363,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      */
     public SignatureOutput update(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.UPDATE) {
-            return engineUpdate(signature);
+            return engine.engineUpdate(signature);
         }
         throw new RedactableSignatureException("not initialized for updating");
     }
@@ -385,7 +387,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      * @return the parameters used with this redactable signature or null if no parameters are used
      */
     public final AlgorithmParameters getParameters() {
-        return engineGetParameters();
+        return engine.engineGetParameters();
     }
 
     /**
@@ -395,7 +397,7 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
      * @throws InvalidAlgorithmParameterException if the given parameters are inappropriate for this algorithm
      */
     public final void setParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
-        engineSetParameters(parameters);
+        engine.engineSetParameters(parameters);
     }
 
     @Override
@@ -404,82 +406,8 @@ public abstract class RedactableSignature extends RedactableSignatureSpi {
     }
 
     static class Delegate extends RedactableSignature {
-
-        private RedactableSignatureSpi rssSPI;
-
-        Delegate(RedactableSignatureSpi spi, String algorithm) {
-            super(algorithm);
-            this.rssSPI = spi;
-        }
-
-        @Override
-        protected void engineInitSign(KeyPair keyPair) throws InvalidKeyException {
-            rssSPI.engineInitSign(keyPair);
-        }
-
-        @Override
-        protected void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
-            rssSPI.engineInitSign(keyPair, random);
-        }
-
-        @Override
-        protected void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
-            rssSPI.engineAddPart(part, admissible);
-        }
-
-        @Override
-        protected SignatureOutput engineSign() throws RedactableSignatureException {
-            return rssSPI.engineSign();
-        }
-
-        @Override
-        protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
-            rssSPI.engineInitVerify(publicKey);
-        }
-
-        @Override
-        protected boolean engineVerify(SignatureOutput signature) throws RedactableSignatureException {
-            return rssSPI.engineVerify(signature);
-        }
-
-        @Override
-        protected void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
-            rssSPI.engineInitRedact(publicKey);
-        }
-
-        @Override
-        protected void engineInitMerge(PublicKey publicKey) throws InvalidKeyException {
-            rssSPI.engineInitMerge(publicKey);
-        }
-
-        @Override
-        protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
-            rssSPI.engineInitUpdate(keyPair);
-        }
-
-        @Override
-        protected SignatureOutput engineRedact(SignatureOutput signature) throws RedactableSignatureException {
-            return rssSPI.engineRedact(signature);
-        }
-
-        @Override
-        protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
-            return rssSPI.engineMerge(signature1, signature2);
-        }
-
-        @Override
-        protected SignatureOutput engineUpdate(SignatureOutput original) throws RedactableSignatureException {
-            return rssSPI.engineUpdate(original);
-        }
-
-        @Override
-        protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
-            rssSPI.engineSetParameters(parameters);
-        }
-
-        @Override
-        protected AlgorithmParameters engineGetParameters() {
-            return rssSPI.engineGetParameters();
+        Delegate(RedactableSignatureSpi engine, String algorithm) {
+            super(engine, algorithm);
         }
     }
 }

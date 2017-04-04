@@ -49,22 +49,25 @@ import java.util.List;
  *
  * @author Wolfgang Popp
  */
-public abstract class Accumulator extends AccumulatorSpi {
+public abstract class Accumulator {
     private Provider provider;
     private String algorithm;
     private STATE state;
+    private final AccumulatorSpi engine;
 
     private enum STATE {
         UNINITIALIZED, CREATE_WITNESS, VERIFY
     }
 
     /**
-     * Constructs a accumulator with the specified algorithm name.
+     * Constructs a accumulator with the specified algorithm name and engine.
      *
      * @param algorithm the algorithm of this accumulator
+     * @param engine the actual implementation
      */
-    protected Accumulator(String algorithm) {
+    protected Accumulator(AccumulatorSpi engine, String algorithm) {
         this.algorithm = algorithm;
+        this.engine = engine;
         this.state = STATE.UNINITIALIZED;
     }
 
@@ -173,7 +176,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     public final void initWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
         state = STATE.CREATE_WITNESS;
-        engineInitWitness(keyPair, elements);
+        engine.engineInitWitness(keyPair, elements);
     }
 
     /**
@@ -190,7 +193,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     public final void restore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
         state = STATE.CREATE_WITNESS;
-        engineRestore(keyPair, accumulatorValue);
+        engine.engineRestore(keyPair, accumulatorValue);
     }
 
     /**
@@ -206,7 +209,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     public final void initVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
         state = STATE.VERIFY;
-        engineInitVerify(publicKey, accumulatorValue);
+        engine.engineInitVerify(publicKey, accumulatorValue);
     }
 
     /**
@@ -219,7 +222,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     public final byte[] createWitness(byte[] element) throws AccumulatorException {
         if (state == STATE.CREATE_WITNESS) {
-            return engineCreateWitness(element);
+            return engine.engineCreateWitness(element);
         }
         throw new AccumulatorException("not initialized for creating witnesses");
     }
@@ -236,7 +239,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     public final boolean verify(byte[] witness, byte[] element) throws AccumulatorException {
         if (state == STATE.VERIFY) {
-            return engineVerify(witness, element);
+            return engine.engineVerify(witness, element);
         }
         throw new AccumulatorException("not initialized for verification");
     }
@@ -250,7 +253,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      */
     public final byte[] getAccumulatorValue() throws AccumulatorException {
         if (state != STATE.UNINITIALIZED) {
-            return engineGetAccumulatorValue();
+            return engine.engineGetAccumulatorValue();
         }
         throw new AccumulatorException("not initialized");
     }
@@ -274,7 +277,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      * @return the parameters used with this accumulator or null if no parameters are used
      */
     public final AlgorithmParameters getParameters() {
-        return engineGetParameters();
+        return engine.engineGetParameters();
     }
 
     /**
@@ -284,7 +287,7 @@ public abstract class Accumulator extends AccumulatorSpi {
      * @throws InvalidAlgorithmParameterException if the given parameters are inappropriate for this algorithm
      */
     public final void setParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
-        engineSetParameters(parameters);
+        engine.engineSetParameters(parameters);
     }
 
 
@@ -300,52 +303,8 @@ public abstract class Accumulator extends AccumulatorSpi {
     }
 
     static class Delegate extends Accumulator {
-
-        private AccumulatorSpi rssSPI;
-
-        Delegate(AccumulatorSpi spi, String algorithm) {
-            super(algorithm);
-            this.rssSPI = spi;
-        }
-
-        @Override
-        protected void engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
-            rssSPI.engineInitWitness(keyPair, elements);
-        }
-
-        @Override
-        protected void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
-            rssSPI.engineRestore(keyPair, accumulatorValue);
-        }
-
-        @Override
-        protected void engineInitVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
-            rssSPI.engineInitVerify(publicKey, accumulatorValue);
-        }
-
-        @Override
-        protected byte[] engineCreateWitness(byte[] element) throws AccumulatorException {
-            return rssSPI.engineCreateWitness(element);
-        }
-
-        @Override
-        protected boolean engineVerify(byte[] witness, byte[] element) throws AccumulatorException {
-            return rssSPI.engineVerify(witness, element);
-        }
-
-        @Override
-        protected byte[] engineGetAccumulatorValue() throws AccumulatorException {
-            return rssSPI.engineGetAccumulatorValue();
-        }
-
-        @Override
-        protected AlgorithmParameters engineGetParameters() {
-            return rssSPI.engineGetParameters();
-        }
-
-        @Override
-        protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
-            rssSPI.engineSetParameters(parameters);
+        Delegate(AccumulatorSpi engine, String algorithm) {
+            super(engine, algorithm);
         }
     }
 }
