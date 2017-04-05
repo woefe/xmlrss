@@ -36,7 +36,6 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -226,11 +225,11 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             selectedNodes.add(dereference(uri, root));
         }
 
-        Collections.sort(selectedNodes, new Comparator<Node>() {
+        selectedNodes.sort(new Comparator<Node>() {
             @Override
             public int compare(Node node1, Node node2) {
-                if (isChild(node1, node2)) {
-                   return 1;
+                if (isDescendant(node1, node2)) {
+                    return 1;
                 }
                 return -1;
             }

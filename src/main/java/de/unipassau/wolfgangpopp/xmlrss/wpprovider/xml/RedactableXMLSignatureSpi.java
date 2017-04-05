@@ -56,19 +56,22 @@ public abstract class RedactableXMLSignatureSpi {
 
     /**
      * Checks whether the given ancestor has the given child.
+     *
      * @param ancestor
      * @param child
-     * @return
+     * @return true if <code>child</code> is a descendant of <code>ancestor</code> or if
+     * <code>child.equals(ancestor)</code>, false otherwise
      */
-    protected boolean isChild(Node ancestor, Node child){
-        NodeList childNodes = ancestor.getChildNodes();
-        if (childNodes.getLength() == 0) {
-            return ancestor.equals(child);
+    protected boolean isDescendant(Node ancestor, Node child) {
+        if (ancestor.equals(child)) {
+            return true;
         }
 
+        NodeList childNodes = ancestor.getChildNodes();
         boolean isChild = false;
-        for (int i = 0; i < childNodes.getLength(); i++){
-            isChild = isChild || isChild(childNodes.item(i), child);
+
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            isChild = isChild || isDescendant(childNodes.item(i), child);
         }
         return isChild;
     }
