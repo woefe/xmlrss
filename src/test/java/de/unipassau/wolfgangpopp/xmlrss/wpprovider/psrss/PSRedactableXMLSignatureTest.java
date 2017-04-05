@@ -76,7 +76,7 @@ public class PSRedactableXMLSignatureTest {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("vehicles.xml"));
+        Document document = documentBuilder.parse(new FileInputStream("testdata/vehicles.xml"));
 
         sig.initSign(keyPair);
         sig.setDocument(document);
@@ -108,7 +108,7 @@ public class PSRedactableXMLSignatureTest {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
         sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("vehicles.xml"));
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
         sig.addPartSelector("#xpointer(id('a3'))");
         sig.addPartSelector("#xpointer(id('a3'))"); // throws RedactableXMLSignatureException
     }
@@ -118,7 +118,7 @@ public class PSRedactableXMLSignatureTest {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
         sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("vehicles.xml"));
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
         sig.addPartSelector("#xpointer(id('a1'))");
         sig.addPartSelector("#xpointer(id('a2'))");
         sig.addPartSelector("#xpointer(id('a3'))");
@@ -137,7 +137,7 @@ public class PSRedactableXMLSignatureTest {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("vehicles.sig.xml"));
+        Document document = documentBuilder.parse(new File("testdata/vehicles.sig.xml"));
 
         NodeList nodeList = document.getElementsByTagName("Signature");
         assertEquals(nodeList.getLength(), 1);
@@ -153,7 +153,7 @@ public class PSRedactableXMLSignatureTest {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
         sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("vehicles.xml"));
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
         sig.addPartSelector("#xpointer(id('a1'))");
         sig.addPartSelector("#xpointer(id('a2'))");
         sig.addPartSelector("#xpointer(id('a3'))");
@@ -183,7 +183,7 @@ public class PSRedactableXMLSignatureTest {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
         sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("vehicles.xml"));
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
         sig.addPartSelector("#xpointer(id('a1'))");
         sig.addPartSelector("#xpointer(id('g1'))");
         sig.addPartSelector("#xpointer(id('j1'))");

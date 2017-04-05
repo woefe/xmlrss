@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE Vehicle SYSTEM "vehicles.dtd">
+<!DOCTYPE Vehicle SYSTEM "testdata/vehicles.dtd">
 <Vehicle>
     <Aircraft id="a1">
         <Glider id="g1">DG-800</Glider>
