@@ -22,17 +22,19 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorSpi;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorState;
 
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Arrays;
+
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.cryptoutils.CryptoUtils.fullDomainHash;
 
 /**
  * @author Wolfgang Popp
@@ -63,7 +65,7 @@ public class PSAccumulator extends AccumulatorSpi {
     }
 
     @Override
-    protected void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
+    protected void engineRestoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws InvalidKeyException, AccumulatorException {
         setKeyPair(keyPair);
         this.accumulatorValueRaw = Arrays.copyOf(accumulatorValue, accumulatorValue.length);
         this.accumulatorValue = new BigInteger(accumulatorValueRaw);
@@ -80,7 +82,7 @@ public class PSAccumulator extends AccumulatorSpi {
     protected byte[] engineCreateWitness(byte[] element) throws AccumulatorException {
         BigInteger hash;
         try {
-            hash = fullDomainHash(publicKey, element);
+            hash = fullDomainHash(publicKey.getKey(), element);
         } catch (NoSuchAlgorithmException e) {
             throw new AccumulatorException(e);
         }
@@ -94,7 +96,7 @@ public class PSAccumulator extends AccumulatorSpi {
     protected boolean engineVerify(byte[] witness, byte[] element) throws AccumulatorException {
         BigInteger hash;
         try {
-            hash = fullDomainHash(publicKey, element);
+            hash = fullDomainHash(publicKey.getKey(), element);
         } catch (NoSuchAlgorithmException e) {
             throw new AccumulatorException(e);
         }
@@ -111,6 +113,16 @@ public class PSAccumulator extends AccumulatorSpi {
     }
 
     @Override
+    protected byte[] engineGetAuxiliaryValue() throws AccumulatorException {
+        return null;
+    }
+
+    @Override
+    protected AccumulatorState engineGetAccumulatorState() {
+        return new AccumulatorState(accumulatorValueRaw, null);
+    }
+
+    @Override
     protected AlgorithmParameters engineGetParameters() {
         return null;
     }
@@ -118,77 +130,6 @@ public class PSAccumulator extends AccumulatorSpi {
     @Override
     protected void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
         //TODO
-    }
-
-    /**
-     * Returns a full domain hash (FDH) for the given byte array and public key, where <code>FDH < publicKey</code>
-     *
-     * @param publicKey that is used for further crypto operations
-     * @param m         message for which the hash shall be calculated
-     * @return a biginteger representing the full domain hash
-     * @throws NoSuchAlgorithmException
-     */
-    private BigInteger fullDomainHash(PSRSSPublicKey publicKey, byte[] m) throws NoSuchAlgorithmException {
-        //TODO: Remove the public and only provide the bit length?
-        BigInteger counter = BigInteger.ZERO;
-        MessageDigest md = MessageDigest.getInstance("SHA-512");
-        int digestLength = md.getDigestLength();
-        int bitLength = publicKey.getKey().bitLength();
-        BigInteger fdh;
-
-        //Calculate a sha-512 of m
-        md.update(m);
-        md.update(counter.toByteArray());
-        byte[] shortHash = md.digest();
-        byte[] largeHash = shortHash;
-        counter = counter.add(BigInteger.ONE);
-
-        //while the length of the hash is smaller than bitlength of the key, calculated more hashes
-        //with increased counter and concactenate the hashes until the bitlength is bigger/equals the bitlength
-        //of the bitlength of the key
-        while ((largeHash.length * 8) < bitLength) {
-            md.update(m);
-            md.update(counter.toByteArray());
-            shortHash = md.digest();
-
-            counter = counter.add(BigInteger.ONE);
-
-            byte[] hashConcat = new byte[largeHash.length + shortHash.length];
-            System.arraycopy(largeHash, 0, hashConcat, 0, largeHash.length);
-            System.arraycopy(shortHash, 0, hashConcat, largeHash.length, shortHash.length);
-            largeHash = hashConcat;
-        }
-
-        // set first bit to 1. This ensures, that the BigInteger (in the next step) has the correct bitlength.
-        largeHash[0] |= 0x80;
-
-        fdh = new BigInteger(1, largeHash);
-        //cut the hash to the same size as the public key
-        fdh = fdh.shiftRight((largeHash.length * 8) - bitLength);
-
-        // set last bit to 1 to ensure that the hash is odd. (Add 1 if the hash is even)
-        fdh = fdh.setBit(0);
-
-        while (fdh.compareTo(publicKey.getKey()) > 0) {
-            counter = counter.add(BigInteger.ONE);
-            md.update(m);
-            md.update(counter.toByteArray());
-            shortHash = md.digest();
-            System.arraycopy(largeHash, digestLength, largeHash, 0, largeHash.length - digestLength);
-            System.arraycopy(shortHash, 0, largeHash, largeHash.length - digestLength, digestLength);
-
-            // set first bit to 1. This ensures, that the BigInteger (in the next step) has the correct bitlength.
-            largeHash[0] |= 0x80;
-
-            fdh = new BigInteger(1, largeHash);
-            //cut the hash to the same size as the public key
-            fdh = fdh.shiftRight((largeHash.length * 8) - bitLength);
-
-            // set last bit to 1 to ensure that the hash is odd. (Add 1 if the hash is even)
-            fdh = fdh.setBit(0);
-        }
-
-        return fdh;
     }
 
     private void setPublicKey(PublicKey key) throws InvalidKeyException {

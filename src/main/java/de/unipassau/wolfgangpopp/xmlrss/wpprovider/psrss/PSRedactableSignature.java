@@ -22,6 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorState;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
@@ -111,7 +112,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
         try {
             accumulator.initWitness(keyPair, pts);
-        } catch (InvalidKeyException e) {
+        } catch (InvalidKeyException | AccumulatorException e) {
             throw new RedactableSignatureException(e);
         }
 
@@ -265,8 +266,8 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
 
         try {
-            accumulator.restore(keyPair, psSig.getAccumulator());
-        } catch (InvalidKeyException e) {
+            accumulator.restoreWitness(keyPair, psSig.getAccumulator(), null);
+        } catch (InvalidKeyException | AccumulatorException e) {
             throw new PSRSSException(e);
         }
 

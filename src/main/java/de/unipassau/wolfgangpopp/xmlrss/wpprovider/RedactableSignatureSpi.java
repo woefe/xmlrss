@@ -41,8 +41,6 @@ public abstract class RedactableSignatureSpi {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support merging");
     }
 
-    ;
-
     protected void engineInitUpdate(KeyPair privateKey) throws InvalidKeyException {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }

@@ -43,7 +43,7 @@ public abstract class AccumulatorSpi {
      * @param elements all elements that are accumulated
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException;
+    protected abstract void engineInitWitness(KeyPair keyPair, byte[]... elements) throws AccumulatorException, InvalidKeyException;
 
     /**
      * Initializes this accumulator engine for creating witnesses under the given keypair. This accumulator is
@@ -53,7 +53,11 @@ public abstract class AccumulatorSpi {
      * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineRestore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException;
+    protected abstract void engineRestoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws InvalidKeyException, AccumulatorException;
+
+    protected void engineRestoreWitness(KeyPair keyPair, AccumulatorState savedState) throws InvalidKeyException, AccumulatorException {
+        engineRestoreWitness(keyPair, savedState.accumulatorValue, savedState.auxiliaryValue, savedState.elements);
+    }
 
     /**
      * Initializes this accumulator for verification (membership testing).
@@ -93,6 +97,10 @@ public abstract class AccumulatorSpi {
      * @throws AccumulatorException if the engine is not initialized properly
      */
     protected abstract byte[] engineGetAccumulatorValue() throws AccumulatorException;
+
+    protected abstract byte[] engineGetAuxiliaryValue() throws AccumulatorException;
+
+    protected abstract AccumulatorState engineGetAccumulatorState() throws AccumulatorException;
 
     /**
      * Returns the algorithm parameters used by this accumulator engine or null if this accumulator engine does not use

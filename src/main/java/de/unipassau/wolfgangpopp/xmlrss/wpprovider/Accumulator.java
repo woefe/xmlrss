@@ -26,6 +26,7 @@ import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.KeyPairGeneratorSpi;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Provider;
@@ -63,7 +64,7 @@ public abstract class Accumulator {
      * Constructs a accumulator with the specified algorithm name and engine.
      *
      * @param algorithm the algorithm of this accumulator
-     * @param engine the actual implementation
+     * @param engine    the actual implementation
      */
     protected Accumulator(AccumulatorSpi engine, String algorithm) {
         this.algorithm = algorithm;
@@ -174,7 +175,7 @@ public abstract class Accumulator {
      * @param elements all elements that are accumulated
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    public final void initWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
+    public final void initWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException, AccumulatorException {
         state = STATE.CREATE_WITNESS;
         engine.engineInitWitness(keyPair, elements);
     }
@@ -191,9 +192,14 @@ public abstract class Accumulator {
      * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    public final void restore(KeyPair keyPair, byte[] accumulatorValue) throws InvalidKeyException {
+    public final void restoreWitness(KeyPair keyPair, AccumulatorState savedState) throws InvalidKeyException, AccumulatorException {
         state = STATE.CREATE_WITNESS;
-        engine.engineRestore(keyPair, accumulatorValue);
+        engine.engineRestoreWitness(keyPair, savedState);
+    }
+
+    public final void restoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException, InvalidKeyException {
+        state = STATE.CREATE_WITNESS;
+        engine.engineRestoreWitness(keyPair, accumulatorValue, auxiliaryValue, elements);
     }
 
     /**
@@ -256,6 +262,20 @@ public abstract class Accumulator {
             return engine.engineGetAccumulatorValue();
         }
         throw new AccumulatorException("not initialized");
+    }
+
+    public final byte[] getAuxiliaryValue() throws AccumulatorException {
+        if (state == STATE.CREATE_WITNESS) {
+            return engine.engineGetAuxiliaryValue();
+        }
+        throw new AccumulatorException("not initialized for creating witnesses");
+    }
+
+    public final AccumulatorState getAccumulatorState() throws AccumulatorException {
+        if (state == STATE.CREATE_WITNESS) {
+            return engine.engineGetAccumulatorState();
+        }
+        throw new AccumulatorException("not initialized for creating witnesses");
     }
 
     /**
