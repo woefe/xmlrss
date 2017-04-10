@@ -128,6 +128,29 @@ public class PSRedactableSignatureTest {
     }
 
     @Test
+    public void testRedactAndVerify() throws Exception {
+
+        RedactableSignature sig =
+                RedactableSignature.getInstance("PSRSSwithPSA");
+
+        sig.initSign(keyPair);
+        sig.addPart("Data to sign\n".getBytes(), true);
+        sig.addPart("More data to sign".getBytes(), true);
+        SignatureOutput out = sig.sign();
+
+        sig.initRedact(keyPair.getPublic());
+        sig.addPart("More data to sign".getBytes());
+        SignatureOutput redacted = sig.redact(out);
+
+        sig.initVerify(keyPair.getPublic());
+        boolean isRedactedValid = sig.verify(redacted);
+        boolean isOriginalValid = sig.verify(out);
+
+        assertTrue(isRedactedValid);
+        assertTrue(isOriginalValid);
+    }
+
+    @Test
     public void engineMerge() throws Exception {
         byte[][] message = {
                 "test1".getBytes(),
@@ -155,6 +178,7 @@ public class PSRedactableSignatureTest {
 
         rss.initMerge(keyPair.getPublic());
         SignatureOutput merged = rss.merge(redacted1, redacted2);
+        assertTrue(merged.containsAll(message));
     }
 
     @Test
