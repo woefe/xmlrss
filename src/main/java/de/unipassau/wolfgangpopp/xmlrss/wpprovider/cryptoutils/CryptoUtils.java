@@ -104,13 +104,12 @@ public final class CryptoUtils {
     }
 
 
-
     /**
      * Creates a safe prime number of the given bit length. A prime number <code>p</code> is safe, if p=2*q+1, where q
      * is also prime.
      *
      * @param bitLength the length of the prime number
-     * @param random the random pool used
+     * @param random    the random pool used
      * @return java.math.BigInteger which is a safe prime number
      */
     public static BigInteger safePrime(int bitLength, SecureRandom random) {

@@ -271,7 +271,7 @@ public abstract class RedactableSignature {
      * @param part
      * @param isRedactable a boolean indicating whether the given part can be redacted from the signed message.
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this redactable
-     *                            signature algorithm is unable to process the given element.
+     *                                      signature algorithm is unable to process the given element.
      */
     public final void addPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
         if (state != STATE.UNINITIALIZED) {
@@ -296,7 +296,7 @@ public abstract class RedactableSignature {
      *
      * @return the SignatureOutput that contains the signature of the added elements.
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                            signature algorithm cannot process the elements to be signed.
+     *                                      signature algorithm cannot process the elements to be signed.
      */
     public final SignatureOutput sign() throws RedactableSignatureException {
         if (state == STATE.SIGN) {
@@ -311,7 +311,7 @@ public abstract class RedactableSignature {
      * @param signature the signature to be verified
      * @return true if the signature verifies, false otherwise
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                            signature algorithm cannot process the elements to be verified.
+     *                                      signature algorithm cannot process the elements to be verified.
      */
     public final boolean verify(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.VERIFY) {
@@ -327,7 +327,7 @@ public abstract class RedactableSignature {
      * @param signature the signature which should be redacted
      * @return the redacted SignatureOutput
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                            signature algorithm cannot process the elements to be redacted.
+     *                                      signature algorithm cannot process the elements to be redacted.
      */
     public final SignatureOutput redact(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.REDACT) {
@@ -344,7 +344,7 @@ public abstract class RedactableSignature {
      * @param signature2 another redacted version of the same original signature output as <code>signature1</code>
      * @return the merged SignatureOutput of signature1 and signature2
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if the two
-     *                            signatures cannot be merged
+     *                                      signatures cannot be merged
      */
     public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
         if (state == STATE.MERGE) {
@@ -359,7 +359,7 @@ public abstract class RedactableSignature {
      * @param signature the signature which should be updated
      * @return teh updated SignatureOutput object
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                            signature algorithm cannot process the elements to be updated.
+     *                                      signature algorithm cannot process the elements to be updated.
      */
     public SignatureOutput update(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.UPDATE) {
