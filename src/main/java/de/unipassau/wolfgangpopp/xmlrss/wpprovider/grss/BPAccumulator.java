@@ -108,9 +108,11 @@ public class BPAccumulator extends AccumulatorSpi {
     @Override
     protected boolean engineVerify(byte[] witness, byte[] element) throws AccumulatorException {
         BigInteger intWitness = new BigInteger(witness);
-        //accumulatorValue ^ witness == hash(element) mod n
+        //accumulatorValue ^ hash(element) mod n == proof
         try {
-            return accumulatorValue.modPow(intWitness, publicParm).equals(fullDomainHash(publicParm, element));
+            return intWitness.modPow(fullDomainHash(publicParm, element), publicParm).equals(accumulatorValue);
+            //return accumulatorValue.modPow(fullDomainHash(publicParm, element), publicParm).equals(intWitness);
+            //return accumulatorValue.modPow(intWitness, publicParm).equals(fullDomainHash(publicParm, element));
         } catch (NoSuchAlgorithmException e) {
             throw new AccumulatorException(e);
         }

@@ -49,11 +49,13 @@ public class WPProvider extends Provider {
                  *  Key Pair Generator engines
                  */
                 put("KeyPairGenerator.PSRSS", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRSSKeyPairGenerator");
+                put("KeyPairGenerator.BPA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.BPKeyPairGenerator");
 
                 /*
                  * Accumulator engines
                  */
                 put("Accumulator.PSA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSAccumulator");
+                put("Accumulator.BPA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.BPAccumulator");
 
 
                 return null;
