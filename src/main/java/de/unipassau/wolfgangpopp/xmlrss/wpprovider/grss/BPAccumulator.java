@@ -96,7 +96,7 @@ public class BPAccumulator extends AccumulatorSpi {
         for (byte[] bytes : elements) {
             if (!Arrays.equals(bytes, element)) {
                 try {
-                    exponent = exponent.multiply(fullDomainHash(publicParm, element));
+                    exponent = exponent.multiply(fullDomainHash(publicParm, bytes));
                 } catch (NoSuchAlgorithmException e) {
                     throw new AccumulatorException(e);
                 }
@@ -108,11 +108,9 @@ public class BPAccumulator extends AccumulatorSpi {
     @Override
     protected boolean engineVerify(byte[] witness, byte[] element) throws AccumulatorException {
         BigInteger intWitness = new BigInteger(witness);
-        //accumulatorValue ^ hash(element) mod n == proof
         try {
-            return intWitness.modPow(fullDomainHash(publicParm, element), publicParm).equals(accumulatorValue);
-            //return accumulatorValue.modPow(fullDomainHash(publicParm, element), publicParm).equals(intWitness);
-            //return accumulatorValue.modPow(intWitness, publicParm).equals(fullDomainHash(publicParm, element));
+            BigInteger intElement = fullDomainHash(publicParm, element);
+            return intWitness.modPow(intElement, publicParm).equals(accumulatorValue);
         } catch (NoSuchAlgorithmException e) {
             throw new AccumulatorException(e);
         }

@@ -25,11 +25,11 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.Security;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Wolfgang Popp
@@ -44,13 +44,16 @@ public class BPAccumulatorTest {
 
     @Before
     public void initialize() throws Exception {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("BPA");
-        keyGen.initialize(512);
-        keyPair = keyGen.generateKeyPair();
+//        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("BPA");
+//        keyGen.initialize(512);
+//        keyPair = keyGen.generateKeyPair();
+        BigInteger p = new BigInteger("102768923406090766454606384684807101116565843764230817427007685819792870349103");
+        BigInteger q = new BigInteger("100643593853045610103209412747828587291631422759640930666057909066465827451823");
+        keyPair = new KeyPair(new BPPublicKey(p.multiply(q)), new BPPrivateKey());
     }
 
     @Test
-    public void testCreateAndVerifyWittness() throws Exception{
+    public void testCreateAndVerifyWitness() throws Exception {
         byte[][] message = {
                 "test1".getBytes(),
                 "test2".getBytes(),
