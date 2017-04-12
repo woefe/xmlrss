@@ -179,7 +179,7 @@ public class PSRedactableXMLSignatureTest {
     }
 
     @Test
-    public void engineRedactOverlap() throws Exception {
+    public void testRedactOverlapDTD() throws Exception {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
         sig.initSign(keyPair);
@@ -195,6 +195,40 @@ public class PSRedactableXMLSignatureTest {
         sig.addPartSelector("#xpointer(id('j1'))");
         sig.addPartSelector("#xpointer(id('g1'))");
         sig.addPartSelector("#xpointer(id('a1'))");
+        sig.redact();
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertTrue(sig.verify());
+    }
+
+    @Test
+    public void testRedactOverlapSchema() throws Exception {
+        Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(new File("testdata/test1.xsd"));
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/test1.xml"), schema);
+        sig.addPartSelector("#xpointer(id('i1'))");
+        sig.addPartSelector("#xpointer(id('l1'))");
+        sig.addPartSelector("#xpointer(id('e1'))");
+        sig.addPartSelector("#xpointer(id('e2'))");
+        sig.addPartSelector("#xpointer(id('e3'))");
+        sig.addPartSelector("#xpointer(id('i3'))");
+        sig.addPartSelector("#xpointer(id('i2'))");
+        sig.addPartSelector("#xpointer(id('s1'))");
+        Document document = sig.sign();
+
+        printDocument(document);
+
+        sig.initRedact(keyPair.getPublic());
+        sig.setDocument(document);
+        sig.addPartSelector("#xpointer(id('i1'))");
+        sig.addPartSelector("#xpointer(id('e2'))");
+        sig.addPartSelector("#xpointer(id('e3'))");
+        sig.addPartSelector("#xpointer(id('e1'))");
+        sig.addPartSelector("#xpointer(id('l1'))");
+        sig.addPartSelector("#xpointer(id('i3'))");
         sig.redact();
 
         sig.initVerify(keyPair.getPublic());

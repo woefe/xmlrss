@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+  ~ XMLRSS - A Java Crypto Provider for Redactable Signatures and their
+  ~ XML Signature encoding.
+  ~
+  ~ Copyright (c) 2017 Wolfgang Popp
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://sec.fim.uni-passau.de/psrss"
+           xmlns="https://sec.fim.uni-passau.de/psrss"
+           elementFormDefault="qualified">
+
+    <xs:element name="container">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="item" type="itemtype" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="itemtype">
+        <xs:sequence>
+            <xs:element name="list" type="listtype" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="struct" type="structtype" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="data" type="datatype" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID"/>
+    </xs:complexType>
+
+    <xs:complexType name="listtype">
+        <xs:sequence>
+            <xs:element type="listentrytype" name="entry" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID"/>
+    </xs:complexType>
+
+    <xs:complexType name="listentrytype">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="id" type="xs:ID"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="structtype">
+        <xs:sequence>
+            <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:ID"/>
+    </xs:complexType>
+
+    <xs:complexType name="datatype">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="id" type="xs:ID"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+</xs:schema>

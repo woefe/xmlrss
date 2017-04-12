@@ -28,6 +28,7 @@ import sun.security.jca.GetInstance;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.validation.Schema;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -145,6 +146,20 @@ public abstract class RedactableXMLSignature {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         documentBuilderFactory.setValidating(true);
+        documentBuilderFactory.setIgnoringElementContentWhitespace(true);
+
+        try {
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            setDocument(documentBuilder.parse(inputStream));
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    public final void setDocument(InputStream inputStream, Schema schema) throws RedactableXMLSignatureException {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setSchema(schema);
+        documentBuilderFactory.setNamespaceAware(true);
         documentBuilderFactory.setIgnoringElementContentWhitespace(true);
 
         try {

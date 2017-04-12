@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  ~ XMLRSS - A Java Crypto Provider for Redactable Signatures and their
+  ~ XML Signature encoding.
+  ~
+  ~ Copyright (c) 2017 Wolfgang Popp
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<container xmlns="https://sec.fim.uni-passau.de/psrss">
+    <item id="i1">
+        <list id="l1">
+            <entry id="e1">entry1</entry>
+            <entry id="e2">entry2</entry>
+            <entry id="e3">entry3</entry>
+        </list>
+    </item>
+    <item id="i2">
+        <struct id="s1">
+            <header>head</header>
+            <body>
+                <data>data</data>
+            </body>
+            <footer>foot</footer>
+        </struct>
+    </item>
+    <item id="i3">
+        <data id="d1">data</data>
+    </item>
+</container>
