@@ -55,6 +55,8 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     private final Accumulator accumulator;
     private final Signature dsig;
+    private final Set<ByteArrayWrapper> redactableParts = new HashSet<>();
+    private final Set<ByteArrayWrapper> nonRedactableParts = new HashSet<>();
     private SecureRandom random;
     private PublicKey accPublicKey;
     private PrivateKey accPrivateKey;
@@ -62,8 +64,6 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
     private PrivateKey dsigPrivateKey;
     private KeyPair dsigkeyPair;
     private KeyPair acckeyPair;
-    private Set<ByteArrayWrapper> redactableParts = new HashSet<>();
-    private Set<ByteArrayWrapper> nonRedactableParts = new HashSet<>();
 
     protected GSRedactableSignature(Accumulator accumulator, Signature dsig) {
         this.accumulator = accumulator;
@@ -77,6 +77,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
+        reset();
         checkAndSetKeyPair(keyPair);
         this.random = random;
         dsig.initSign(dsigPrivateKey, random);
@@ -85,13 +86,15 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
+        reset();
         checkAndSetPublicKey(publicKey);
-        dsig.initVerify(publicKey);
-        accumulator.initVerify(publicKey);
+        dsig.initVerify(dsigPublicKey);
+        accumulator.initVerify(accPublicKey);
     }
 
     @Override
     protected void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
+        reset();
         checkAndSetPublicKey(publicKey);
     }
 
@@ -204,13 +207,20 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
         GRSSSignatureOutput.Builder builder = new GRSSSignatureOutput.Builder();
         Map<ByteArrayWrapper, byte[]> signedParts = signatureOutput.getRedactableParts();
         Set<ByteArrayWrapper> parts = signedParts.keySet();
+        Set<ByteArrayWrapper> nonRedactableParts = signatureOutput.getNonRedactableParts();
 
         builder.setDSigValue(signatureOutput.getDSigValue())
                 .setAccumulatorValue(signatureOutput.getAccumulatorValue())
-                .addNonRedactableParts(signatureOutput.getNonRedactableParts());
+                .addNonRedactableParts(nonRedactableParts);
 
-        for (ByteArrayWrapper part : this.redactableParts) {
-            if (!parts.contains(part)) {
+        for (ByteArrayWrapper redactablePart : redactableParts) {
+            if (nonRedactableParts.contains(redactablePart)) {
+                throw new RedactableSignatureException("Cannot perform the redaction since a given part is not redactable");
+            }
+        }
+
+        for (ByteArrayWrapper part : parts) {
+            if (!redactableParts.contains(part)) {
                 builder.addRedactablePart(part, signedParts.get(part));
             }
         }
@@ -226,6 +236,18 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
     @Override
     protected AlgorithmParameters engineGetParameters() {
         return null;
+    }
+
+    private void reset() {
+        this.random = null;
+        this.accPublicKey = null;
+        this.accPrivateKey = null;
+        this.dsigPublicKey = null;
+        this.dsigPrivateKey = null;
+        this.dsigkeyPair = null;
+        this.acckeyPair = null;
+        this.redactableParts.clear();
+        this.nonRedactableParts.clear();
     }
 
     private void checkAndSetKeyPair(KeyPair keyPair) throws InvalidKeyException {
