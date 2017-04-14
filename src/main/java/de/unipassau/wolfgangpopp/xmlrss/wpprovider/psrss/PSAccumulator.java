@@ -45,12 +45,21 @@ public class PSAccumulator extends AccumulatorSpi {
     private PSRSSPublicKey publicKey;
     private byte[] accumulatorValueRaw;
     private BigInteger accumulatorValue;
+    private SecureRandom random;
 
     @Override
-    protected void engineInitWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException {
-        setKeyPair(keyPair);
+    protected void engineInitWitness(KeyPair keyPair) throws InvalidKeyException {
+        engineInitWitness(keyPair, new SecureRandom());
+    }
 
-        SecureRandom random = new SecureRandom();
+    @Override
+    protected void engineInitWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
+        setKeyPair(keyPair);
+        this.random = random;
+    }
+
+    @Override
+    protected void engineDigest(byte[]... elements) {
         BigInteger n = publicKey.getKey();
 
         int bitLength = n.bitLength();
@@ -65,15 +74,18 @@ public class PSAccumulator extends AccumulatorSpi {
     }
 
     @Override
-    protected void engineRestoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws InvalidKeyException, AccumulatorException {
-        setKeyPair(keyPair);
+    protected void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException {
         this.accumulatorValueRaw = Arrays.copyOf(accumulatorValue, accumulatorValue.length);
         this.accumulatorValue = new BigInteger(accumulatorValueRaw);
     }
 
     @Override
-    protected void engineInitVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
+    protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
         setPublicKey(publicKey);
+    }
+
+    @Override
+    protected void engineRestoreVerify(byte[] accumulatorValue) {
         this.accumulatorValueRaw = Arrays.copyOf(accumulatorValue, accumulatorValue.length);
         this.accumulatorValue = new BigInteger(accumulatorValueRaw);
     }

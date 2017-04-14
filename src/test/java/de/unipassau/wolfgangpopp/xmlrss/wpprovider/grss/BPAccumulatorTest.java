@@ -64,10 +64,12 @@ public class BPAccumulatorTest {
 
 
         Accumulator accumulator = Accumulator.getInstance("BPA");
-        accumulator.initWitness(keyPair, message);
+        accumulator.initWitness(keyPair);
+        accumulator.digest(message);
         byte[] witness = accumulator.createWitness(message[0]);
 
-        accumulator.initVerify(keyPair.getPublic(), accumulator.getAccumulatorValue());
+        accumulator.initVerify(keyPair.getPublic());
+        accumulator.restoreVerify(accumulator.getAccumulatorValue());
         assertTrue(accumulator.verify(witness, message[0]));
 
 

@@ -170,8 +170,6 @@ public abstract class RedactableXMLSignature {
         }
     }
 
-    //TODO setDocument function that can handle xsd validation
-
     public final void addPartSelector(String uri) throws RedactableXMLSignatureException {
         if (state != STATE.UNINITIALIZED) {
             engine.engineAddPartSelector(uri);

@@ -2,7 +2,7 @@
  * XMLRSS - A Java Crypto Provider for Redactable Signatures and their
  * XML Signature encoding.
  *
- * Copyright (c) 2016 Wolfgang Popp
+ * Copyright (c) 2017 Wolfgang Popp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils;
 
 import java.util.Arrays;
 
 /**
  * @author Wolfgang Popp
  */
-class PSMessagePart {
+public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
     private final byte[] array;
 
-    public PSMessagePart(byte[] array) {
+    public ByteArrayWrapper(byte[] array) {
         this.array = array;
     }
 
@@ -37,7 +37,7 @@ class PSMessagePart {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        PSMessagePart part = (PSMessagePart) o;
+        ByteArrayWrapper part = (ByteArrayWrapper) o;
 
         return Arrays.equals(array, part.array);
 
@@ -50,5 +50,18 @@ class PSMessagePart {
 
     public byte[] getArray() {
         return array;
+    }
+
+    @Override
+    public int compareTo(ByteArrayWrapper o) {
+        int len = Math.min(array.length, o.array.length);
+
+        for (int i = 0; i < len; i++) {
+            if (array[i] != o.array[i]) {
+                return array[i] - o.array[i];
+            }
+        }
+
+        return array.length - o.array.length;
     }
 }

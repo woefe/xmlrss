@@ -30,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.util.List;
 
 /**
@@ -174,9 +175,21 @@ public abstract class Accumulator {
      * @param elements all elements that are accumulated
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    public final void initWitness(KeyPair keyPair, byte[]... elements) throws InvalidKeyException, AccumulatorException {
+    public final void initWitness(KeyPair keyPair) throws InvalidKeyException {
         state = STATE.CREATE_WITNESS;
-        engine.engineInitWitness(keyPair, elements);
+        engine.engineInitWitness(keyPair);
+    }
+
+    public final void initWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
+        state = STATE.CREATE_WITNESS;
+        engine.engineInitWitness(keyPair, random);
+    }
+
+    public final void digest(byte[]... elements) throws AccumulatorException {
+        if (state != STATE.CREATE_WITNESS) {
+            throw new AccumulatorException("not initialized for creating witnesses");
+        }
+        engine.engineDigest(elements);
     }
 
     /**
@@ -191,14 +204,18 @@ public abstract class Accumulator {
      * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    public final void restoreWitness(KeyPair keyPair, AccumulatorState savedState) throws InvalidKeyException, AccumulatorException {
-        state = STATE.CREATE_WITNESS;
-        engine.engineRestoreWitness(keyPair, savedState);
+    public final void restoreWitness(AccumulatorState savedState) throws AccumulatorException {
+        if (state != STATE.CREATE_WITNESS) {
+            throw new AccumulatorException("not initialized for creating witnesses");
+        }
+        engine.engineRestoreWitness(savedState);
     }
 
-    public final void restoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException, InvalidKeyException {
-        state = STATE.CREATE_WITNESS;
-        engine.engineRestoreWitness(keyPair, accumulatorValue, auxiliaryValue, elements);
+    public final void restoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException, InvalidKeyException {
+        if (state != STATE.CREATE_WITNESS) {
+            throw new AccumulatorException("not initialized for creating witnesses");
+        }
+        engine.engineRestoreWitness(accumulatorValue, auxiliaryValue, elements);
     }
 
     /**
@@ -212,9 +229,16 @@ public abstract class Accumulator {
      * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
      * @throws InvalidKeyException if the given key is inappropriate for initializing this Accumulator object.
      */
-    public final void initVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
+    public final void initVerify(PublicKey publicKey) throws InvalidKeyException {
         state = STATE.VERIFY;
-        engine.engineInitVerify(publicKey, accumulatorValue);
+        engine.engineInitVerify(publicKey);
+    }
+
+    public final void restoreVerify(byte[] accumulatorValue) throws AccumulatorException {
+        if (state != STATE.VERIFY) {
+            throw new AccumulatorException("not initialized for verification");
+        }
+        engine.engineRestoreVerify(accumulatorValue);
     }
 
     /**

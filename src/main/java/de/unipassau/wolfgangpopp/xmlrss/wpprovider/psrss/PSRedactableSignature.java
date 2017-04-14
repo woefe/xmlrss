@@ -25,6 +25,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArrayWrapper;
 
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -54,7 +55,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     private PSRSSPrivateKey privateKey;
     private Accumulator accumulator;
     private SecureRandom random;
-    private final Set<PSMessagePart> parts = new HashSet<>();
+    private final Set<ByteArrayWrapper> parts = new HashSet<>();
     private KeyPair keyPair;
 
     PSRedactableSignature(Accumulator accumulator) {
@@ -68,11 +69,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     protected void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         setKeyPair(keyPair);
         this.random = random;
+        accumulator.initWitness(keyPair);
         parts.clear();
     }
 
     protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
         setPublicKey(publicKey);
+        accumulator.initVerify(publicKey);
         parts.clear();
     }
 
@@ -89,13 +92,14 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     @Override
     protected void engineInitUpdate(KeyPair keyPair) throws InvalidKeyException {
         setKeyPair(keyPair);
+        accumulator.initWitness(keyPair);
         parts.clear();
     }
 
     //TODO admissible is ignored
     //TODO Error when part is added twice
     protected void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
-        if (!parts.add(new PSMessagePart(part))) {
+        if (!parts.add(new ByteArrayWrapper(part))) {
             throw new PSRSSException("Each part can only be added once");
         }
     }
@@ -105,13 +109,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         byte[][] pts = new byte[parts.size()][];
 
         int i = 0;
-        for (PSMessagePart part : parts) {
+        for (ByteArrayWrapper part : parts) {
             pts[i] = part.getArray();
             ++i;
         }
         try {
-            accumulator.initWitness(keyPair, pts);
-        } catch (InvalidKeyException | AccumulatorException e) {
+            accumulator.digest(pts);
+        } catch (AccumulatorException e) {
             throw new RedactableSignatureException(e);
         }
 
@@ -133,9 +137,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, acc);
 
-        Function<PSMessagePart, PSSignatureOutput.SignedPart> signFunction = new Function<PSMessagePart, PSSignatureOutput.SignedPart>() {
+        Function<ByteArrayWrapper, PSSignatureOutput.SignedPart> signFunction = new Function<ByteArrayWrapper, PSSignatureOutput.SignedPart>() {
             @Override
-            public PSSignatureOutput.SignedPart execute(PSMessagePart element) throws Exception {
+            public PSSignatureOutput.SignedPart execute(ByteArrayWrapper element) throws Exception {
                 return signPart(element, tag);
             }
         };
@@ -147,7 +151,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return builder.build();
     }
 
-    private PSSignatureOutput.SignedPart signPart(PSMessagePart part, byte[] tag) throws AccumulatorException {
+    private PSSignatureOutput.SignedPart signPart(ByteArrayWrapper part, byte[] tag) throws AccumulatorException {
         byte[] partRaw = part.getArray();
         return new PSSignatureOutput.SignedPart(accumulator.createWitness(concat(tag, partRaw)), part);
     }
@@ -166,8 +170,8 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
         sig = ((PSSignatureOutput) signature);
         try {
-            accumulator.initVerify(publicKey, sig.getAccumulator());
-        } catch (InvalidKeyException e) {
+            accumulator.restoreVerify(sig.getAccumulator());
+        } catch (AccumulatorException e) {
             throw new RedactableSignatureException(e);
         }
 
@@ -265,13 +269,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
 
         try {
-            accumulator.restoreWitness(keyPair, psSig.getAccumulator(), null);
+            accumulator.restoreWitness(psSig.getAccumulator(), null);
         } catch (InvalidKeyException | AccumulatorException e) {
             throw new PSRSSException(e);
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSig);
-        for (PSMessagePart part : parts) {
+        for (ByteArrayWrapper part : parts) {
             try {
                 builder.add(signPart(part, psSig.getTag()));
             } catch (AccumulatorException e) {

@@ -48,14 +48,21 @@ public class BPAccumulator extends AccumulatorSpi {
     private BigInteger accumulatorValue;
     private BigInteger startValue;
     private byte[][] elements;
+    private SecureRandom random;
 
     @Override
-    protected void engineInitWitness(KeyPair keyPair, byte[]... elements) throws AccumulatorException, InvalidKeyException {
+    protected void engineInitWitness(KeyPair keyPair) throws InvalidKeyException {
+        engineInitWitness(keyPair, new SecureRandom());
+    }
+
+    @Override
+    protected void engineInitWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         checkAndSetParm(keyPair);
-        this.elements = elements;
+        this.random = random;
+    }
 
-        SecureRandom random = new SecureRandom();
-
+    @Override
+    protected void engineDigest(byte[]... elements) throws AccumulatorException {
         do {
             startValue = new BigInteger(publicParm.bitLength(), random);
         } while (startValue.compareTo(publicParm) == 1 || !startValue.gcd(publicParm).equals(BigInteger.ONE));
@@ -71,22 +78,27 @@ public class BPAccumulator extends AccumulatorSpi {
         }
 
         accumulatorValue = startValue.modPow(exponent, publicParm);
+        this.elements = elements;
     }
 
     @Override
-    protected void engineRestoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws InvalidKeyException, AccumulatorException {
-        checkAndSetParm(keyPair);
+    protected void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException {
         this.accumulatorValue = new BigInteger(accumulatorValue);
         this.startValue = new BigInteger(auxiliaryValue);
         this.elements = elements;
     }
 
     @Override
-    protected void engineInitVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException {
+    protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
         if (!(publicKey instanceof BPPublicKey)) {
             throw new InvalidKeyException("The given key is not a BPKey");
         }
         publicParm = ((BPPublicKey) publicKey).getKey();
+    }
+
+    @Override
+    protected void engineRestoreVerify(byte[] accumulatorValue) {
+        this.accumulatorValue = new BigInteger(accumulatorValue);
     }
 
     @Override

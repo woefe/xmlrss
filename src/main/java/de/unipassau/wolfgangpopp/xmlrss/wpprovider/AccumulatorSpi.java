@@ -25,6 +25,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 
 /**
  * This class defines the Service Provider Interface for the {@link Accumulator} class.
@@ -43,7 +44,11 @@ public abstract class AccumulatorSpi {
      * @param elements all elements that are accumulated
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineInitWitness(KeyPair keyPair, byte[]... elements) throws AccumulatorException, InvalidKeyException;
+    protected abstract void engineInitWitness(KeyPair keyPair) throws InvalidKeyException;
+
+    protected abstract void engineInitWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException;
+
+    protected abstract void engineDigest(byte[]... elements) throws AccumulatorException;
 
     /**
      * Initializes this accumulator engine for creating witnesses under the given keypair. This accumulator is
@@ -53,10 +58,10 @@ public abstract class AccumulatorSpi {
      * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineRestoreWitness(KeyPair keyPair, byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws InvalidKeyException, AccumulatorException;
+    protected abstract void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException;
 
-    protected void engineRestoreWitness(KeyPair keyPair, AccumulatorState savedState) throws InvalidKeyException, AccumulatorException {
-        engineRestoreWitness(keyPair, savedState.accumulatorValue, savedState.auxiliaryValue, savedState.elements);
+    protected void engineRestoreWitness(AccumulatorState savedState) throws AccumulatorException {
+        engineRestoreWitness(savedState.accumulatorValue, savedState.auxiliaryValue, savedState.elements);
     }
 
     /**
@@ -66,7 +71,9 @@ public abstract class AccumulatorSpi {
      * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineInitVerify(PublicKey publicKey, byte[] accumulatorValue) throws InvalidKeyException;
+    protected abstract void engineInitVerify(PublicKey publicKey) throws InvalidKeyException;
+
+    protected abstract void engineRestoreVerify(byte[] accumulatorValue);
 
     /**
      * Creates a witness for the given element.

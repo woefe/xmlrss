@@ -54,10 +54,12 @@ public class PSAccumulatorTest {
                 "test5".getBytes(),
         };
         Accumulator psa = Accumulator.getInstance("PSA");
-        psa.initWitness(keyPair, message);
+        psa.initWitness(keyPair);
+        psa.digest(message);
         byte[] witness = psa.createWitness(message[0]);
 
-        psa.initVerify(keyPair.getPublic(), psa.getAccumulatorValue());
+        psa.initVerify(keyPair.getPublic());
+        psa.restoreVerify(psa.getAccumulatorValue());
         assertTrue(psa.verify(witness, message[0]));
     }
 
@@ -71,24 +73,28 @@ public class PSAccumulatorTest {
                 "test5".getBytes(),
         };
         Accumulator psa = Accumulator.getInstance("PSA");
-        psa.initWitness(keyPair, message);
+        psa.initWitness(keyPair);
+        psa.digest(message);
         byte[] witness0 = psa.createWitness(message[0]);
         AccumulatorState savedState = psa.getAccumulatorState();
 
         // restore using saved state
         psa = Accumulator.getInstance("PSA");
-        psa.restoreWitness(keyPair, savedState);
+        psa.initWitness(keyPair);
+        psa.restoreWitness(savedState);
         byte[] witness1 = psa.createWitness(message[1]);
         byte[] accumulatorValue = psa.getAccumulatorValue();
         byte[] auxiliaryValue = psa.getAuxiliaryValue();
 
         // restore using aux and acc
         psa = Accumulator.getInstance("PSA");
-        psa.restoreWitness(keyPair, accumulatorValue, auxiliaryValue);
+        psa.initWitness(keyPair);
+        psa.restoreWitness(accumulatorValue, auxiliaryValue);
         byte[] witness2 = psa.createWitness(message[2]);
 
         psa = Accumulator.getInstance("PSA");
-        psa.initVerify(keyPair.getPublic(), accumulatorValue);
+        psa.initVerify(keyPair.getPublic());
+        psa.restoreVerify(accumulatorValue);
         assertTrue(psa.verify(witness0, message[0]));
         assertTrue(psa.verify(witness1, message[1]));
         assertTrue(psa.verify(witness2, message[2]));
