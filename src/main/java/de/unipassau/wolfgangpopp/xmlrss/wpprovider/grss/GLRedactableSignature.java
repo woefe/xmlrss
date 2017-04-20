@@ -86,6 +86,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
     protected void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
         reset();
         checkAndSetPublicKey(publicKey);
+        posAccumulator.initVerify(accPublicKey);
     }
 
     @Override
@@ -146,7 +147,32 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected boolean engineVerify(SignatureOutput signature) throws RedactableSignatureException {
-        return false;
+        if (!(signature instanceof GLRSSSignatureOutput)) {
+            throw new RedactableSignatureException("wrong signature type");
+        }
+
+        GLRSSSignatureOutput glrssSignatureOutput = (GLRSSSignatureOutput) signature;
+        List<GLRSSSignedPart> parts = glrssSignatureOutput.getParts();
+        boolean verify = gsrss.verify(glrssSignatureOutput.getGsrssOutput());
+
+        for (int i = 0; i < parts.size() && verify; i++) {
+            GLRSSSignedPart part = parts.get(i);
+
+            try {
+                posAccumulator.restoreVerify(part.getAccumulatorValue());
+                for (int j = 0; j < i && verify; j++) {
+                    byte[] witness = part.getWitnesses().get(j).getArray();
+                    byte[] randomValue = parts.get(j).getRandomValue();
+                    verify = posAccumulator.verify(witness, randomValue);
+                }
+            } catch (AccumulatorException e) {
+                throw new RedactableSignatureException(e);
+            }
+        }
+
+        //TODO Check if all Non redactable parts are present
+
+        return verify;
     }
 
     @Override
@@ -203,6 +229,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
     public static class GLRSSwithBPAccumulatorAndRSA extends GLRedactableSignature {
         public GLRSSwithBPAccumulatorAndRSA() throws NoSuchAlgorithmException {
+            //TODO set ord(ADM)
             super(Accumulator.getInstance("BPA"), RedactableSignature.getInstance("GSRSSwithRSAandBPA"));
         }
     }
