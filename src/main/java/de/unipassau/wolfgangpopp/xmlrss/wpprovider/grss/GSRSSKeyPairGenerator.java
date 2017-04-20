@@ -31,13 +31,13 @@ import java.security.SecureRandom;
 /**
  * @author Wolfgang Popp
  */
-public abstract class GRSSKeyPairGenerator extends KeyPairGeneratorSpi {
+public abstract class GSRSSKeyPairGenerator extends KeyPairGeneratorSpi {
 
-    private final KeyPairGenerator dsigGenerator;
-    private final KeyPairGenerator accGenerator;
-    private final String algorithm;
+    protected final KeyPairGenerator dsigGenerator;
+    protected final KeyPairGenerator accGenerator;
+    protected final String algorithm;
 
-    protected GRSSKeyPairGenerator(String algorithm, KeyPairGenerator dsigGenerator, KeyPairGenerator accGenerator) {
+    protected GSRSSKeyPairGenerator(String algorithm, KeyPairGenerator dsigGenerator, KeyPairGenerator accGenerator) {
         this.dsigGenerator = dsigGenerator;
         this.accGenerator = accGenerator;
         this.algorithm = algorithm;
@@ -53,15 +53,15 @@ public abstract class GRSSKeyPairGenerator extends KeyPairGeneratorSpi {
     public KeyPair generateKeyPair() {
         KeyPair dsigKeyPair = dsigGenerator.generateKeyPair();
         KeyPair accKeyPair = accGenerator.generateKeyPair();
-        PublicKey publicKey = new GRSSPublicKey(algorithm, dsigKeyPair.getPublic(), accKeyPair.getPublic());
-        PrivateKey privateKey = new GRSSPrivateKey(algorithm, dsigKeyPair.getPrivate(), accKeyPair.getPrivate());
+        PublicKey publicKey = new GSRSSPublicKey(algorithm, dsigKeyPair.getPublic(), accKeyPair.getPublic());
+        PrivateKey privateKey = new GSRSSPrivateKey(algorithm, dsigKeyPair.getPrivate(), accKeyPair.getPrivate());
         return new KeyPair(publicKey, privateKey);
     }
 
 
-    public static class GRSSwithRSAandBPA extends GRSSKeyPairGenerator {
-        public GRSSwithRSAandBPA() throws NoSuchAlgorithmException {
-            super("GRSSwithRSAandBPAcc", KeyPairGenerator.getInstance("RSA"), KeyPairGenerator.getInstance("BPA"));
+    public static class GSRSSwithRSAandBPA extends GSRSSKeyPairGenerator {
+        public GSRSSwithRSAandBPA() throws NoSuchAlgorithmException {
+            super("GSRSSwithRSAandBPAcc", KeyPairGenerator.getInstance("RSA"), KeyPairGenerator.getInstance("BPA"));
         }
     }
 

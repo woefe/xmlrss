@@ -25,7 +25,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArrayWrapper;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -55,7 +55,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     private PSRSSPrivateKey privateKey;
     private Accumulator accumulator;
     private SecureRandom random;
-    private final Set<ByteArrayWrapper> parts = new HashSet<>();
+    private final Set<ByteArray> parts = new HashSet<>();
     private KeyPair keyPair;
 
     PSRedactableSignature(Accumulator accumulator) {
@@ -99,7 +99,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     //TODO admissible is ignored
     //TODO Error when part is added twice
     protected void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
-        if (!parts.add(new ByteArrayWrapper(part))) {
+        if (!parts.add(new ByteArray(part))) {
             throw new PSRSSException("Each part can only be added once");
         }
     }
@@ -109,7 +109,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         byte[][] pts = new byte[parts.size()][];
 
         int i = 0;
-        for (ByteArrayWrapper part : parts) {
+        for (ByteArray part : parts) {
             pts[i] = part.getArray();
             ++i;
         }
@@ -137,9 +137,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, acc);
 
-        Function<ByteArrayWrapper, PSSignatureOutput.SignedPart> signFunction = new Function<ByteArrayWrapper, PSSignatureOutput.SignedPart>() {
+        Function<ByteArray, PSSignatureOutput.SignedPart> signFunction = new Function<ByteArray, PSSignatureOutput.SignedPart>() {
             @Override
-            public PSSignatureOutput.SignedPart execute(ByteArrayWrapper element) throws Exception {
+            public PSSignatureOutput.SignedPart execute(ByteArray element) throws Exception {
                 return signPart(element, tag);
             }
         };
@@ -151,7 +151,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return builder.build();
     }
 
-    private PSSignatureOutput.SignedPart signPart(ByteArrayWrapper part, byte[] tag) throws AccumulatorException {
+    private PSSignatureOutput.SignedPart signPart(ByteArray part, byte[] tag) throws AccumulatorException {
         byte[] partRaw = part.getArray();
         return new PSSignatureOutput.SignedPart(accumulator.createWitness(concat(tag, partRaw)), part);
     }
@@ -275,7 +275,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         }
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(psSig);
-        for (ByteArrayWrapper part : parts) {
+        for (ByteArray part : parts) {
             try {
                 builder.add(signPart(part, psSig.getTag()));
             } catch (AccumulatorException e) {

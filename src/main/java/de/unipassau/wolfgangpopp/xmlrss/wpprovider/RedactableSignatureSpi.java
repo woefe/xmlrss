@@ -45,7 +45,7 @@ public abstract class RedactableSignatureSpi {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }
 
-    protected abstract void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException;
+    protected abstract void engineAddPart(byte[] part, boolean isRedactable) throws RedactableSignatureException;
 
     //protected abstract void engineAddAllAdmissibleParts(byte[]... parts) throws SignatureException;
     //protected abstract void engineAddAllNonAdmissibleParts(byte[]... parts) throws SignatureException;

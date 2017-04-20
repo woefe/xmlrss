@@ -53,8 +53,8 @@ public class WPProvider extends Provider {
                  */
                 put("KeyPairGenerator.PSRSS", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRSSKeyPairGenerator");
                 put("KeyPairGenerator.BPA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.BPKeyPairGenerator");
-                put("KeyPairGenerator.GSRSSwithPSAandBPA",
-                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GRSSKeyPairGenerator$GRSSwithRSAandBPA");
+                put("KeyPairGenerator.GSRSSwithRSAandBPA",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GSRSSKeyPairGenerator$GSRSSwithRSAandBPA");
 
                 /*
                  * Accumulator engines

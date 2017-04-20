@@ -25,7 +25,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArrayWrapper;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -55,8 +55,8 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     private final Accumulator accumulator;
     private final Signature dsig;
-    private final Set<ByteArrayWrapper> redactableParts = new HashSet<>();
-    private final Set<ByteArrayWrapper> nonRedactableParts = new HashSet<>();
+    private final Set<ByteArray> redactableParts = new HashSet<>();
+    private final Set<ByteArray> nonRedactableParts = new HashSet<>();
     private SecureRandom random;
     private PublicKey accPublicKey;
     private PrivateKey accPrivateKey;
@@ -100,14 +100,14 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected void engineAddPart(byte[] part, boolean redactable) throws RedactableSignatureException {
-        Set<ByteArrayWrapper> set;
+        Set<ByteArray> set;
         if (redactable) {
             set = this.redactableParts;
         } else {
             set = this.nonRedactableParts;
         }
 
-        if (!set.add(new ByteArrayWrapper(part))) {
+        if (!set.add(new ByteArray(part))) {
             throw new RedactableSignatureException(
                     "This algorithm is set based and therefore does not support duplicates");
         }
@@ -116,10 +116,10 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
     @Override
     protected SignatureOutput engineSign() throws RedactableSignatureException {
         byte[][] elements = new byte[redactableParts.size()][];
-        GRSSSignatureOutput.Builder builder = new GRSSSignatureOutput.Builder();
+        GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder();
 
         int index = 0;
-        for (ByteArrayWrapper redactablePart : redactableParts) {
+        for (ByteArray redactablePart : redactableParts) {
             elements[index++] = redactablePart.getArray();
         }
 
@@ -130,7 +130,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        for (ByteArrayWrapper element : orderNonRedactableParts(nonRedactableParts)) {
+        for (ByteArray element : orderNonRedactableParts(nonRedactableParts)) {
             try {
                 dsig.update(element.getArray());
                 builder.addNonRedactablePart(element);
@@ -145,7 +145,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        for (ByteArrayWrapper part : redactableParts) {
+        for (ByteArray part : redactableParts) {
             try {
                 builder.addRedactablePart(part, accumulator.createWitness(part.getArray()));
             } catch (AccumulatorException e) {
@@ -158,11 +158,11 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected boolean engineVerify(SignatureOutput signature) throws RedactableSignatureException {
-        if (!(signature instanceof GRSSSignatureOutput)) {
+        if (!(signature instanceof GSRSSSignatureOutput)) {
             throw new RedactableSignatureException("wrong signature type");
         }
 
-        GRSSSignatureOutput signatureOutput = ((GRSSSignatureOutput) signature);
+        GSRSSSignatureOutput signatureOutput = ((GSRSSSignatureOutput) signature);
 
         try {
             accumulator.restoreVerify(signatureOutput.getAccumulatorValue());
@@ -170,8 +170,8 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        List<ByteArrayWrapper> ordered = orderNonRedactableParts(signatureOutput.getNonRedactableParts());
-        for (ByteArrayWrapper element : ordered) {
+        List<ByteArray> ordered = orderNonRedactableParts(signatureOutput.getNonRedactableParts());
+        for (ByteArray element : ordered) {
             try {
                 dsig.update(element.getArray());
             } catch (SignatureException e) {
@@ -186,8 +186,8 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        Map<ByteArrayWrapper, byte[]> redactableParts = signatureOutput.getRedactableParts();
-        for (ByteArrayWrapper key : redactableParts.keySet()) {
+        Map<ByteArray, byte[]> redactableParts = signatureOutput.getRedactableParts();
+        for (ByteArray key : redactableParts.keySet()) {
             try {
                 valid = valid && accumulator.verify(redactableParts.get(key), key.getArray());
             } catch (AccumulatorException e) {
@@ -200,26 +200,26 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected SignatureOutput engineRedact(SignatureOutput signature) throws RedactableSignatureException {
-        if (!(signature instanceof GRSSSignatureOutput)) {
+        if (!(signature instanceof GSRSSSignatureOutput)) {
             throw new RedactableSignatureException("wrong signature type");
         }
-        GRSSSignatureOutput signatureOutput = (GRSSSignatureOutput) signature;
-        GRSSSignatureOutput.Builder builder = new GRSSSignatureOutput.Builder();
-        Map<ByteArrayWrapper, byte[]> signedParts = signatureOutput.getRedactableParts();
-        Set<ByteArrayWrapper> parts = signedParts.keySet();
-        Set<ByteArrayWrapper> nonRedactableParts = signatureOutput.getNonRedactableParts();
+        GSRSSSignatureOutput signatureOutput = (GSRSSSignatureOutput) signature;
+        GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder();
+        Map<ByteArray, byte[]> signedParts = signatureOutput.getRedactableParts();
+        Set<ByteArray> parts = signedParts.keySet();
+        Set<ByteArray> nonRedactableParts = signatureOutput.getNonRedactableParts();
 
         builder.setDSigValue(signatureOutput.getDSigValue())
                 .setAccumulatorValue(signatureOutput.getAccumulatorValue())
                 .addNonRedactableParts(nonRedactableParts);
 
-        for (ByteArrayWrapper redactablePart : redactableParts) {
+        for (ByteArray redactablePart : redactableParts) {
             if (nonRedactableParts.contains(redactablePart)) {
                 throw new RedactableSignatureException("Cannot perform the redaction since a given part is not redactable");
             }
         }
 
-        for (ByteArrayWrapper part : parts) {
+        for (ByteArray part : parts) {
             if (!redactableParts.contains(part)) {
                 builder.addRedactablePart(part, signedParts.get(part));
             }
@@ -253,29 +253,29 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
     private void checkAndSetKeyPair(KeyPair keyPair) throws InvalidKeyException {
         checkAndSetPublicKey(keyPair.getPublic());
 
-        if (!(keyPair.getPrivate() instanceof GRSSPrivateKey)) {
+        if (!(keyPair.getPrivate() instanceof GSRSSPrivateKey)) {
             throw new InvalidKeyException("The given private key cannot be used with this algorithm");
         }
-        dsigPrivateKey = ((GRSSPrivateKey) keyPair.getPrivate()).getDSigKey();
-        accPrivateKey = ((GRSSPrivateKey) keyPair.getPrivate()).getAccumulatorKey();
+        dsigPrivateKey = ((GSRSSPrivateKey) keyPair.getPrivate()).getDSigKey();
+        accPrivateKey = ((GSRSSPrivateKey) keyPair.getPrivate()).getAccumulatorKey();
         acckeyPair = new KeyPair(accPublicKey, accPrivateKey);
         dsigkeyPair = new KeyPair(dsigPublicKey, dsigPrivateKey);
     }
 
     private void checkAndSetPublicKey(PublicKey publicKey) throws InvalidKeyException {
-        if (!(publicKey instanceof GRSSPublicKey)) {
+        if (!(publicKey instanceof GSRSSPublicKey)) {
             throw new InvalidKeyException("The given public key cannot be used with this algorithm");
         }
-        accPublicKey = ((GRSSPublicKey) publicKey).getAccumulatorKey();
-        dsigPublicKey = ((GRSSPublicKey) publicKey).getDSigKey();
+        accPublicKey = ((GSRSSPublicKey) publicKey).getAccumulatorKey();
+        dsigPublicKey = ((GSRSSPublicKey) publicKey).getDSigKey();
     }
 
-    private List<ByteArrayWrapper> orderNonRedactableParts(Collection<ByteArrayWrapper> nonRedactable) {
-        List<ByteArrayWrapper> ordered = new ArrayList<>(nonRedactable.size());
+    private List<ByteArray> orderNonRedactableParts(Collection<ByteArray> nonRedactable) {
+        List<ByteArray> ordered = new ArrayList<>(nonRedactable.size());
         ordered.addAll(nonRedactable);
-        ordered.sort(new Comparator<ByteArrayWrapper>() {
+        ordered.sort(new Comparator<ByteArray>() {
             @Override
-            public int compare(ByteArrayWrapper o1, ByteArrayWrapper o2) {
+            public int compare(ByteArray o1, ByteArray o2) {
                 return o1.compareTo(o2);
             }
         });

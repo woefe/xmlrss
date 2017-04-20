@@ -25,10 +25,10 @@ import java.util.Arrays;
 /**
  * @author Wolfgang Popp
  */
-public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
+public class ByteArray implements Comparable<ByteArray> {
     private final byte[] array;
 
-    public ByteArrayWrapper(byte[] array) {
+    public ByteArray(byte[] array) {
         this.array = array;
     }
 
@@ -37,7 +37,7 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ByteArrayWrapper part = (ByteArrayWrapper) o;
+        ByteArray part = (ByteArray) o;
 
         return Arrays.equals(array, part.array);
 
@@ -53,7 +53,7 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
     }
 
     @Override
-    public int compareTo(ByteArrayWrapper o) {
+    public int compareTo(ByteArray o) {
         int len = Math.min(array.length, o.array.length);
 
         for (int i = 0; i < len; i++) {
@@ -63,5 +63,17 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
         }
 
         return array.length - o.array.length;
+    }
+
+    public ByteArray concat(ByteArray bytes) {
+        return concat(bytes.getArray());
+    }
+
+    public ByteArray concat(byte[] other) {
+        byte[] thisConcatOther = new byte[other.length + this.array.length];
+        System.arraycopy(this.array, 0, thisConcatOther, 0, this.array.length);
+        System.arraycopy(other, 0, thisConcatOther, array.length, other.length);
+
+        return new ByteArray(thisConcatOther);
     }
 }

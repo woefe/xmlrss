@@ -20,12 +20,10 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArrayWrapper;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,31 +32,31 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-public class GRSSSignatureOutput implements SignatureOutput {
-    private final Map<ByteArrayWrapper, byte[]> signedParts = new HashMap<>();
-    private final Set<ByteArrayWrapper> nonRedactableParts = new HashSet<>();
+public class GSRSSSignatureOutput implements SignatureOutput {
+    private final Map<ByteArray, byte[]> signedParts = new HashMap<>();
+    private final Set<ByteArray> nonRedactableParts = new HashSet<>();
     private byte[] dSigValue;
     private byte[] accumulatorValue;
 
-    private GRSSSignatureOutput() {
+    GSRSSSignatureOutput() {
 
     }
 
     @Override
     public boolean contains(byte[] part) {
-        ByteArrayWrapper wrapper = new ByteArrayWrapper(part);
+        ByteArray wrapper = new ByteArray(part);
         return signedParts.containsKey(wrapper) || nonRedactableParts.contains(wrapper);
     }
 
     @Override
     public boolean containsAll(byte[]... parts) {
-        Set<ByteArrayWrapper> allParts = new HashSet<>();
+        Set<ByteArray> allParts = new HashSet<>();
         allParts.addAll(signedParts.keySet());
         allParts.addAll(nonRedactableParts);
 
-        Set<ByteArrayWrapper> set = new HashSet<>();
+        Set<ByteArray> set = new HashSet<>();
         for (byte[] part : parts) {
-            set.add(new ByteArrayWrapper(part));
+            set.add(new ByteArray(part));
         }
         return allParts.containsAll(set);
     }
@@ -76,17 +74,17 @@ public class GRSSSignatureOutput implements SignatureOutput {
         return Arrays.copyOf(accumulatorValue, accumulatorValue.length);
     }
 
-    public Set<ByteArrayWrapper> getNonRedactableParts() {
+    public Set<ByteArray> getNonRedactableParts() {
         return nonRedactableParts;
     }
 
-    public Map<ByteArrayWrapper, byte[]> getRedactableParts() {
+    public Map<ByteArray, byte[]> getRedactableParts() {
         return signedParts;
     }
 
 
     public static class Builder {
-        private final GRSSSignatureOutput signatureOutput = new GRSSSignatureOutput();
+        private final GSRSSSignatureOutput signatureOutput = new GSRSSSignatureOutput();
 
         public Builder setAccumulatorValue(byte[] accumulatorValue) {
             signatureOutput.accumulatorValue = accumulatorValue;
@@ -98,22 +96,22 @@ public class GRSSSignatureOutput implements SignatureOutput {
             return this;
         }
 
-        public Builder addRedactablePart(ByteArrayWrapper value, byte[] proof) {
+        public Builder addRedactablePart(ByteArray value, byte[] proof) {
             signatureOutput.signedParts.put(value, proof);
             return this;
         }
 
-        public Builder addNonRedactablePart(ByteArrayWrapper value) {
+        public Builder addNonRedactablePart(ByteArray value) {
             signatureOutput.nonRedactableParts.add(value);
             return this;
         }
 
-        public Builder addNonRedactableParts(Set<ByteArrayWrapper> elements) {
+        public Builder addNonRedactableParts(Set<ByteArray> elements) {
             signatureOutput.nonRedactableParts.addAll(elements);
             return this;
         }
 
-        public GRSSSignatureOutput build() {
+        public GSRSSSignatureOutput build() {
             if (signatureOutput.dSigValue == null || signatureOutput.accumulatorValue == null) {
                 throw new IllegalStateException("Either the accumulator value or the dsig value are not set");
             }

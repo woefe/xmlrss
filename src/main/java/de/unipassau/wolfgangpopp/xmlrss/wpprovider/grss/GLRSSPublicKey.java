@@ -20,26 +20,26 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
-import java.security.PrivateKey;
+import java.security.PublicKey;
 
 /**
  * @author Wolfgang Popp
  */
-public class GRSSPrivateKey extends GRSSKey implements PrivateKey{
-    private final PrivateKey dsigKey;
-    private final PrivateKey accKey;
+public class GLRSSPublicKey extends GRSSKey implements PublicKey{
+    private final PublicKey accKey;
+    private final PublicKey gsrssKey;
 
-    public GRSSPrivateKey(String algorithm, PrivateKey dsigKey, PrivateKey accKey) {
+    public GLRSSPublicKey(String algorithm, PublicKey gsrssKey, PublicKey accKey) {
         super(algorithm);
-        this.dsigKey = dsigKey;
+        this.gsrssKey = gsrssKey;
         this.accKey = accKey;
     }
 
-    public PrivateKey getDSigKey() {
-        return dsigKey;
+    public PublicKey getGsrssKey() {
+        return gsrssKey;
     }
 
-    public PrivateKey getAccumulatorKey() {
+    public PublicKey getAccumulatorKey() {
         return accKey;
     }
 }

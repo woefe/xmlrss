@@ -20,26 +20,46 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
-import java.security.PublicKey;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
+
+import java.util.List;
 
 /**
  * @author Wolfgang Popp
  */
-public class GRSSPublicKey extends GRSSKey implements PublicKey{
-    private final PublicKey dsigKey;
-    private final PublicKey accKey;
+public class GLRSSSignatureOutput implements SignatureOutput {
 
-    public GRSSPublicKey(String algorithm, PublicKey dsigKey, PublicKey accKey) {
-        super(algorithm);
-        this.dsigKey = dsigKey;
-        this.accKey = accKey;
+    private final GSRSSSignatureOutput gsrssOutput;
+    private final List<GLRSSSignedPart> parts;
+
+    GLRSSSignatureOutput(GSRSSSignatureOutput gsrssOutput, List<GLRSSSignedPart> parts) {
+        this.gsrssOutput = gsrssOutput;
+        this.parts = parts;
     }
 
-    public PublicKey getDSigKey() {
-        return dsigKey;
+    public GSRSSSignatureOutput getGsrssOutput() {
+        return gsrssOutput;
     }
 
-    public PublicKey getAccumulatorKey() {
-        return accKey;
+    public List<GLRSSSignedPart> getParts() {
+        return parts;
+    }
+
+    @Override
+    public boolean contains(byte[] part) {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public boolean containsAll(byte[]... part) {
+        // TODO
+        return false;
+    }
+
+    @Override
+    public int size() {
+        // TODO
+        return 0;
     }
 }

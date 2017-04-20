@@ -21,7 +21,7 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArrayWrapper;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,7 +39,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     private final byte[] tag;
     private final byte[] proofOfTag;
     private final byte[] accumulator;
-    private final Map<ByteArrayWrapper, byte[]> signedParts;
+    private final Map<ByteArray, byte[]> signedParts;
 
     //TODO rename proof to witness
 
@@ -83,20 +83,20 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @param c collection to be checked for containment in this set.
      * @return true if all elements of <code>c</code> are values of this set.
      */
-    public boolean containsAll(Collection<ByteArrayWrapper> c) {
+    public boolean containsAll(Collection<ByteArray> c) {
         return values().containsAll(c);
     }
 
     @Override
     public boolean contains(byte[] part) {
-        return values().contains(new ByteArrayWrapper(part));
+        return values().contains(new ByteArray(part));
     }
 
     @Override
     public boolean containsAll(byte[]... part) {
-        Set<ByteArrayWrapper> messageParts = new HashSet<>();
+        Set<ByteArray> messageParts = new HashSet<>();
         for (byte[] bytes : part) {
-            messageParts.add(new ByteArrayWrapper(bytes));
+            messageParts.add(new ByteArray(bytes));
         }
         return containsAll(messageParts);
     }
@@ -108,7 +108,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @param c collection that is checked to be disjoint
      * @return true if all elements of <code>c</code> are not values of this set.
      */
-    public boolean isDisjoint(Collection<ByteArrayWrapper> c) {
+    public boolean isDisjoint(Collection<ByteArray> c) {
         return Collections.disjoint(c, values());
     }
 
@@ -121,7 +121,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      *
      * @return the set of values without their corresponding proofs
      */
-    public Set<ByteArrayWrapper> values() {
+    public Set<ByteArray> values() {
         return signedParts.keySet();
     }
 
@@ -138,7 +138,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     public Iterator<SignedPart> iterator() {
         return new Iterator<SignedPart>() {
 
-            private final Iterator<ByteArrayWrapper> iterator = signedParts.keySet().iterator();
+            private final Iterator<ByteArray> iterator = signedParts.keySet().iterator();
 
             @Override
             public boolean hasNext() {
@@ -147,7 +147,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
 
             @Override
             public SignedPart next() {
-                ByteArrayWrapper next = iterator.next();
+                ByteArray next = iterator.next();
                 return new SignedPart(signedParts.get(next), next);
             }
         };
@@ -183,7 +183,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @return the proof for the given message part
      */
     public byte[] getProof(byte[] part) {
-        return signedParts.get(new ByteArrayWrapper(part));
+        return signedParts.get(new ByteArray(part));
     }
 
     /**
@@ -222,14 +222,14 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
          * @return a reference to this object
          */
         public Builder add(byte[] part, byte[] proof) throws PSRSSException {
-            return add(new ByteArrayWrapper(part), proof);
+            return add(new ByteArray(part), proof);
         }
 
         public Builder add(SignedPart signedPart) throws PSRSSException {
             return add(signedPart.getElement(), signedPart.getProof());
         }
 
-        public Builder add(ByteArrayWrapper part, byte[] proof) throws PSRSSException {
+        public Builder add(ByteArray part, byte[] proof) throws PSRSSException {
 
             if (psSignatureOutput.signedParts.containsKey(part)) {
                 throw new PSRSSException("Every part can be added only once");
@@ -258,9 +258,9 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
 
     static class SignedPart {
         private final byte[] proof;
-        private final ByteArrayWrapper part;
+        private final ByteArray part;
 
-        SignedPart(byte[] proof, ByteArrayWrapper part) {
+        SignedPart(byte[] proof, ByteArray part) {
             this.proof = proof;
             this.part = part;
         }
@@ -269,7 +269,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
             return proof;
         }
 
-        public ByteArrayWrapper getElement() {
+        public ByteArray getElement() {
             return part;
         }
     }
