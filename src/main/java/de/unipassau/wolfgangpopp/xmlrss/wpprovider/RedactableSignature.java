@@ -273,21 +273,22 @@ public abstract class RedactableSignature {
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this redactable
      *                                      signature algorithm is unable to process the given element.
      */
-    public final void addPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
-        if (state != STATE.UNINITIALIZED) {
-            engine.engineAddPart(part, isRedactable);
-        } else {
-            throw new RedactableSignatureException("not initialized");
+    public final Identifier addPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
+        if (state == STATE.SIGN || state == STATE.UPDATE) {
+            return engine.engineAddPart(part, isRedactable);
         }
+        throw new RedactableSignatureException("not initialized for signing or updating");
     }
 
-    public final void addPart(byte[] part) throws RedactableSignatureException {
-        addPart(part, true);
+    public final Identifier addPart(byte[] part) throws RedactableSignatureException {
+        return addPart(part, true);
     }
 
-    public final void addParts(byte[]... parts) throws RedactableSignatureException {
-        for (byte[] part : parts) {
-            addPart(part);
+    public final void addIdentifier(Identifier identifier) throws RedactableSignatureException {
+        if (state == STATE.REDACT) {
+            engine.engineAddIdentifier(identifier);
+        } else {
+            throw new RedactableSignatureException("not initialized for redaction");
         }
     }
 

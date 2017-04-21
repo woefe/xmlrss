@@ -2,7 +2,7 @@
  * XMLRSS - A Java Crypto Provider for Redactable Signatures and their
  * XML Signature encoding.
  *
- * Copyright (c) 2016 Wolfgang Popp
+ * Copyright (c) 2017 Wolfgang Popp
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,17 +23,5 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 /**
  * @author Wolfgang Popp
  */
-public interface SignatureOutput {
-
-    boolean contains(byte[] part);
-
-    boolean contains(Identifier identifier);
-
-    boolean containsAll(byte[]... part);
-
-    byte[] getMessagePart(Identifier identifier);
-
-    byte[] getProof(Identifier identifier);
-
-    int size();
+public interface Identifier {
 }
