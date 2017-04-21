@@ -22,6 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
 import org.w3c.dom.Document;
@@ -111,12 +112,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     private byte[] concat(Node pointer, byte[] data) throws RedactableXMLSignatureException {
-        byte[] c14nPointer = canonicalize(pointer);
-        byte[] pointerConcatData = new byte[c14nPointer.length + data.length];
-        System.arraycopy(c14nPointer, 0, pointerConcatData, 0, c14nPointer.length);
-        System.arraycopy(data, 0, pointerConcatData, c14nPointer.length, data.length);
-
-        return pointerConcatData;
+        return new ByteArray(canonicalize(pointer)).concat(data).getArray();
     }
 
     @Override

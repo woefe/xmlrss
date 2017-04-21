@@ -20,6 +20,8 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.cryptoutils;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
+
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -65,10 +67,7 @@ public final class CryptoUtils {
 
             counter = counter.add(BigInteger.ONE);
 
-            byte[] hashConcat = new byte[largeHash.length + shortHash.length];
-            System.arraycopy(largeHash, 0, hashConcat, 0, largeHash.length);
-            System.arraycopy(shortHash, 0, hashConcat, largeHash.length, shortHash.length);
-            largeHash = hashConcat;
+            largeHash = new ByteArray(largeHash).concat(shortHash).getArray();
         }
 
         // set first bit to 1. This ensures, that the BigInteger (in the next step) has the correct bitlength.
