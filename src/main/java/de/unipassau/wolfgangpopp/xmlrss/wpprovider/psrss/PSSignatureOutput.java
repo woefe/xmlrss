@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
@@ -93,6 +94,11 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     }
 
     @Override
+    public boolean contains(Identifier identifier) {
+        return contains(identifier.getBytes());
+    }
+
+    @Override
     public boolean containsAll(byte[]... part) {
         Set<ByteArray> messageParts = new HashSet<>();
         for (byte[] bytes : part) {
@@ -101,6 +107,18 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
         return containsAll(messageParts);
     }
 
+    @Override
+    public byte[] getMessagePart(Identifier identifier) {
+        if (contains(identifier)) {
+            return identifier.getBytes();
+        }
+        return null;
+    }
+
+    @Override
+    public byte[] getProof(Identifier identifier) {
+        return getProof(identifier.getBytes());
+    }
 
     /**
      * Checks if the given collection and the values of this <code>SignedSet</code> are disjoint.

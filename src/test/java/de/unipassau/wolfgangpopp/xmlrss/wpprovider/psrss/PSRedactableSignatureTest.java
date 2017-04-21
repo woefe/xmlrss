@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
@@ -29,6 +30,10 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -106,25 +111,24 @@ public class PSRedactableSignatureTest {
                 "test5".getBytes(),
         };
 
-        byte[][] toRedact = {
-                "test1".getBytes(),
-                "test2".getBytes(),
-        };
+        Identifier[] identifiers = new Identifier[message.length];
 
         RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
         rss.initSign(keyPair);
-        rss.addParts(message);
-
+        for (int i = 0; i < message.length; i++) {
+            identifiers[i] = rss.addPart(message[i]);
+        }
         SignatureOutput signedMessage = rss.sign();
 
         rss.initRedact(keyPair.getPublic());
-        rss.addParts(toRedact);
+        rss.addIdentifier(identifiers[1]);
+        rss.addIdentifier(identifiers[0]);
         SignatureOutput redactedMessage = rss.redact(signedMessage);
 
         rss.initVerify(keyPair.getPublic());
         assertTrue(rss.verify(redactedMessage));
-        assertFalse(redactedMessage.contains(toRedact[0]));
-        assertFalse(redactedMessage.contains(toRedact[1]));
+        assertFalse(redactedMessage.contains(message[0]));
+        assertFalse(redactedMessage.contains(message[1]));
     }
 
     @Test
@@ -135,11 +139,11 @@ public class PSRedactableSignatureTest {
 
         sig.initSign(keyPair);
         sig.addPart("Data to sign\n".getBytes(), true);
-        sig.addPart("More data to sign".getBytes(), true);
+        Identifier identifier = sig.addPart("More data to sign".getBytes(), true);
         SignatureOutput out = sig.sign();
 
         sig.initRedact(keyPair.getPublic());
-        sig.addPart("More data to sign".getBytes());
+        sig.addIdentifier(identifier);
         SignatureOutput redacted = sig.redact(out);
 
         sig.initVerify(keyPair.getPublic());
@@ -160,20 +164,24 @@ public class PSRedactableSignatureTest {
                 "test5".getBytes(),
         };
 
+        Identifier[] identifiers = new Identifier[message.length];
+
         RedactableSignature rss = RedactableSignature.getInstance("RSSwithPSA");
 
         rss.initSign(keyPair);
-        rss.addParts(message);
+        for (int i = 0; i < message.length; i++) {
+            identifiers[i] = rss.addPart(message[i]);
+        }
         SignatureOutput wholeMessage = rss.sign();
 
         rss.initRedact(keyPair.getPublic());
-        rss.addPart("test4".getBytes());
-        rss.addPart("test5".getBytes());
+        rss.addIdentifier(identifiers[3]);
+        rss.addIdentifier(identifiers[4]);
         SignatureOutput redacted1 = rss.redact(wholeMessage);
 
         rss.initRedact(keyPair.getPublic());
-        rss.addPart("test2".getBytes());
-        rss.addPart("test3".getBytes());
+        rss.addIdentifier(identifiers[1]);
+        rss.addIdentifier(identifiers[2]);
         SignatureOutput redacted2 = rss.redact(wholeMessage);
 
         rss.initMerge(keyPair.getPublic());

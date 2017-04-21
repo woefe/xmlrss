@@ -22,6 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
@@ -97,10 +98,18 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     //TODO admissible is ignored
-    //TODO Error when part is added twice
-    protected void engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
+    @Override
+    protected Identifier engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
         if (!parts.add(new ByteArray(part))) {
             throw new PSRSSException("Each part can only be added once");
+        }
+        return new Identifier(part);
+    }
+
+    @Override
+    protected void engineAddIdentifier(Identifier identifier) throws RedactableSignatureException {
+        if (!parts.add(new ByteArray(identifier.getBytes()))) {
+            throw new PSRSSException("Each part can only be redacted once");
         }
     }
 
@@ -157,10 +166,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
     }
 
     private byte[] concat(byte[] first, byte[] second) {
-        byte[] concat = new byte[first.length + second.length];
-        System.arraycopy(first, 0, concat, 0, first.length);
-        System.arraycopy(second, 0, concat, second.length - 1, second.length);
-        return concat;
+        return new ByteArray(first).concat(second).getArray();
     }
 
     protected boolean engineVerify(SignatureOutput signature) throws RedactableSignatureException {
