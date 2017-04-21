@@ -22,6 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
@@ -99,7 +100,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
     }
 
     @Override
-    protected void engineAddPart(byte[] part, boolean redactable) throws RedactableSignatureException {
+    protected Identifier engineAddPart(byte[] part, boolean redactable) throws RedactableSignatureException {
         Set<ByteArray> set;
         if (redactable) {
             set = this.redactableParts;
@@ -111,6 +112,13 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(
                     "This algorithm is set based and therefore does not support duplicates");
         }
+        //TODO return Identifier for non redactable parts?
+        return new Identifier(part);
+    }
+
+    @Override
+    protected void engineAddIdentifier(Identifier identifier) throws RedactableSignatureException {
+        engineAddPart(identifier.getBytes(), true);
     }
 
     @Override

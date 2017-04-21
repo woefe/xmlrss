@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
@@ -87,13 +88,13 @@ public class GSRedactableSignatureTest {
     public void testSignRedactandVerify() throws Exception {
         sig.initSign(keyPair);
         sig.addPart(message[0], true);
-        sig.addPart(message[1], true);
+        Identifier identifier = sig.addPart(message[1], true);
         sig.addPart(message[2], false);
         sig.addPart(message[3], false);
         SignatureOutput output = sig.sign();
 
         sig.initRedact(keyPair.getPublic());
-        sig.addPart(message[1]);
+        sig.addIdentifier(identifier);
         SignatureOutput redacted = sig.redact(output);
 
         assertTrue(redacted.containsAll(message[0], message[2], message[3]));

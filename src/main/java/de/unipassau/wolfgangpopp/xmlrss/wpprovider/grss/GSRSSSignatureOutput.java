@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
@@ -49,6 +50,11 @@ public class GSRSSSignatureOutput implements SignatureOutput {
     }
 
     @Override
+    public boolean contains(Identifier identifier) {
+        return contains(identifier.getBytes());
+    }
+
+    @Override
     public boolean containsAll(byte[]... parts) {
         Set<ByteArray> allParts = new HashSet<>();
         allParts.addAll(signedParts.keySet());
@@ -59,6 +65,19 @@ public class GSRSSSignatureOutput implements SignatureOutput {
             set.add(new ByteArray(part));
         }
         return allParts.containsAll(set);
+    }
+
+    @Override
+    public byte[] getMessagePart(Identifier identifier) {
+        if (contains(identifier)) {
+            return identifier.getBytes();
+        }
+        return null;
+    }
+
+    @Override
+    public byte[] getProof(Identifier identifier) {
+        return signedParts.get(identifier.getByteArray());
     }
 
     @Override
