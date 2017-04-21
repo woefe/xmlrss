@@ -56,7 +56,7 @@ public class GSRedactableSignatureTest {
 
     @Before
     public void init() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("GSRSSwithPSAandBPA");
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("GSRSSwithRSAandBPA");
         keyGen.initialize(512);
         keyPair = keyGen.generateKeyPair();
         sig = RedactableSignature.getInstance("GSRSSwithRSAandBPA", new WPProvider());
