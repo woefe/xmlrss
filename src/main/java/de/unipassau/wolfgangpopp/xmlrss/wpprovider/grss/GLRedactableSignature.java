@@ -22,6 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Accumulator;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AccumulatorException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureSpi;
@@ -37,6 +38,9 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -46,7 +50,9 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
     private final Accumulator posAccumulator;
     private final RedactableSignature gsrss;
-    private final List<GLRSSSignedPart> parts = new ArrayList<>();
+    private final List<ByteArray> parts = new ArrayList<>();
+    private final List<Boolean> isRedactable = new ArrayList<>();
+    private final List<Identifier> identifiers = new ArrayList<>();
     private PrivateKey gsrssPrivateKey;
     private PrivateKey accPrivateKey;
     private PublicKey gsrssPublicKey;
@@ -87,62 +93,67 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
         reset();
         checkAndSetPublicKey(publicKey);
         posAccumulator.initVerify(accPublicKey);
+        gsrss.initVerify(gsrssPublicKey);
     }
 
     @Override
     protected void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
         reset();
         checkAndSetPublicKey(publicKey);
+        gsrss.initRedact(gsrssPublicKey);
     }
 
     @Override
-    protected void engineAddPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
-        GLRSSSignedPart glrssPart = new GLRSSSignedPart();
-        glrssPart.setMessagePart(part);
-        glrssPart.setRedactable(isRedactable);
-        parts.add(glrssPart);
+    protected Identifier engineAddPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
+        this.parts.add(new ByteArray(part));
+        this.isRedactable.add(isRedactable);
+        return new Identifier(part, parts.size() - 1);
+    }
+
+    @Override
+    protected void engineAddIdentifier(Identifier identifier) throws RedactableSignatureException {
+        identifiers.add(identifier);
     }
 
     @Override
     protected SignatureOutput engineSign() throws RedactableSignatureException {
 
-        for (GLRSSSignedPart part : parts) {
-            byte[] randomValue = new byte[accByteLength];
-            random.nextBytes(randomValue);
-            part.setRandomValue(randomValue);
+        GLRSSSignatureOutput.Builder builder = new GLRSSSignatureOutput.Builder(parts.size());
+        byte[][] randomValues = new byte[parts.size()][accByteLength];
+
+        for (int i = 0; i < parts.size(); i++) {
+            random.nextBytes(randomValues[i]);
         }
 
         for (int i = 0; i < parts.size(); i++) {
-            GLRSSSignedPart part = parts.get(i);
-            List<ByteArray> witnesses = part.getWitnesses();
-            byte[][] randomValues = new byte[i + 1][];
-
-            for (int j = 0; j < i; j++) {
-                randomValues[j] = parts.get(j).getRandomValue();
-            }
+            byte[] accumulatorValue;
+            byte[] messagePart = parts.get(i).getArray();
+            boolean isRedactable = this.isRedactable.get(i);
 
             try {
-                posAccumulator.digest(randomValues);
-                part.setAccumulatorValue(posAccumulator.getAccumulatorValue());
+                byte[][] randomRange = Arrays.copyOfRange(randomValues, 0, i);
+                posAccumulator.digest(randomRange);
+                accumulatorValue = posAccumulator.getAccumulatorValue();
+
+                for (byte[] bytes : randomRange) {
+                    builder.addWittness(i, posAccumulator.createWitness(bytes));
+                }
             } catch (AccumulatorException e) {
                 throw new RedactableSignatureException(e);
             }
 
-            for (byte[] bytes : randomValues) {
-                try {
-                    witnesses.add(new ByteArray(posAccumulator.createWitness(bytes)));
-                } catch (AccumulatorException e) {
-                    throw new RedactableSignatureException(e);
-                }
-            }
+            builder.setMessagePart(i, messagePart)
+                    .setRedactable(i, isRedactable)
+                    .setRandomValue(i, randomValues[i])
+                    .setAccValue(i, accumulatorValue);
 
-            ByteArray concat = new ByteArray(part.getMessagePart()).concat(part.getAccumulatorValue())
-                    .concat(part.getRandomValue());
-
-            gsrss.addPart(concat.getArray(), part.isRedactable());
+            ByteArray concat = new ByteArray(messagePart).concat(accumulatorValue).concat(randomValues[i]);
+            gsrss.addPart(concat.getArray(), isRedactable);
         }
 
-        return new GLRSSSignatureOutput((GSRSSSignatureOutput) gsrss.sign(), parts);
+        builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.sign());
+
+        return builder.build();
     }
 
     @Override
@@ -152,11 +163,11 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
         }
 
         GLRSSSignatureOutput glrssSignatureOutput = (GLRSSSignatureOutput) signature;
-        List<GLRSSSignedPart> parts = glrssSignatureOutput.getParts();
+        List<GLRSSSignatureOutput.GLRSSSignedPart> parts = glrssSignatureOutput.getParts();
         boolean verify = gsrss.verify(glrssSignatureOutput.getGsrssOutput());
 
         for (int i = 0; i < parts.size() && verify; i++) {
-            GLRSSSignedPart part = parts.get(i);
+            GLRSSSignatureOutput.GLRSSSignedPart part = parts.get(i);
 
             try {
                 posAccumulator.restoreVerify(part.getAccumulatorValue());
@@ -177,7 +188,62 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected SignatureOutput engineRedact(SignatureOutput signature) throws RedactableSignatureException {
-        return null;
+        if (!(signature instanceof GLRSSSignatureOutput)) {
+            throw new RedactableSignatureException("wrong signature type");
+        }
+
+        identifiers.sort(new Comparator<Identifier>() {
+            @Override
+            public int compare(Identifier o1, Identifier o2) {
+                return Integer.compare(o1.getPosition(), o2.getPosition());
+            }
+        });
+
+        GLRSSSignatureOutput original = (GLRSSSignatureOutput) signature;
+        List<GLRSSSignatureOutput.GLRSSSignedPart> parts = ((GLRSSSignatureOutput) signature).getParts();
+        int size = parts.size() - identifiers.size();
+        GLRSSSignatureOutput.Builder builder = new GLRSSSignatureOutput.Builder(size);
+
+        for (int i = 0; i < size; i++) {
+            GLRSSSignatureOutput.GLRSSSignedPart part = parts.get(i);
+            if (!isIdentified(i, part)) {
+                ArrayList<ByteArray> copy = new ArrayList<>(part.getWitnesses());
+                removeWitnesses(copy);
+
+                builder.setMessagePart(i, part.getMessagePart())
+                        .setRedactable(i, part.isRedactable())
+                        .setRandomValue(i, part.getRandomValue())
+                        .setAccValue(i, part.getAccumulatorValue())
+                        .setWitnesses(i, copy);
+            }
+        }
+
+        // redact gsrss signature output
+        for (Identifier identifier : identifiers) {
+            GLRSSSignatureOutput.GLRSSSignedPart part = parts.get(identifier.getPosition());
+            ByteArray concat = new ByteArray(part.getMessagePart()).concat(part.getAccumulatorValue())
+                    .concat(part.getRandomValue());
+            gsrss.addIdentifier(new Identifier(concat));
+        }
+
+        builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.redact(original.getGsrssOutput()));
+
+        return builder.build();
+    }
+
+    private void removeWitnesses(List<ByteArray> witnesses) {
+        ByteArray invalid = new ByteArray(null);
+        for (Identifier identifier : identifiers) {
+            int position = identifier.getPosition();
+            if (witnesses.get(position).equals(identifier.getByteArray())) {
+                witnesses.set(position, invalid);
+            }
+        }
+        witnesses.removeAll(Collections.singleton(invalid));
+    }
+
+    private boolean isIdentified(int index, GLRSSSignatureOutput.GLRSSSignedPart part) {
+        return identifiers.contains(new Identifier(part.getMessagePart(), index));
     }
 
     @Override
@@ -222,8 +288,8 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
         if (!(publicKey instanceof GLRSSPublicKey)) {
             throw new InvalidKeyException("The given public key cannot be used with this algorithm");
         }
-        gsrssPublicKey = ((GSRSSPublicKey) publicKey).getAccumulatorKey();
-        accPublicKey = ((GSRSSPublicKey) publicKey).getDSigKey();
+        gsrssPublicKey = ((GLRSSPublicKey) publicKey).getGsrssKey();
+        accPublicKey = ((GLRSSPublicKey) publicKey).getAccumulatorKey();
     }
 
 

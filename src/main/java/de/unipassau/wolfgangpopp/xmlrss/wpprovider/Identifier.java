@@ -34,6 +34,11 @@ public class Identifier {
         this.position = position;
     }
 
+    public Identifier(byte[] bytes, int position) {
+        this.bytes = new ByteArray(bytes);
+        this.position = position;
+    }
+
     public Identifier(byte[] bytes) {
         this.bytes = new ByteArray(bytes);
     }
