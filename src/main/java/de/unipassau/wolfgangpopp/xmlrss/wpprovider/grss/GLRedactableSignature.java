@@ -131,7 +131,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
             boolean isRedactable = this.isRedactable.get(i);
 
             try {
-                byte[][] randomRange = Arrays.copyOfRange(randomValues, 0, i);
+                byte[][] randomRange = Arrays.copyOfRange(randomValues, 0, i + 1);
                 posAccumulator.digest(randomRange);
                 accumulatorValue = posAccumulator.getAccumulatorValue();
 
@@ -152,6 +152,9 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
         }
 
         builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.sign());
+
+        parts.clear();
+        isRedactable.clear();
 
         return builder.build();
     }
@@ -192,29 +195,25 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException("wrong signature type");
         }
 
-        identifiers.sort(new Comparator<Identifier>() {
-            @Override
-            public int compare(Identifier o1, Identifier o2) {
-                return Integer.compare(o1.getPosition(), o2.getPosition());
-            }
-        });
-
         GLRSSSignatureOutput original = (GLRSSSignatureOutput) signature;
         List<GLRSSSignatureOutput.GLRSSSignedPart> parts = ((GLRSSSignatureOutput) signature).getParts();
         int size = parts.size() - identifiers.size();
         GLRSSSignatureOutput.Builder builder = new GLRSSSignatureOutput.Builder(size);
 
-        for (int i = 0; i < size; i++) {
+        int builderIndex = 0;
+        for (int i = 0; i < parts.size(); i++) {
             GLRSSSignatureOutput.GLRSSSignedPart part = parts.get(i);
             if (!isIdentified(i, part)) {
                 ArrayList<ByteArray> copy = new ArrayList<>(part.getWitnesses());
                 removeWitnesses(copy);
 
-                builder.setMessagePart(i, part.getMessagePart())
-                        .setRedactable(i, part.isRedactable())
-                        .setRandomValue(i, part.getRandomValue())
-                        .setAccValue(i, part.getAccumulatorValue())
-                        .setWitnesses(i, copy);
+                builder.setMessagePart(builderIndex, part.getMessagePart())
+                        .setRedactable(builderIndex, part.isRedactable())
+                        .setRandomValue(builderIndex, part.getRandomValue())
+                        .setAccValue(builderIndex, part.getAccumulatorValue())
+                        .setWitnesses(builderIndex, copy);
+
+                ++builderIndex;
             }
         }
 
@@ -228,6 +227,8 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
         builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.redact(original.getGsrssOutput()));
 
+        identifiers.clear();
+
         return builder.build();
     }
 
@@ -235,7 +236,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
         ByteArray invalid = new ByteArray(null);
         for (Identifier identifier : identifiers) {
             int position = identifier.getPosition();
-            if (witnesses.get(position).equals(identifier.getByteArray())) {
+            if (position < witnesses.size() && witnesses.get(position).equals(identifier.getByteArray())) {
                 witnesses.set(position, invalid);
             }
         }
@@ -257,17 +258,17 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
     }
 
     private void reset() {
-        /*
-        private PrivateKey gsrssPrivateKey;
-        private PrivateKey accPrivateKey;
-        private PublicKey gsrssPublicKey;
-        private PublicKey accPublicKey;
-        private KeyPair gsrssKeyPair;
-        private KeyPair accKeyPair;
-        private SecureRandom random;
-        private int accByteLength;
-        */
         parts.clear();
+        isRedactable.clear();
+        identifiers.clear();
+        gsrssPrivateKey = null;
+        accPrivateKey = null;
+        gsrssPublicKey = null;
+        accPublicKey = null;
+        gsrssKeyPair = null;
+        accKeyPair = null;
+        random = null;
+        accByteLength = -1;
     }
 
     private void checkAndSetKeyPair(KeyPair keyPair) throws InvalidKeyException {

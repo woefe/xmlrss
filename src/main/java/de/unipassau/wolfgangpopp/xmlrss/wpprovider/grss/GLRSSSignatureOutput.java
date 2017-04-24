@@ -27,7 +27,9 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Wolfgang Popp
@@ -36,10 +38,17 @@ public class GLRSSSignatureOutput implements SignatureOutput {
 
     private final GSRSSSignatureOutput gsrssOutput;
     private final List<GLRSSSignedPart> parts;
+    private final Set<ByteArray> messageParts;
+
 
     private GLRSSSignatureOutput(GSRSSSignatureOutput gsrssOutput, List<GLRSSSignedPart> parts) {
         this.gsrssOutput = gsrssOutput;
         this.parts = Collections.unmodifiableList(parts);
+        Set<ByteArray> messageParts = new HashSet<>(size());
+        for (GLRSSSignedPart part : parts) {
+            messageParts.add(new ByteArray(part.getMessagePart()));
+        }
+        this.messageParts = Collections.unmodifiableSet(messageParts);
     }
 
     public GSRSSSignatureOutput getGsrssOutput() {
@@ -52,48 +61,50 @@ public class GLRSSSignatureOutput implements SignatureOutput {
 
     @Override
     public boolean contains(byte[] part) {
-        // TODO
-        return false;
+        return messageParts.contains(new ByteArray(part));
     }
 
     @Override
     public boolean contains(Identifier identifier) {
-        // TODO
-        return false;
+        int position = identifier.getPosition();
+        return !(position < 0 || position >= size()) &&
+                Arrays.equals(parts.get(position).getMessagePart(), identifier.getBytes());
     }
 
     @Override
-    public boolean containsAll(byte[]... part) {
-        // TODO
-        return false;
+    public boolean containsAll(byte[]... parts) {
+        boolean areAllContained = true;
+        for (byte[] part : parts) {
+            areAllContained = areAllContained && contains(part);
+        }
+        return areAllContained;
     }
 
     @Override
     public byte[] getMessagePart(Identifier identifier) {
-        // TODO
-        return new byte[0];
+        if (!contains(identifier)) {
+            return null;
+        }
+        return parts.get(identifier.getPosition()).getMessagePart();
     }
 
     @Override
     public byte[] getProof(Identifier identifier) {
-        // TODO
-        return new byte[0];
+        //TODO
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public int size() {
-        // TODO
-        return 0;
+        return parts.size();
     }
 
     static class Builder {
 
         private final GLRSSSignedPart[] parts;
-        private final int size;
         private GSRSSSignatureOutput gsrssSignatureOutput;
 
         Builder(int size) {
-            this.size = size;
             parts = new GLRSSSignedPart[size];
             for (int i = 0; i < size; i++) {
                 parts[i] = new GLRSSSignedPart();

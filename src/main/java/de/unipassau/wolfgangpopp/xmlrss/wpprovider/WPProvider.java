@@ -33,9 +33,7 @@ public class WPProvider extends Provider {
         super("WP", 0.1, "WP Provider (implements Redactable Signature Schemes, Accumulators)");
         AccessController.doPrivileged(new PrivilegedAction<Object>() {
             public Object run() {
-                /*
-                 * Signature engines
-                 */
+                // Redactable signature engines
                 put("RedactableSignature.RSSwithPSAccumulator",
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableSignature$PSRSSwithPSA");
                 put("Alg.Alias.RedactableSignature.RSSwithACC", "RSSwithPSAccumulator");
@@ -45,23 +43,25 @@ public class WPProvider extends Provider {
                 put("RedactableSignature.GSRSSwithRSAandBPA",
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GSRedactableSignature$GSRSSwithBPAccumulatorAndRSA");
 
+                put("RedactableSignature.GLRSSwithRSAandBPA",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRedactableSignature$GLRSSwithBPAccumulatorAndRSA");
+
+
+                // Redactable XML signature engines
                 put("RedactableXMLSignature.XMLPSRSSwithPSA",
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableXMLSignature$XMLPSRSSwithPSA");
 
-                /*
-                 *  Key Pair Generator engines
-                 */
+                // Key pair generator engines
                 put("KeyPairGenerator.PSRSS", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRSSKeyPairGenerator");
                 put("KeyPairGenerator.BPA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.BPKeyPairGenerator");
                 put("KeyPairGenerator.GSRSSwithRSAandBPA",
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GSRSSKeyPairGenerator$GSRSSwithRSAandBPA");
+                put("KeyPairGenerator.GLRSSwithRSAandBPA",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSKeyPairGenerator$GLRSSwithRSAandBPA");
 
-                /*
-                 * Accumulator engines
-                 */
+                // Accumulator engines
                 put("Accumulator.PSA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSAccumulator");
                 put("Accumulator.BPA", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.BPAccumulator");
-
 
                 return null;
             }

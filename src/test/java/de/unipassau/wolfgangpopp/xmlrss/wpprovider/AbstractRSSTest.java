@@ -174,7 +174,7 @@ public abstract class AbstractRSSTest {
         rss.initRedact(keyPair.getPublic());
         rss.addIdentifier(identifier5);
         rss.addIdentifier(identifier4);
-        rss.addIdentifier(new Identifier(TEST_MESSAGE[6], 6));
+        rss.addIdentifier(new Identifier(TEST_MESSAGE[6], 2));
         SignatureOutput redacted = rss.redact(original);
 
         rss.initVerify(keyPair.getPublic());
@@ -213,11 +213,11 @@ public abstract class AbstractRSSTest {
         RedactableSignature rss = RedactableSignature.getInstance(algorithm);
         rss.initSign(keyPair);
         Identifier identifier0 = rss.addPart(TEST_MESSAGE[0]);
-        Identifier identifier1 = rss.addPart(TEST_MESSAGE[1]);;
-        Identifier identifier2 = rss.addPart(TEST_MESSAGE[2]);;
-        Identifier identifier3 = rss.addPart(TEST_MESSAGE[3]);;
-        Identifier identifier4 = rss.addPart(TEST_MESSAGE[4]);;
-        Identifier identifier5 = rss.addPart(TEST_MESSAGE[5]);;
+        Identifier identifier1 = rss.addPart(TEST_MESSAGE[1]);
+        Identifier identifier2 = rss.addPart(TEST_MESSAGE[2]);
+        Identifier identifier3 = rss.addPart(TEST_MESSAGE[3]);
+        Identifier identifier4 = rss.addPart(TEST_MESSAGE[4]);
+        Identifier identifier5 = rss.addPart(TEST_MESSAGE[5]);
         SignatureOutput original = rss.sign();
 
         rss.initRedact(keyPair.getPublic());
