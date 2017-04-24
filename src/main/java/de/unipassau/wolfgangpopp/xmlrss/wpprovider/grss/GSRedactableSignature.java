@@ -161,6 +161,9 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             }
         }
 
+        redactableParts.clear();
+        nonRedactableParts.clear();
+
         return builder.build();
     }
 
@@ -232,6 +235,8 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
                 builder.addRedactablePart(part, signedParts.get(part));
             }
         }
+
+        redactableParts.clear();
 
         return builder.build();
     }

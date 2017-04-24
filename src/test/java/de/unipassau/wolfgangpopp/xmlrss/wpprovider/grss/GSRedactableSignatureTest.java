@@ -20,18 +20,16 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AbstractRSSTest;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -39,84 +37,61 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Wolfgang Popp
  */
-public class GSRedactableSignatureTest {
+public class GSRedactableSignatureTest extends AbstractRSSTest {
 
-    private KeyPair keyPair;
-    private RedactableSignature sig;
-
-    private static final byte[][] message = {
-            "Test1".getBytes(),
-            "Test2".getBytes(),
-            "Test3".getBytes(),
-            "Test4".getBytes(),
-    };
-
-    static {
-        Security.insertProviderAt(new WPProvider(), 1);
+    public GSRedactableSignatureTest() throws NoSuchAlgorithmException {
+        super("GSRSSwithRSAandBPA", new WPProvider(), "GSRSSwithRSAandBPA", 512);
     }
 
-    @Before
-    public void init() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("GSRSSwithRSAandBPA");
-        keyGen.initialize(512);
-        keyPair = keyGen.generateKeyPair();
-        sig = RedactableSignature.getInstance("GSRSSwithRSAandBPA", new WPProvider());
-    }
-
+    @Override
     @Test
-    public void testSignAndVerify() throws Exception {
+    public void testSignSomeRedactable() throws Exception {
+        RedactableSignature sig = RedactableSignature.getInstance(algorithm);
         sig.initSign(keyPair);
-        sig.addPart(message[0], true);
-        sig.addPart(message[1], true);
-        sig.addPart(message[2], false);
-        sig.addPart(message[3], false);
-
+        sig.addPart(TEST_MESSAGE[0], true);
+        sig.addPart(TEST_MESSAGE[1], true);
+        sig.addPart(TEST_MESSAGE[2], false);
+        sig.addPart(TEST_MESSAGE[3], false);
         SignatureOutput output = sig.sign();
 
         sig.initVerify(keyPair.getPublic());
         assertTrue(sig.verify(output));
+        assertTrue(output.containsAll(Arrays.copyOfRange(TEST_MESSAGE, 0, 4)));
+        assertEquals(output.size(), 4);
     }
 
     @Test(expected = RedactableSignatureException.class)
-    public void testAddDuplicates() throws Exception {
+    public void testRedactNonRedactable() throws Exception {
+        RedactableSignature sig = RedactableSignature.getInstance(algorithm);
         sig.initSign(keyPair);
-        sig.addPart("test".getBytes());
-        sig.addPart("test".getBytes());
-    }
-
-    @Test
-    public void testSignRedactandVerify() throws Exception {
-        sig.initSign(keyPair);
-        sig.addPart(message[0], true);
-        Identifier identifier = sig.addPart(message[1], true);
-        sig.addPart(message[2], false);
-        sig.addPart(message[3], false);
+        sig.addPart(TEST_MESSAGE[0], true);
+        sig.addPart(TEST_MESSAGE[1], true);
+        sig.addPart(TEST_MESSAGE[2], false);
+        Identifier identifier = sig.addPart(TEST_MESSAGE[3], false);
         SignatureOutput output = sig.sign();
 
         sig.initRedact(keyPair.getPublic());
         sig.addIdentifier(identifier);
         SignatureOutput redacted = sig.redact(output);
-
-        assertTrue(redacted.containsAll(message[0], message[2], message[3]));
-        assertEquals(redacted.size(), 3);
-
-        sig.initVerify(keyPair.getPublic());
-        assertTrue(sig.verify(redacted));
     }
 
+    @Override
     @Test(expected = RedactableSignatureException.class)
-    public void testRedactNonRedactable() throws Exception {
+    public void testAddDuplicateParts() throws Exception {
+        RedactableSignature sig = RedactableSignature.getInstance(algorithm);
         sig.initSign(keyPair);
-        sig.addPart(message[0], true);
-        sig.addPart(message[1], true);
-        sig.addPart(message[2], false);
-        sig.addPart(message[3], false);
-        SignatureOutput output = sig.sign();
+        sig.addPart("test".getBytes());
+        sig.addPart("test".getBytes());
+    }
 
-
-        sig.initRedact(keyPair.getPublic());
-        sig.addPart(message[3]);
-        SignatureOutput redacted = sig.redact(output);
+    @Override
+    @Test(expected = RedactableSignatureException.class)
+    public void testAddDuplicateIdentifiers() throws Exception {
+        RedactableSignature sig = RedactableSignature.getInstance(algorithm);
+        sig.initSign(keyPair);
+        Identifier identifier = new Identifier("test".getBytes());
+        sig.addIdentifier(identifier);
+        sig.addIdentifier(identifier);
     }
 
 }

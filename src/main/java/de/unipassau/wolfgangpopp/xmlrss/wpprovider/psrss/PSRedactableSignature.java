@@ -99,7 +99,11 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
     //TODO admissible is ignored
     @Override
-    protected Identifier engineAddPart(byte[] part, boolean admissible) throws RedactableSignatureException {
+    protected Identifier engineAddPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
+        if (!isRedactable) {
+            throw new PSRSSException("PSRSS does not support non redactable parts");
+        }
+
         if (!parts.add(new ByteArray(part))) {
             throw new PSRSSException("Each part can only be added once");
         }
