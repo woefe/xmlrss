@@ -40,8 +40,9 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Wolfgang Popp
@@ -52,7 +53,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
     private final RedactableSignature gsrss;
     private final List<ByteArray> parts = new ArrayList<>();
     private final List<Boolean> isRedactable = new ArrayList<>();
-    private final List<Identifier> identifiers = new ArrayList<>();
+    private final Set<Identifier> identifiers = new HashSet<>();
     private PrivateKey gsrssPrivateKey;
     private PrivateKey accPrivateKey;
     private PublicKey gsrssPublicKey;
@@ -112,7 +113,9 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected void engineAddIdentifier(Identifier identifier) throws RedactableSignatureException {
-        identifiers.add(identifier);
+        if (!identifiers.add(identifier)) {
+            throw new RedactableSignatureException("identifiers cannot be added twice");
+        }
     }
 
     @Override

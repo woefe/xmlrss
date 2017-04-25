@@ -239,10 +239,13 @@ public abstract class AbstractRSSTest {
         assertFalse(redacted2.contains(TEST_MESSAGE[3]));
     }
 
+    @Test
     public abstract void testAddDuplicateParts() throws Exception;
 
+    @Test
     public abstract void testAddDuplicateIdentifiers() throws Exception;
 
+    @Test
     public abstract void testSignSomeRedactable() throws Exception;
 
 }

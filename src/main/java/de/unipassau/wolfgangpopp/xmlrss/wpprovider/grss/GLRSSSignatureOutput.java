@@ -41,9 +41,9 @@ public class GLRSSSignatureOutput implements SignatureOutput {
     private final Set<ByteArray> messageParts;
 
 
-    private GLRSSSignatureOutput(GSRSSSignatureOutput gsrssOutput, List<GLRSSSignedPart> parts) {
+    GLRSSSignatureOutput(GSRSSSignatureOutput gsrssOutput, List<GLRSSSignedPart> parts) {
         this.gsrssOutput = gsrssOutput;
-        this.parts = Collections.unmodifiableList(parts);
+        this.parts = parts;
         Set<ByteArray> messageParts = new HashSet<>(size());
         for (GLRSSSignedPart part : parts) {
             messageParts.add(new ByteArray(part.getMessagePart()));
@@ -56,7 +56,7 @@ public class GLRSSSignatureOutput implements SignatureOutput {
     }
 
     public List<GLRSSSignedPart> getParts() {
-        return parts;
+        return Collections.unmodifiableList(parts);
     }
 
     @Override
