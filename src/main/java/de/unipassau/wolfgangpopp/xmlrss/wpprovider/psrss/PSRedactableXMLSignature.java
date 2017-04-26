@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
@@ -54,6 +55,9 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     private RedactableSignature signature;
     private Node root;
     private Map<Element, byte[]> selectorResults = new HashMap<>();
+    private State state;
+
+    private enum State { SIGN, REDACT, VERIFY }
 
     PSRedactableXMLSignature(RedactableSignature signature) throws RedactableXMLSignatureException {
         super();
@@ -68,18 +72,21 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     @Override
     public void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         signature.initSign(keyPair, random);
+        state = State.SIGN;
         reset();
     }
 
     @Override
     public void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
         signature.initVerify(publicKey);
+        state = State.VERIFY;
         reset();
     }
 
     @Override
     public void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
         signature.initRedact(publicKey);
+        state = State.REDACT;
         reset();
     }
 
@@ -105,7 +112,12 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
         selectorResults.put(pointer, pointerConcatData);
         try {
-            signature.addPart(pointerConcatData);
+            if (state == State.REDACT) {
+                signature.addIdentifier(new Identifier(pointerConcatData));
+            } else if (state == State.SIGN) {
+                signature.addPart(pointerConcatData);
+            }
+            //throw new RedactableXMLSignatureException("")
         } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
