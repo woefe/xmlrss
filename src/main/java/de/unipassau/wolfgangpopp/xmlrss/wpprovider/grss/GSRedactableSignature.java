@@ -41,6 +41,7 @@ import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,8 +57,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     private final Accumulator accumulator;
     private final Signature dsig;
-    private final Set<ByteArray> redactableParts = new HashSet<>();
-    private final Set<ByteArray> nonRedactableParts = new HashSet<>();
+    private final Map<ByteArray, Boolean> messageParts = new HashMap<>();
     private SecureRandom random;
     private PublicKey accPublicKey;
     private PrivateKey accPrivateKey;
@@ -100,19 +100,11 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
     }
 
     @Override
-    protected Identifier engineAddPart(byte[] part, boolean redactable) throws RedactableSignatureException {
-        Set<ByteArray> set;
-        if (redactable) {
-            set = this.redactableParts;
-        } else {
-            set = this.nonRedactableParts;
-        }
-
-        if (!set.add(new ByteArray(part))) {
+    protected Identifier engineAddPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
+        if (messageParts.put(new ByteArray(part), isRedactable) != null) {
             throw new RedactableSignatureException(
                     "This algorithm is set based and therefore does not support duplicates");
         }
-        //TODO return Identifier for non redactable parts?
         return new Identifier(part);
     }
 
@@ -123,11 +115,11 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
 
     @Override
     protected SignatureOutput engineSign() throws RedactableSignatureException {
-        byte[][] elements = new byte[redactableParts.size()][];
+        byte[][] elements = new byte[messageParts.size()][];
         GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder();
 
         int index = 0;
-        for (ByteArray redactablePart : redactableParts) {
+        for (ByteArray redactablePart : messageParts.keySet()) {
             elements[index++] = redactablePart.getArray();
         }
 
@@ -138,10 +130,16 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        for (ByteArray element : orderNonRedactableParts(nonRedactableParts)) {
+        Set<ByteArray> nonRedactableParts = new HashSet<>();
+        for (Map.Entry<ByteArray, Boolean> entry : messageParts.entrySet()) {
+            if (!entry.getValue()) {
+                nonRedactableParts.add(entry.getKey());
+            }
+        }
+
+        for (ByteArray element : sortNonRedactableParts(nonRedactableParts)) {
             try {
                 dsig.update(element.getArray());
-                builder.addNonRedactablePart(element);
             } catch (SignatureException e) {
                 throw new RedactableSignatureException(e);
             }
@@ -153,16 +151,16 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        for (ByteArray part : redactableParts) {
+        for (Map.Entry<ByteArray, Boolean> entry : messageParts.entrySet()) {
+            ByteArray part = entry.getKey();
             try {
-                builder.addRedactablePart(part, accumulator.createWitness(part.getArray()));
+                builder.addSignedPart(part, accumulator.createWitness(part.getArray()), entry.getValue());
             } catch (AccumulatorException e) {
                 throw new RedactableSignatureException(e);
             }
         }
 
-        redactableParts.clear();
-        nonRedactableParts.clear();
+        messageParts.clear();
 
         return builder.build();
     }
@@ -181,7 +179,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        List<ByteArray> ordered = orderNonRedactableParts(signatureOutput.getNonRedactableParts());
+        List<ByteArray> ordered = sortNonRedactableParts(signatureOutput.getNonRedactableParts());
         for (ByteArray element : ordered) {
             try {
                 dsig.update(element.getArray());
@@ -197,7 +195,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
             throw new RedactableSignatureException(e);
         }
 
-        Map<ByteArray, byte[]> redactableParts = signatureOutput.getRedactableParts();
+        Map<ByteArray, byte[]> redactableParts = signatureOutput.getParts();
         for (ByteArray key : redactableParts.keySet()) {
             try {
                 valid = valid && accumulator.verify(redactableParts.get(key), key.getArray());
@@ -216,27 +214,26 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
         }
         GSRSSSignatureOutput signatureOutput = (GSRSSSignatureOutput) signature;
         GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder();
-        Map<ByteArray, byte[]> signedParts = signatureOutput.getRedactableParts();
+        Map<ByteArray, byte[]> signedParts = signatureOutput.getParts();
         Set<ByteArray> parts = signedParts.keySet();
         Set<ByteArray> nonRedactableParts = signatureOutput.getNonRedactableParts();
 
         builder.setDSigValue(signatureOutput.getDSigValue())
-                .setAccumulatorValue(signatureOutput.getAccumulatorValue())
-                .addNonRedactableParts(nonRedactableParts);
+                .setAccumulatorValue(signatureOutput.getAccumulatorValue());
 
-        for (ByteArray redactablePart : redactableParts) {
+        for (ByteArray redactablePart : messageParts.keySet()) {
             if (nonRedactableParts.contains(redactablePart)) {
                 throw new RedactableSignatureException("Cannot perform the redaction since a given part is not redactable");
             }
         }
 
         for (ByteArray part : parts) {
-            if (!redactableParts.contains(part)) {
-                builder.addRedactablePart(part, signedParts.get(part));
+            if (!messageParts.keySet().contains(part)) {
+                builder.addSignedPart(part, signedParts.get(part), signatureOutput.isRedactable(new Identifier(part)));
             }
         }
 
-        redactableParts.clear();
+        messageParts.clear();
 
         return builder.build();
     }
@@ -259,8 +256,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
         this.dsigPrivateKey = null;
         this.dsigkeyPair = null;
         this.acckeyPair = null;
-        this.redactableParts.clear();
-        this.nonRedactableParts.clear();
+        this.messageParts.clear();
     }
 
     private void checkAndSetKeyPair(KeyPair keyPair) throws InvalidKeyException {
@@ -283,7 +279,7 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
         dsigPublicKey = ((GSRSSPublicKey) publicKey).getDSigKey();
     }
 
-    private List<ByteArray> orderNonRedactableParts(Collection<ByteArray> nonRedactable) {
+    private List<ByteArray> sortNonRedactableParts(Collection<ByteArray> nonRedactable) {
         List<ByteArray> ordered = new ArrayList<>(nonRedactable.size());
         ordered.addAll(nonRedactable);
         ordered.sort(new Comparator<ByteArray>() {

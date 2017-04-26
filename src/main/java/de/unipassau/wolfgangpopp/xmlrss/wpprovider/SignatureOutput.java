@@ -31,6 +31,8 @@ public interface SignatureOutput {
 
     boolean containsAll(byte[]... parts);
 
+    boolean isRedactable(Identifier identifier);
+
     byte[] getMessagePart(Identifier identifier);
 
     byte[] getProof(Identifier identifier);

@@ -81,6 +81,12 @@ public class GLRSSSignatureOutput implements SignatureOutput {
     }
 
     @Override
+    public boolean isRedactable(Identifier identifier) {
+        //TODO
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
     public byte[] getMessagePart(Identifier identifier) {
         if (!contains(identifier)) {
             return null;

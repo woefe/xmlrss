@@ -25,6 +25,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.Set;
  */
 public class GSRSSSignatureOutput implements SignatureOutput {
     private final Map<ByteArray, byte[]> signedParts = new HashMap<>();
-    private final Set<ByteArray> nonRedactableParts = new HashSet<>();
+    private final Map<ByteArray, Boolean> redactableMapping = new HashMap<>();
     private byte[] dSigValue;
     private byte[] accumulatorValue;
 
@@ -46,7 +47,7 @@ public class GSRSSSignatureOutput implements SignatureOutput {
     @Override
     public boolean contains(byte[] part) {
         ByteArray wrapper = new ByteArray(part);
-        return signedParts.containsKey(wrapper) || nonRedactableParts.contains(wrapper);
+        return signedParts.containsKey(wrapper);
     }
 
     @Override
@@ -56,15 +57,16 @@ public class GSRSSSignatureOutput implements SignatureOutput {
 
     @Override
     public boolean containsAll(byte[]... parts) {
-        Set<ByteArray> allParts = new HashSet<>();
-        allParts.addAll(signedParts.keySet());
-        allParts.addAll(nonRedactableParts);
-
         Set<ByteArray> set = new HashSet<>();
         for (byte[] part : parts) {
             set.add(new ByteArray(part));
         }
-        return allParts.containsAll(set);
+        return signedParts.keySet().containsAll(set);
+    }
+
+    @Override
+    public boolean isRedactable(Identifier identifier) {
+        return redactableMapping.get(identifier.getByteArray());
     }
 
     @Override
@@ -82,7 +84,7 @@ public class GSRSSSignatureOutput implements SignatureOutput {
 
     @Override
     public int size() {
-        return signedParts.size() + nonRedactableParts.size();
+        return signedParts.size();
     }
 
     public byte[] getDSigValue() {
@@ -94,11 +96,17 @@ public class GSRSSSignatureOutput implements SignatureOutput {
     }
 
     public Set<ByteArray> getNonRedactableParts() {
-        return nonRedactableParts;
+        Set<ByteArray> nonRedactableParts = new HashSet<>();
+        for (Map.Entry<ByteArray, Boolean> part : redactableMapping.entrySet()) {
+            if (!part.getValue()) {
+                nonRedactableParts.add(part.getKey());
+            }
+        }
+        return Collections.unmodifiableSet(nonRedactableParts);
     }
 
-    public Map<ByteArray, byte[]> getRedactableParts() {
-        return signedParts;
+    public Map<ByteArray, byte[]> getParts() {
+        return Collections.unmodifiableMap(signedParts);
     }
 
 
@@ -115,18 +123,9 @@ public class GSRSSSignatureOutput implements SignatureOutput {
             return this;
         }
 
-        public Builder addRedactablePart(ByteArray value, byte[] proof) {
+        public Builder addSignedPart(ByteArray value, byte[] proof, boolean isRedactable) {
             signatureOutput.signedParts.put(value, proof);
-            return this;
-        }
-
-        public Builder addNonRedactablePart(ByteArray value) {
-            signatureOutput.nonRedactableParts.add(value);
-            return this;
-        }
-
-        public Builder addNonRedactableParts(Set<ByteArray> elements) {
-            signatureOutput.nonRedactableParts.addAll(elements);
+            signatureOutput.redactableMapping.put(value, isRedactable);
             return this;
         }
 

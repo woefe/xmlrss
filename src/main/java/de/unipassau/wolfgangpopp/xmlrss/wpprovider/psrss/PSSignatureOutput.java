@@ -108,6 +108,11 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     }
 
     @Override
+    public boolean isRedactable(Identifier identifier) {
+        return true;
+    }
+
+    @Override
     public byte[] getMessagePart(Identifier identifier) {
         if (contains(identifier)) {
             return identifier.getBytes();
