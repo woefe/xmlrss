@@ -21,10 +21,12 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -36,17 +38,12 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Signature", namespace = "https://sec.uni-passau.de/2017/03/xmlrss")
+@XmlRootElement(name = "Signature")
 @XmlType(propOrder = {"references", "signatureValue"})
 public final class Signature<S extends SignatureValue, P extends Proof> {
     private final Class<? extends Proof> proofClass;
     private final Class<? extends SignatureValue> signatureValueClass;
-
-    @XmlElementWrapper(name = "References")
-    @XmlElement(name = "Reference")
     private List<Reference<P>> references = new LinkedList<>();
-
-    @XmlAnyElement
     private S signatureValue;
 
     private Signature() {
@@ -56,6 +53,17 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
     public Signature(Class<S> signatureValueClass, Class<P> proofClass) {
         this.proofClass = proofClass;
         this.signatureValueClass = signatureValueClass;
+    }
+
+    @XmlElementWrapper(name = "References")
+    @XmlElement(name = "Reference")
+    public List<Reference<P>> getReferences() {
+        return references;
+    }
+
+    @XmlAnyElement(lax = true)
+    public S getSignatureValue() {
+        return signatureValue;
     }
 
     public Signature addReference(Reference<P> reference) {
@@ -75,5 +83,13 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
 
         m.marshal(this, document.getDocumentElement());
         return document;
+    }
+
+    public static <S extends SignatureValue, P extends Proof>
+    Signature<S, P> unmarshall(Class<S> signatureValueClass, Class<P> proofClass, Node signatureNode) throws JAXBException {
+
+        final JAXBContext context = JAXBContext.newInstance(Signature.class, proofClass, signatureValueClass);
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+        return (Signature<S, P>) unmarshaller.unmarshal(signatureNode);
     }
 }

@@ -47,4 +47,12 @@ public class GSSignatureValue implements SignatureValue {
         this.dsigValue = encoder.encodeToString(dsigValue);
         this.accumulatorValue = encoder.encodeToString(accumulatorValue);
     }
+
+    public byte[] getDSigValue() {
+        return Base64.getDecoder().decode(dsigValue);
+    }
+
+    public byte[] getAccumulatorValue() {
+        return Base64.getDecoder().decode(accumulatorValue);
+    }
 }

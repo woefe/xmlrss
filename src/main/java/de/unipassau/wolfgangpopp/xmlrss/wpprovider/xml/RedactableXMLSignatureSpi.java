@@ -84,6 +84,11 @@ public abstract class RedactableXMLSignatureSpi {
         }
     }
 
+    protected Node getSignatureNode(Node root, String xmlNamespace) throws RedactableXMLSignatureException {
+        Document doc = getOwnerDocument(root);
+        return checkNode(doc.getElementsByTagNameNS(xmlNamespace, "Signature").item(0), "Signature");
+    }
+
     protected Node getFirstChildSafe(Node parent, String expectedNodeName) throws RedactableXMLSignatureException {
         return checkNode(parent.getFirstChild(), expectedNodeName);
     }
@@ -93,8 +98,8 @@ public abstract class RedactableXMLSignatureSpi {
     }
 
     protected Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
-        if (node == null || !node.getNodeName().equals(expectedNodeName)) {
-            throw new RedactableXMLSignatureException("Cannot find expected node " + expectedNodeName);
+        if (node == null || !node.getLocalName().equals(expectedNodeName)) {
+            throw new RedactableXMLSignatureException("Cannot find expected node '" + expectedNodeName + "'");
         }
 
         return node;

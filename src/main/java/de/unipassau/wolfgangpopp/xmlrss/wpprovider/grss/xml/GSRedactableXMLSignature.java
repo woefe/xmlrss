@@ -24,6 +24,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GSRSSSignatureOutput;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
@@ -39,6 +40,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -73,12 +75,12 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineAddPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
-        Pointer pointer = new Pointer(root, uri, isRedactable);
+        Pointer pointer = new Pointer(uri, isRedactable);
         if (!pointers.add(pointer)) {
             throw new RedactableXMLSignatureException("Cannot add the given URI twice");
         }
         try {
-            gsrss.addPart(pointer.getConcatDereference(), isRedactable);
+            gsrss.addPart(pointer.getConcatDereference(root), isRedactable);
         } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
@@ -101,7 +103,7 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         Signature<GSSignatureValue, GSProof> sigElement = new Signature<>(GSSignatureValue.class, GSProof.class);
 
         for (Pointer pointer : pointers) {
-            GSProof proof = new GSProof(output.getProof(new Identifier(pointer.getConcatDereference())));
+            GSProof proof = new GSProof(output.getProof(new Identifier(pointer.getConcatDereference(root))));
             Reference<GSProof> reference = new Reference<>(pointer, proof);
             sigElement.addReference(reference);
         }
@@ -116,7 +118,32 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public boolean engineVerify() throws RedactableXMLSignatureException {
-        return false;
+        Signature<GSSignatureValue, GSProof> signature;
+        Node signatureNode = getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss");
+
+        try {
+            signature = Signature.unmarshall(GSSignatureValue.class, GSProof.class, signatureNode);
+        } catch (JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+        GSSignatureValue signatureValue = signature.getSignatureValue();
+        List<Reference<GSProof>> references = signature.getReferences();
+        GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder()
+                .setAccumulatorValue(signatureValue.getAccumulatorValue())
+                .setDSigValue(signatureValue.getDSigValue());
+
+        for (Reference<GSProof> reference : references) {
+            Pointer pointer = reference.getPointer();
+            builder.addSignedPart(new ByteArray(pointer.getConcatDereference(root)),
+                    reference.getProof().getBytes(), pointer.isRedactable());
+        }
+
+        try {
+            return gsrss.verify(builder.build());
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
     }
 
     @Override

@@ -174,7 +174,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     @Override
     public boolean engineVerify() throws RedactableXMLSignatureException {
         Base64.Decoder base64 = Base64.getDecoder();
-        Node signatureNode = getSignatureNode();
+        Node signatureNode = getSignatureNode(root, XML_NAMESPACE);
 
         // Enveloped signature; remove signature node from document, before doing any further processing
         root.removeChild(signatureNode);
@@ -220,7 +220,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineRedact() throws RedactableXMLSignatureException {
-        Node references = checkNode(getSignatureNode().getFirstChild(), "References");
+        Node references = checkNode(getSignatureNode(root, XML_NAMESPACE).getFirstChild(), "References");
         NodeList referencesList = references.getChildNodes();
         Set<Element> pointerElements = selectorResults.keySet();
         Set<String> selectors = new HashSet<>();
@@ -261,11 +261,6 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         for (Node node : referencesToRemove) {
             node.getParentNode().removeChild(node);
         }
-    }
-
-    private Node getSignatureNode() throws RedactableXMLSignatureException {
-        Document doc = getOwnerDocument(root);
-        return checkNode(doc.getElementsByTagNameNS(XML_NAMESPACE, "Signature").item(0), "Signature");
     }
 
     private void reset() {

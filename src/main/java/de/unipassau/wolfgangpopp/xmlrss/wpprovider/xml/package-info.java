@@ -18,30 +18,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
-
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Proof;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Base64;
-
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Proof")
-public class GSProof implements Proof {
-    @XmlElement(name = "Data")
-    private String proof;
+@XmlSchema(namespace = "https://sec.uni-passau.de/2017/03/xmlrss",
+        elementFormDefault = XmlNsForm.UNQUALIFIED,
+        xmlns = @XmlNs(prefix = "rsig", namespaceURI = "https://sec.uni-passau.de/2017/03/xmlrss"))
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
-    private GSProof() {
-    }
-
-    public GSProof(byte[] proof) {
-        this.proof = Base64.getEncoder().encodeToString(proof);
-    }
-
-    public byte[] getBytes() {
-        return Base64.getDecoder().decode(proof);
-    }
-}
+import javax.xml.bind.annotation.XmlNs;
+import javax.xml.bind.annotation.XmlNsForm;
+import javax.xml.bind.annotation.XmlSchema;

@@ -34,7 +34,7 @@ public final class Reference<P extends Proof> {
     @XmlElement(name = "Pointer")
     private Pointer pointer;
 
-    @XmlAnyElement
+    @XmlAnyElement(lax = true)
     private P proof;
 
     private Reference() {
@@ -43,5 +43,13 @@ public final class Reference<P extends Proof> {
     public Reference(Pointer pointer, P proof) {
         this.pointer = pointer;
         this.proof = proof;
+    }
+
+    public Pointer getPointer() {
+        return pointer;
+    }
+
+    public P getProof() {
+        return proof;
     }
 }

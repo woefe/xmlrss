@@ -43,29 +43,31 @@ public final class Pointer {
     @XmlAttribute(name = "id")
     private String id;
 
-    private final byte[] concatDereference;
+    private byte[] concatDereference;
 
     private Pointer() throws RedactableXMLSignatureException {
-        this(null, null);
+        this(null);
     }
 
-    public Pointer(Node root, String uri) throws RedactableXMLSignatureException {
-        this(root, uri, true);
+    public Pointer(String uri) throws RedactableXMLSignatureException {
+        this(uri, true);
     }
 
-    public Pointer(Node root, String uri, boolean isRedactable) throws RedactableXMLSignatureException {
-        this(root, uri, isRedactable, null);
-
+    public Pointer(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
+        this(uri, isRedactable, null);
     }
 
-    public Pointer(Node root, String uri, boolean isRedactable, String id) throws RedactableXMLSignatureException {
+    public Pointer(String uri, boolean isRedactable, String id) throws RedactableXMLSignatureException {
         this.uri = uri;
         this.isRedactable = isRedactable;
         this.id = id;
-        concatDereference = concatDereference(root);
     }
 
-    private byte[] concatDereference(Node root) throws RedactableXMLSignatureException {
+    private Pointer initConcatDereference(Node root) throws RedactableXMLSignatureException {
+        if (concatDereference != null) {
+            return this;
+        }
+
         byte[] c14n;
         Node dereference = Dereferencer.dereference(uri, root);
         try {
@@ -74,7 +76,8 @@ public final class Pointer {
             throw new RedactableXMLSignatureException(e);
         }
 
-        return new ByteArray(c14n).concat(marshall()).getArray();
+        this.concatDereference = new ByteArray(c14n).concat(marshall()).getArray();
+        return this;
     }
 
     private byte[] marshall() {
@@ -108,7 +111,19 @@ public final class Pointer {
         return uri.hashCode();
     }
 
-    public byte[] getConcatDereference() {
-        return concatDereference;
+    public byte[] getConcatDereference(Node root) throws RedactableXMLSignatureException {
+        return initConcatDereference(root).concatDereference;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public Boolean isRedactable() {
+        return isRedactable == null || isRedactable;
+    }
+
+    public String getId() {
+        return id;
     }
 }

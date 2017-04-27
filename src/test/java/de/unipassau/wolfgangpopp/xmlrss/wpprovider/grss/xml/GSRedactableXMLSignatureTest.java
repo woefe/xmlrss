@@ -64,4 +64,20 @@ public class GSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         printDocument(document);
     }
 
+    @Test
+    public void testSignAndThenVerify() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
+        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.addPartSelector("#xpointer(id('a2'))");
+        sig.addPartSelector("#xpointer(id('a3'))");
+        Document document = sig.sign();
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        sig.verify();
+
+    }
+
 }
