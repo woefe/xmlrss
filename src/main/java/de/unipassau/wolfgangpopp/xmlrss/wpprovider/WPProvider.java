@@ -50,6 +50,8 @@ public class WPProvider extends Provider {
                 // Redactable XML signature engines
                 put("RedactableXMLSignature.XMLPSRSSwithPSA",
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableXMLSignature$XMLPSRSSwithPSA");
+                put("RedactableXMLSignature.GSRSSwithRSAandBPA",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml.GSRedactableXMLSignature$GSRSSwithBPAccumulatorAndRSA");
 
                 // Key pair generator engines
                 put("KeyPairGenerator.PSRSS", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRSSKeyPairGenerator");

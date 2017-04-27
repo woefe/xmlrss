@@ -171,8 +171,12 @@ public abstract class RedactableXMLSignature {
     }
 
     public final void addPartSelector(String uri) throws RedactableXMLSignatureException {
+        addPartSelector(uri, true);
+    }
+
+    public final void addPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         if (state != STATE.UNINITIALIZED) {
-            engine.engineAddPartSelector(uri);
+            engine.engineAddPartSelector(uri, isRedactable);
         } else {
             throw new RedactableXMLSignatureException("not initialized");
         }

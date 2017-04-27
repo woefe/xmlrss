@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AbstractXMLRSSTest;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
@@ -32,12 +33,7 @@ import org.xml.sax.SAXException;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -59,7 +55,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Wolfgang Popp
  */
-public class PSRedactableXMLSignatureTest {
+public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
     private static final KeyPair keyPair;
 
     static {
@@ -235,13 +231,4 @@ public class PSRedactableXMLSignatureTest {
         sig.setDocument(document);
         assertTrue(sig.verify());
     }
-
-    private void printDocument(Document document) throws TransformerException {
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer trans = tf.newTransformer();
-        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        trans.transform(new DOMSource(document), new StreamResult(System.out));
-    }
-
 }

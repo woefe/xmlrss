@@ -96,7 +96,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public void engineAddPartSelector(String uri) throws RedactableXMLSignatureException {
+    public void engineAddPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         if (root == null) {
             throw new RedactableXMLSignatureException("root node not set");
         }

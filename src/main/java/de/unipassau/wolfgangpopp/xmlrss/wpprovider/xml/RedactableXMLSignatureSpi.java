@@ -124,7 +124,9 @@ public abstract class RedactableXMLSignatureSpi {
         return attributeNode.getTextContent();
     }
 
-    public abstract void engineInitSign(KeyPair keyPair) throws InvalidKeyException;
+    public void engineInitSign(KeyPair keyPair) throws InvalidKeyException {
+        engineInitSign(keyPair, new SecureRandom());
+    }
 
     public abstract void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException;
 
@@ -132,7 +134,7 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
-    public abstract void engineAddPartSelector(String uri) throws RedactableXMLSignatureException;
+    public abstract void engineAddPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException;
 
     public abstract void engineSetRootNode(Node node);
 
