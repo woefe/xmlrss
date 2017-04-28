@@ -143,7 +143,7 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException;
 
-    public abstract void engineSetRootNode(Node node);
+    public abstract void engineSetRootNode(Node root);
 
     public abstract Document engineSign() throws RedactableXMLSignatureException;
 

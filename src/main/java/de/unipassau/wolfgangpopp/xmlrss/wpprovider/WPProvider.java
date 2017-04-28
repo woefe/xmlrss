@@ -52,6 +52,8 @@ public class WPProvider extends Provider {
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRedactableXMLSignature$XMLPSRSSwithPSA");
                 put("RedactableXMLSignature.GSRSSwithRSAandBPA",
                         "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml.GSRedactableXMLSignature$GSRSSwithBPAccumulatorAndRSA");
+                put("RedactableXMLSignature.GLRSSwithRSAandBPA",
+                        "de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml.GLRedactableXMLSignature$GLRSSwithBPAccumulatorAndRSA");
 
                 // Key pair generator engines
                 put("KeyPairGenerator.PSRSS", "de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss.PSRSSKeyPairGenerator");
