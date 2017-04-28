@@ -30,6 +30,8 @@ import org.w3c.dom.Document;
 import java.io.FileInputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 import java.security.Security;
 
 import static org.junit.Assert.assertTrue;
@@ -39,65 +41,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class GSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
-    private KeyPair keyPair;
-    private String algorithm;
-
-    static {
-        Security.insertProviderAt(new WPProvider(), 2);
+    public GSRedactableXMLSignatureTest() throws NoSuchAlgorithmException {
+        super("GSRSSwithRSAandBPA", new WPProvider(), "GSRSSwithRSAandBPA", 512);
     }
-
-    @Before
-    public void setUp() throws Exception {
-        algorithm = "GSRSSwithRSAandBPA";
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(algorithm);
-        keyGen.initialize(512);
-        keyPair = keyGen.generateKeyPair();
-    }
-
-    @Test
-    public void testSign() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", false);
-        Document document = sig.sign();
-    }
-
-    @Test
-    public void testSignAndThenVerify() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", false);
-        Document document = sig.sign();
-
-        sig.initVerify(keyPair.getPublic());
-        sig.setDocument(document);
-        assertTrue(sig.verify());
-    }
-
-    @Test
-    public void testSignThenRedactAndThenVerify() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", true);
-        Document document = sig.sign();
-
-        sig.initRedact(keyPair.getPublic());
-        sig.setDocument(document);
-        sig.addRedactSelector("#xpointer(id('a3'))");
-        sig.redact();
-
-        sig.initVerify(keyPair.getPublic());
-        sig.setDocument(document);
-        assertTrue(sig.verify());
-    }
-
 }

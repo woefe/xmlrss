@@ -45,7 +45,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
-import java.security.Security;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,13 +55,12 @@ import static org.junit.Assert.assertTrue;
  * @author Wolfgang Popp
  */
 public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
-    private static final KeyPair keyPair;
 
-    static {
-        Security.insertProviderAt(new WPProvider(), 0);
-        PSRSSPublicKey publicKey256 = new PSRSSPublicKey(new BigInteger("7249349928048807500024891411067629370056303429447255270046802991880425543412906735607605108373982421012500888307062421310001762155422489671132976679912849"));
-        PSRSSPrivateKey privateKey256 = new PSRSSPrivateKey(new BigInteger("7249349928048807500024891411067629370056303429447255270046802991880425543412734960638035580933850038621738468566657503090109097536944629352405060890801636"));
-        keyPair = new KeyPair(publicKey256, privateKey256);
+    public PSRedactableXMLSignatureTest() {
+        super("XMLPSRSSwithPSA", new WPProvider(), new KeyPair(
+                new PSRSSPublicKey(new BigInteger("7249349928048807500024891411067629370056303429447255270046802991880425543412906735607605108373982421012500888307062421310001762155422489671132976679912849")),
+                new PSRSSPrivateKey(new BigInteger("7249349928048807500024891411067629370056303429447255270046802991880425543412734960638035580933850038621738468566657503090109097536944629352405060890801636"))
+        ));
     }
 
     @Test

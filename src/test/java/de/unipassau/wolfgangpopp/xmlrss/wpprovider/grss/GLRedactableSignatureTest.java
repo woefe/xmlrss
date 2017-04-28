@@ -30,6 +30,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -93,7 +94,7 @@ public class GLRedactableSignatureTest extends AbstractRSSTest {
 
         SignatureOutput output = rss.sign();
 
-        assertEquals(output.size(), 5);
+        assertEquals(4, output.size());
         for (Identifier identifier : identifiers) {
             assertTrue(output.contains(identifier));
         }
