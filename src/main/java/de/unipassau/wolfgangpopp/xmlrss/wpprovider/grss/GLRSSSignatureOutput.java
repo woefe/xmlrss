@@ -132,6 +132,11 @@ public class GLRSSSignatureOutput implements SignatureOutput {
             return this;
         }
 
+        Builder setGSIdentifier(int index, Identifier gsIdentifier) {
+            parts[index].gsIdentifier = gsIdentifier;
+            return this;
+        }
+
         Builder addWittness(int index, byte[] wittness) {
             parts[index].witnesses.add(new ByteArray(Arrays.copyOf(wittness, wittness.length)));
             return this;
@@ -155,6 +160,9 @@ public class GLRSSSignatureOutput implements SignatureOutput {
         }
 
         GLRSSSignatureOutput build() {
+            for (GLRSSSignedPart part : parts) {
+                part.gsProof = gsrssSignatureOutput.getProof(part.gsIdentifier);
+            }
             return new GLRSSSignatureOutput(gsrssSignatureOutput, Arrays.asList(parts));
         }
     }
@@ -165,6 +173,8 @@ public class GLRSSSignatureOutput implements SignatureOutput {
         private byte[] messagePart;
         private byte[] randomValue;
         private byte[] accumulatorValue;
+        private byte[] gsProof;
+        private Identifier gsIdentifier;
         private boolean isRedactable;
         private final List<ByteArray> witnesses = new ArrayList<>();
 
@@ -180,12 +190,20 @@ public class GLRSSSignatureOutput implements SignatureOutput {
             return Arrays.copyOf(accumulatorValue, accumulatorValue.length);
         }
 
+        public byte[] getGsProof() {
+            return Arrays.copyOf(gsProof, gsProof.length);
+        }
+
         public List<ByteArray> getWitnesses() {
             return Collections.unmodifiableList(witnesses);
         }
 
         public boolean isRedactable() {
             return isRedactable;
+        }
+
+        public Identifier getGSIdentifier() {
+            return gsIdentifier;
         }
 
         @Override

@@ -145,13 +145,13 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
                 throw new RedactableSignatureException(e);
             }
 
+            ByteArray concat = new ByteArray(messagePart).concat(accumulatorValue).concat(randomValues[i]);
+
             builder.setMessagePart(i, messagePart)
                     .setRedactable(i, isRedactable)
                     .setRandomValue(i, randomValues[i])
-                    .setAccValue(i, accumulatorValue);
-
-            ByteArray concat = new ByteArray(messagePart).concat(accumulatorValue).concat(randomValues[i]);
-            gsrss.addPart(concat.getArray(), isRedactable);
+                    .setAccValue(i, accumulatorValue)
+                    .setGSIdentifier(i, gsrss.addPart(concat.getArray(), isRedactable));
         }
 
         builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.sign());
@@ -214,6 +214,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
                         .setRedactable(builderIndex, part.isRedactable())
                         .setRandomValue(builderIndex, part.getRandomValue())
                         .setAccValue(builderIndex, part.getAccumulatorValue())
+                        .setGSIdentifier(builderIndex, part.getGSIdentifier())
                         .setWitnesses(builderIndex, copy);
 
                 ++builderIndex;
