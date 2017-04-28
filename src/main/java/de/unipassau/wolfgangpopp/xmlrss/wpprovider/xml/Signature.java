@@ -41,8 +41,8 @@ import java.util.List;
 @XmlRootElement(name = "Signature")
 @XmlType(propOrder = {"references", "signatureValue"})
 public final class Signature<S extends SignatureValue, P extends Proof> {
-    private final Class<? extends Proof> proofClass;
-    private final Class<? extends SignatureValue> signatureValueClass;
+    private Class<? extends Proof> proofClass;
+    private Class<? extends SignatureValue> signatureValueClass;
     private List<Reference<P>> references = new LinkedList<>();
     private S signatureValue;
 
@@ -90,6 +90,9 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
 
         final JAXBContext context = JAXBContext.newInstance(Signature.class, proofClass, signatureValueClass);
         Unmarshaller unmarshaller = context.createUnmarshaller();
-        return (Signature<S, P>) unmarshaller.unmarshal(signatureNode);
+        Signature<S, P> signature = (Signature<S, P>) unmarshaller.unmarshal(signatureNode);
+        signature.proofClass = proofClass;
+        signature.signatureValueClass = signatureValueClass;
+        return signature;
     }
 }

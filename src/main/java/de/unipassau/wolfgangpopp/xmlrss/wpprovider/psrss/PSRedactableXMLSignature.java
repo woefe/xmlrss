@@ -96,7 +96,12 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public void engineAddPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
+    public void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException {
+        engineAddSignSelector(uri, true);
+    }
+
+    @Override
+    public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         if (root == null) {
             throw new RedactableXMLSignatureException("root node not set");
         }
@@ -219,7 +224,7 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public void engineRedact() throws RedactableXMLSignatureException {
+    public Document engineRedact() throws RedactableXMLSignatureException {
         Node references = checkNode(getSignatureNode(root, XML_NAMESPACE).getFirstChild(), "References");
         NodeList referencesList = references.getChildNodes();
         Set<Element> pointerElements = selectorResults.keySet();
@@ -261,6 +266,8 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         for (Node node : referencesToRemove) {
             node.getParentNode().removeChild(node);
         }
+
+        return getOwnerDocument(root);
     }
 
     private void reset() {

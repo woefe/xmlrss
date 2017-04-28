@@ -52,4 +52,22 @@ public final class Reference<P extends Proof> {
     public P getProof() {
         return proof;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Reference<?> reference = (Reference<?>) o;
+
+        if (pointer != null ? !pointer.equals(reference.pointer) : reference.pointer != null) return false;
+        return proof != null ? proof.equals(reference.proof) : reference.proof == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = pointer != null ? pointer.hashCode() : 0;
+        result = 31 * result + (proof != null ? proof.hashCode() : 0);
+        return result;
+    }
 }

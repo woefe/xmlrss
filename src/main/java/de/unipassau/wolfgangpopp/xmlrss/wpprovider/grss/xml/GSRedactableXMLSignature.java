@@ -39,8 +39,11 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 /**
@@ -60,21 +63,24 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
+        reset();
         gsrss.initSign(keyPair, random);
     }
 
     @Override
     public void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
+        reset();
         gsrss.initVerify(publicKey);
     }
 
     @Override
     public void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
+        reset();
         gsrss.initRedact(publicKey);
     }
 
     @Override
-    public void engineAddPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
+    public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         Pointer pointer = new Pointer(uri, isRedactable);
         if (!pointers.add(pointer)) {
             throw new RedactableXMLSignatureException("Cannot add the given URI twice");
@@ -83,6 +89,14 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             gsrss.addPart(pointer.getConcatDereference(root), isRedactable);
         } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    @Override
+    public void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException {
+        Pointer pointer = new Pointer(uri, true);
+        if (!pointers.add(pointer)) {
+            throw new RedactableXMLSignatureException("Cannot add the given URI twice");
         }
     }
 
@@ -147,8 +161,55 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     }
 
     @Override
-    public void engineRedact() throws RedactableXMLSignatureException {
+    public Document engineRedact() throws RedactableXMLSignatureException {
+        Signature<GSSignatureValue, GSProof> signature;
+        Node signatureNode = getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss");
 
+        try {
+            signature = Signature.unmarshall(GSSignatureValue.class, GSProof.class, signatureNode);
+        } catch (JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+        List<Node> selectedNodes = new ArrayList<>(pointers.size());
+
+        for (Pointer pointer : pointers) {
+            selectedNodes.add(dereference(pointer.getUri(), root));
+        }
+
+        selectedNodes.sort(new Comparator<Node>() {
+            @Override
+            public int compare(Node node1, Node node2) {
+                if (isDescendant(node1, node2)) {
+                    return 1;
+                }
+                return -1;
+            }
+        });
+
+        for (Node selectedNode : selectedNodes) {
+            selectedNode.getParentNode().removeChild(selectedNode);
+        }
+
+        root.removeChild(signatureNode);
+        ListIterator<Reference<GSProof>> it = signature.getReferences().listIterator();
+        while (it.hasNext()) {
+            Reference<GSProof> reference = it.next();
+            if (pointers.contains(reference.getPointer())) {
+                it.remove();
+            }
+        }
+
+        try {
+            return signature.marshall(getOwnerDocument(root));
+        } catch (JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    private void reset() {
+        root = null;
+        pointers.clear();
     }
 
     public static class GSRSSwithBPAccumulatorAndRSA extends GSRedactableXMLSignature {

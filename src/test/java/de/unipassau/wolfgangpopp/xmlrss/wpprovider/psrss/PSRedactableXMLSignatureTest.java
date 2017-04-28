@@ -76,9 +76,9 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
         sig.initSign(keyPair);
         sig.setDocument(document);
-        sig.addPartSelector("#xpointer(id('a1'))");
-        sig.addPartSelector("#xpointer(id('a2'))");
-        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
         sig.sign();
 
         validateXSD(document);
@@ -105,9 +105,11 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addPartSelector("#xpointer(id('a3'))");
-        sig.addPartSelector("#xpointer(id('a3'))"); // throws RedactableXMLSignatureException
+        sig.addSignSelector("#xpointer(id('a3'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true); // throws RedactableXMLSignatureException
     }
+
+    // TODO add nonredactable
 
     @Test
     public void engineVerify() throws Exception {
@@ -115,9 +117,9 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addPartSelector("#xpointer(id('a1'))");
-        sig.addPartSelector("#xpointer(id('a2'))");
-        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
         Document signedDocument = sig.sign();
 
         sig.initVerify(keyPair.getPublic());
@@ -150,14 +152,14 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addPartSelector("#xpointer(id('a1'))");
-        sig.addPartSelector("#xpointer(id('a2'))");
-        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
         Document document = sig.sign();
 
         sig.initRedact(keyPair.getPublic());
         sig.setDocument(document);
-        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addRedactSelector("#xpointer(id('a3'))");
         sig.redact();
 
         validateXSD(document);
@@ -180,17 +182,17 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addPartSelector("#xpointer(id('a1'))");
-        sig.addPartSelector("#xpointer(id('g1'))");
-        sig.addPartSelector("#xpointer(id('j1'))");
-        sig.addPartSelector("#xpointer(id('a2'))");
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('g1'))", true);
+        sig.addSignSelector("#xpointer(id('j1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
         Document document = sig.sign();
 
         sig.initRedact(keyPair.getPublic());
         sig.setDocument(document);
-        sig.addPartSelector("#xpointer(id('j1'))");
-        sig.addPartSelector("#xpointer(id('g1'))");
-        sig.addPartSelector("#xpointer(id('a1'))");
+        sig.addRedactSelector("#xpointer(id('j1'))");
+        sig.addRedactSelector("#xpointer(id('g1'))");
+        sig.addRedactSelector("#xpointer(id('a1'))");
         sig.redact();
 
         sig.initVerify(keyPair.getPublic());
@@ -205,26 +207,26 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/test1.xml"), schema);
-        sig.addPartSelector("#xpointer(id('i1'))");
-        sig.addPartSelector("#xpointer(id('l1'))");
-        sig.addPartSelector("#xpointer(id('e1'))");
-        sig.addPartSelector("#xpointer(id('e2'))");
-        sig.addPartSelector("#xpointer(id('e3'))");
-        sig.addPartSelector("#xpointer(id('i3'))");
-        sig.addPartSelector("#xpointer(id('i2'))");
-        sig.addPartSelector("#xpointer(id('s1'))");
+        sig.addSignSelector("#xpointer(id('i1'))", true);
+        sig.addSignSelector("#xpointer(id('l1'))", true);
+        sig.addSignSelector("#xpointer(id('e1'))", true);
+        sig.addSignSelector("#xpointer(id('e2'))", true);
+        sig.addSignSelector("#xpointer(id('e3'))", true);
+        sig.addSignSelector("#xpointer(id('i3'))", true);
+        sig.addSignSelector("#xpointer(id('i2'))", true);
+        sig.addSignSelector("#xpointer(id('s1'))", true);
         Document document = sig.sign();
 
         printDocument(document);
 
         sig.initRedact(keyPair.getPublic());
         sig.setDocument(document);
-        sig.addPartSelector("#xpointer(id('i1'))");
-        sig.addPartSelector("#xpointer(id('e2'))");
-        sig.addPartSelector("#xpointer(id('e3'))");
-        sig.addPartSelector("#xpointer(id('e1'))");
-        sig.addPartSelector("#xpointer(id('l1'))");
-        sig.addPartSelector("#xpointer(id('i3'))");
+        sig.addRedactSelector("#xpointer(id('i1'))");
+        sig.addRedactSelector("#xpointer(id('e2'))");
+        sig.addRedactSelector("#xpointer(id('e3'))");
+        sig.addRedactSelector("#xpointer(id('e1'))");
+        sig.addRedactSelector("#xpointer(id('l1'))");
+        sig.addRedactSelector("#xpointer(id('i3'))");
         sig.redact();
 
         sig.initVerify(keyPair.getPublic());

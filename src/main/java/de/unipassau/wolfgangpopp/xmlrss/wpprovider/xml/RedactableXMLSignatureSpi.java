@@ -139,7 +139,9 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract void engineInitRedact(PublicKey publicKey) throws InvalidKeyException;
 
-    public abstract void engineAddPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException;
+    public abstract void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException;
+
+    public abstract void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException;
 
     public abstract void engineSetRootNode(Node node);
 
@@ -147,5 +149,5 @@ public abstract class RedactableXMLSignatureSpi {
 
     public abstract boolean engineVerify() throws RedactableXMLSignatureException;
 
-    public abstract void engineRedact() throws RedactableXMLSignatureException;
+    public abstract Document engineRedact() throws RedactableXMLSignatureException;
 }

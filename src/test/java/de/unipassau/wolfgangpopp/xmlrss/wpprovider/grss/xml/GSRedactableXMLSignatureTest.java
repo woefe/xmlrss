@@ -32,6 +32,8 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.Security;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Wolfgang Popp
  */
@@ -57,11 +59,10 @@ public class GSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addPartSelector("#xpointer(id('a1'))");
-        sig.addPartSelector("#xpointer(id('a2'))");
-        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", false);
         Document document = sig.sign();
-        printDocument(document);
     }
 
     @Test
@@ -69,15 +70,34 @@ public class GSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addPartSelector("#xpointer(id('a1'))");
-        sig.addPartSelector("#xpointer(id('a2'))");
-        sig.addPartSelector("#xpointer(id('a3'))");
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", false);
         Document document = sig.sign();
 
         sig.initVerify(keyPair.getPublic());
         sig.setDocument(document);
-        sig.verify();
+        assertTrue(sig.verify());
+    }
 
+    @Test
+    public void testSignThenRedactAndThenVerify() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
+        Document document = sig.sign();
+
+        sig.initRedact(keyPair.getPublic());
+        sig.setDocument(document);
+        sig.addRedactSelector("#xpointer(id('a3'))");
+        sig.redact();
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertTrue(sig.verify());
     }
 
 }

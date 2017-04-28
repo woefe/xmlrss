@@ -44,4 +44,19 @@ public class GSProof implements Proof {
     public byte[] getBytes() {
         return Base64.getDecoder().decode(proof);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        GSProof gsProof = (GSProof) o;
+
+        return proof != null ? proof.equals(gsProof.proof) : gsProof.proof == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return proof != null ? proof.hashCode() : 0;
+    }
 }

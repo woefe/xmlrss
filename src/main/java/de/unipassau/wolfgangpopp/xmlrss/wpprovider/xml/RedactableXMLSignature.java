@@ -170,15 +170,19 @@ public abstract class RedactableXMLSignature {
         }
     }
 
-    public final void addPartSelector(String uri) throws RedactableXMLSignatureException {
-        addPartSelector(uri, true);
+    public final void addSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
+        if (state == STATE.SIGN) {
+            engine.engineAddSignSelector(uri, isRedactable);
+        } else {
+            throw new RedactableXMLSignatureException("not for signing");
+        }
     }
 
-    public final void addPartSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
-        if (state != STATE.UNINITIALIZED) {
-            engine.engineAddPartSelector(uri, isRedactable);
+    public final void addRedactSelector(String uri) throws RedactableXMLSignatureException {
+        if (state == STATE.REDACT) {
+            engine.engineAddRedactSelector(uri);
         } else {
-            throw new RedactableXMLSignatureException("not initialized");
+            throw new RedactableXMLSignatureException("not for redaction");
         }
     }
 
