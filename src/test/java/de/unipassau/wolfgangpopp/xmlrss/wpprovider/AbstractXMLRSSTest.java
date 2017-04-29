@@ -96,7 +96,7 @@ public abstract class AbstractXMLRSSTest {
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
         sig.addSignSelector("#xpointer(id('a1'))", true);
         sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", false);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
         Document document = sig.sign();
         printDocument(document);
     }

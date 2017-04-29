@@ -18,9 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
-
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Proof;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,14 +28,14 @@ import java.util.Base64;
  * @author Wolfgang Popp
  */
 @XmlRootElement(name = "Proof")
-public class GSProof implements Proof {
+public class SimpleProof implements Proof {
     @XmlElement(name = "Data")
     private String proof;
 
-    private GSProof() {
+    private SimpleProof() {
     }
 
-    public GSProof(byte[] proof) {
+    public SimpleProof(byte[] proof) {
         this.proof = Base64.getEncoder().encodeToString(proof);
     }
 
@@ -50,7 +48,7 @@ public class GSProof implements Proof {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GSProof gsProof = (GSProof) o;
+        SimpleProof gsProof = (SimpleProof) o;
 
         return proof != null ? proof.equals(gsProof.proof) : gsProof.proof == null;
     }

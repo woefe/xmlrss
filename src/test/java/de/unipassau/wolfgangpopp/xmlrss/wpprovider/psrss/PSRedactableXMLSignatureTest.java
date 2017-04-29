@@ -67,29 +67,31 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
     public void engineSign() throws Exception {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
 
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        documentBuilderFactory.setNamespaceAware(true);
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new FileInputStream("testdata/vehicles.xml"));
-
         sig.initSign(keyPair);
-        sig.setDocument(document);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
         sig.addSignSelector("#xpointer(id('a1'))", true);
         sig.addSignSelector("#xpointer(id('a2'))", true);
         sig.addSignSelector("#xpointer(id('a3'))", true);
-        sig.sign();
+        Document document = sig.sign();
 
         validateXSD(document);
 
-        //printDocument(document)
+        printDocument(document);
     }
 
     private void validateXSD(Document signedDoc) throws SAXException, IOException {
-        NodeList nodeList = signedDoc.getElementsByTagNameNS(PSRedactableXMLSignature.XML_NAMESPACE, "Signature");
-        assertEquals(nodeList.getLength(), 1);
+        NodeList nodeList = signedDoc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
+        assertEquals(1, nodeList.getLength());
 
         Node signature = nodeList.item(0);
-        assertEquals(signature.getChildNodes().getLength(), 2);
+        NodeList childNodes = signature.getChildNodes();
+        int actualNodes = 0;
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            if (childNodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
+                ++actualNodes;
+            }
+        }
+        assertEquals(2, actualNodes);
 
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = schemaFactory.newSchema(new File("psrss_schema.xsd"));
@@ -135,7 +137,7 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         Document document = documentBuilder.parse(new File("testdata/vehicles.sig.xml"));
 
-        NodeList nodeList = document.getElementsByTagName("Signature");
+        NodeList nodeList = document.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
         assertEquals(nodeList.getLength(), 1);
 
         sig.initVerify(keyPair.getPublic());

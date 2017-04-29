@@ -30,6 +30,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureExc
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Reference;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Signature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.SimpleProof;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -39,8 +40,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -114,11 +113,11 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             throw new RedactableXMLSignatureException(e);
         }
 
-        Signature<GSSignatureValue, GSProof> sigElement = new Signature<>(GSSignatureValue.class, GSProof.class);
+        Signature<GSSignatureValue, SimpleProof> sigElement = new Signature<>(GSSignatureValue.class, SimpleProof.class);
 
         for (Pointer pointer : pointers) {
-            GSProof proof = new GSProof(output.getProof(new Identifier(pointer.getConcatDereference(root))));
-            Reference<GSProof> reference = new Reference<>(pointer, proof);
+            SimpleProof proof = new SimpleProof(output.getProof(new Identifier(pointer.getConcatDereference(root))));
+            Reference<SimpleProof> reference = new Reference<>(pointer, proof);
             sigElement.addReference(reference);
         }
         sigElement.setSignatureValue(new GSSignatureValue(output.getDSigValue(), output.getAccumulatorValue()));
@@ -132,22 +131,22 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public boolean engineVerify() throws RedactableXMLSignatureException {
-        Signature<GSSignatureValue, GSProof> signature;
-        Node signatureNode = getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss");
+        Signature<GSSignatureValue, SimpleProof> signature;
+        Node signatureNode = getSignatureNode(root);
 
         try {
-            signature = Signature.unmarshall(GSSignatureValue.class, GSProof.class, signatureNode);
+            signature = Signature.unmarshall(GSSignatureValue.class, SimpleProof.class, signatureNode);
         } catch (JAXBException e) {
             throw new RedactableXMLSignatureException(e);
         }
 
         GSSignatureValue signatureValue = signature.getSignatureValue();
-        List<Reference<GSProof>> references = signature.getReferences();
+        List<Reference<SimpleProof>> references = signature.getReferences();
         GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder()
                 .setAccumulatorValue(signatureValue.getAccumulatorValue())
                 .setDSigValue(signatureValue.getDSigValue());
 
-        for (Reference<GSProof> reference : references) {
+        for (Reference<SimpleProof> reference : references) {
             Pointer pointer = reference.getPointer();
             builder.addSignedPart(new ByteArray(pointer.getConcatDereference(root)),
                     reference.getProof().getBytes(), pointer.isRedactable());
@@ -162,11 +161,11 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public Document engineRedact() throws RedactableXMLSignatureException {
-        Signature<GSSignatureValue, GSProof> signature;
-        Node signatureNode = getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss");
+        Signature<GSSignatureValue, SimpleProof> signature;
+        Node signatureNode = getSignatureNode(root);
 
         try {
-            signature = Signature.unmarshall(GSSignatureValue.class, GSProof.class, signatureNode);
+            signature = Signature.unmarshall(GSSignatureValue.class, SimpleProof.class, signatureNode);
         } catch (JAXBException e) {
             throw new RedactableXMLSignatureException(e);
         }
@@ -178,9 +177,9 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         removeNodes(root, uris);
 
         root.removeChild(signatureNode);
-        ListIterator<Reference<GSProof>> it = signature.getReferences().listIterator();
+        ListIterator<Reference<SimpleProof>> it = signature.getReferences().listIterator();
         while (it.hasNext()) {
-            Reference<GSProof> reference = it.next();
+            Reference<SimpleProof> reference = it.next();
             if (pointers.contains(reference.getPointer())) {
                 it.remove();
             }

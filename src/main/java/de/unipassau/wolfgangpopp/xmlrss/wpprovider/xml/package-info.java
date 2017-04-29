@@ -22,8 +22,8 @@
  * @author Wolfgang Popp
  */
 @XmlSchema(namespace = "https://sec.uni-passau.de/2017/03/xmlrss",
-        elementFormDefault = XmlNsForm.UNQUALIFIED,
-        xmlns = @XmlNs(prefix = "rsig", namespaceURI = "https://sec.uni-passau.de/2017/03/xmlrss"))
+        elementFormDefault = XmlNsForm.QUALIFIED,
+        xmlns = @XmlNs(prefix = "drs", namespaceURI = "https://sec.uni-passau.de/2017/03/xmlrss"))
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
 import javax.xml.bind.annotation.XmlNs;

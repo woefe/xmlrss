@@ -20,10 +20,6 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
-import com.sun.org.apache.xml.internal.security.Init;
-import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
-import com.sun.org.apache.xml.internal.security.c14n.Canonicalizer;
-import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -41,22 +37,6 @@ import java.util.Set;
  * @author Wolfgang Popp
  */
 public abstract class RedactableXMLSignatureSpi {
-
-    private Canonicalizer canonicalizer;
-
-    protected RedactableXMLSignatureSpi() throws RedactableXMLSignatureException {
-        Init.init();
-        try {
-            canonicalizer = Canonicalizer.getInstance(Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS);
-        } catch (InvalidCanonicalizerException e) {
-            throw new RedactableXMLSignatureException(e);
-        }
-
-    }
-
-    protected Node dereference(String uri, Node root) throws RedactableXMLSignatureException {
-        return Dereferencer.dereference(uri, root);
-    }
 
     /**
      * Checks whether the given ancestor has the given child.
@@ -80,19 +60,11 @@ public abstract class RedactableXMLSignatureSpi {
         return isChild;
     }
 
-    protected byte[] canonicalize(Node node) throws RedactableXMLSignatureException {
-        try {
-            return canonicalizer.canonicalizeSubtree(node);
-        } catch (CanonicalizationException e) {
-            throw new RedactableXMLSignatureException("Cannot canonicalize the given node");
-        }
-    }
-
     protected void removeNodes(Node root, Set<String> uris) throws RedactableXMLSignatureException {
         List<Node> selectedNodes = new ArrayList<>(uris.size());
 
         for (String uri : uris) {
-            selectedNodes.add(dereference(uri, root));
+            selectedNodes.add(Dereferencer.dereference(uri, root));
         }
 
         selectedNodes.sort(new Comparator<Node>() {
@@ -110,17 +82,9 @@ public abstract class RedactableXMLSignatureSpi {
         }
     }
 
-    protected Node getSignatureNode(Node root, String xmlNamespace) throws RedactableXMLSignatureException {
+    protected Node getSignatureNode(Node root) throws RedactableXMLSignatureException {
         Document doc = getOwnerDocument(root);
-        return checkNode(doc.getElementsByTagNameNS(xmlNamespace, "Signature").item(0), "Signature");
-    }
-
-    protected Node getFirstChildSafe(Node parent, String expectedNodeName) throws RedactableXMLSignatureException {
-        return checkNode(parent.getFirstChild(), expectedNodeName);
-    }
-
-    protected Node getNextSiblingSafe(Node sibling, String expectedNodeName) throws RedactableXMLSignatureException {
-        return checkNode(sibling.getNextSibling(), expectedNodeName);
+        return checkNode(doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0), "Signature");
     }
 
     protected Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
@@ -131,28 +95,11 @@ public abstract class RedactableXMLSignatureSpi {
         return node;
     }
 
-    protected String getText(Node node) throws RedactableXMLSignatureException {
-        Node textNode = node.getFirstChild();
-        if (textNode.getNodeType() != Node.TEXT_NODE) {
-            throw new RedactableXMLSignatureException("Cannot get text from node" + node.getNodeName());
-        }
-
-        return textNode.getNodeValue();
-    }
-
     protected Document getOwnerDocument(Node node) {
         if (node.getNodeType() == Node.DOCUMENT_NODE) {
             return (Document) node;
         }
         return node.getOwnerDocument();
-    }
-
-    protected String getAttributeValue(Node node, String attribute) throws RedactableXMLSignatureException {
-        Node attributeNode = node.getAttributes().getNamedItem(attribute);
-        if (attributeNode == null) {
-            throw new RedactableXMLSignatureException("Cannot find attribute " + attribute);
-        }
-        return attributeNode.getTextContent();
     }
 
     public void engineInitSign(KeyPair keyPair) throws InvalidKeyException {

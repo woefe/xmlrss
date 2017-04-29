@@ -37,7 +37,7 @@ import java.util.List;
 @XmlRootElement(name = "Proof")
 public class GLProof implements Proof {
 
-    @XmlElement(name = "GSProof")
+    @XmlElement(name = "SimpleProof")
     private String gsProof;
 
     @XmlElement(name = "RandomValue")

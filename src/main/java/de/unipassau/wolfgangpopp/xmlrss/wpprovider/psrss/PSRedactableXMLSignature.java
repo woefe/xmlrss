@@ -24,24 +24,24 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Reference;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Signature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.SimpleProof;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
+import javax.xml.bind.JAXBException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,17 +51,14 @@ import java.util.Set;
  */
 abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
-    public static final String XML_NAMESPACE = "http://sec.uni-passau.de/2017/03/xmlpsrss";
-    private RedactableSignature signature;
+    private RedactableSignature psrss;
     private Node root;
-    private Map<Element, byte[]> selectorResults = new HashMap<>();
-    private State state;
-
-    private enum State { SIGN, REDACT, VERIFY }
+    private Map<ByteArray, Pointer> pointers = new HashMap<>();
+    private Set<String> redactUris = new HashSet<>();
 
     PSRedactableXMLSignature(RedactableSignature signature) throws RedactableXMLSignatureException {
         super();
-        this.signature = signature;
+        this.psrss = signature;
     }
 
     @Override
@@ -71,23 +68,20 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
-        signature.initSign(keyPair, random);
-        state = State.SIGN;
         reset();
+        psrss.initSign(keyPair, random);
     }
 
     @Override
     public void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
-        signature.initVerify(publicKey);
-        state = State.VERIFY;
         reset();
+        psrss.initVerify(publicKey);
     }
 
     @Override
     public void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
-        signature.initRedact(publicKey);
-        state = State.REDACT;
         reset();
+        psrss.initRedact(publicKey);
     }
 
     @Override
@@ -97,127 +91,50 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException {
-        engineAddSignSelector(uri, true);
-    }
-
-    @Override
-    public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
-        if (root == null) {
-            throw new RedactableXMLSignatureException("root node not set");
+        if (!redactUris.add(uri)) {
+            throw new RedactableXMLSignatureException("A URI cannot be added twice");
         }
-        //TODO Improvement: Selector results not needed for verification and redaction
-        // Could however be used to check if uri is valid.
-        byte[] data = canonicalize(dereference(uri, root));
-
-        Document doc = getOwnerDocument(root);
-        Element pointer = doc.createElementNS(XML_NAMESPACE, "Pointer");
-        pointer.setAttribute("URI", uri);
-
-        byte[] pointerConcatData = concat(pointer, data);
-
-        selectorResults.put(pointer, pointerConcatData);
         try {
-            if (state == State.REDACT) {
-                signature.addIdentifier(new Identifier(pointerConcatData));
-            } else if (state == State.SIGN) {
-                signature.addPart(pointerConcatData);
-            }
-            //throw new RedactableXMLSignatureException("")
+            psrss.addIdentifier(new Identifier(new Pointer(uri).getConcatDereference(root)));
         } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
     }
 
-    private byte[] concat(Node pointer, byte[] data) throws RedactableXMLSignatureException {
-        return new ByteArray(canonicalize(pointer)).concat(data).getArray();
+    @Override
+    public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
+        if (root == null) { //TODO move to superclass?
+            throw new RedactableXMLSignatureException("root node not set");
+        }
+
+        Pointer pointer = new Pointer(uri, isRedactable);
+        if (pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer) != null) {
+            throw new RedactableXMLSignatureException("An uri cannot be added twice");
+        }
+
+        try {
+            psrss.addPart(pointer.getConcatDereference(root), isRedactable);
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
     }
 
     @Override
     public Document engineSign() throws RedactableXMLSignatureException {
         PSSignatureOutput output;
         try {
-            output = (PSSignatureOutput) signature.sign();
+            output = (PSSignatureOutput) psrss.sign();
         } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
 
-        Base64.Encoder base64 = Base64.getEncoder();
-        Document doc = getOwnerDocument(root);
-        Element signature = doc.createElementNS(XML_NAMESPACE, "Signature");
-        Element references = doc.createElementNS(XML_NAMESPACE, "References");
-        Element signatureValue = doc.createElementNS(XML_NAMESPACE, "SignatureValue");
-
-        for (Element pointer : selectorResults.keySet()) {
-            Element reference = doc.createElementNS(XML_NAMESPACE, "Reference");
-            Element proofNode = doc.createElementNS(XML_NAMESPACE, "Proof");
-            byte[] proof = output.getProof(selectorResults.get(pointer));
-            proofNode.appendChild(doc.createTextNode(base64.encodeToString(proof)));
-
-            reference.appendChild(pointer);
-            reference.appendChild(proofNode);
-            references.appendChild(reference);
-        }
-
-        Element tag = doc.createElementNS(XML_NAMESPACE, "Tag");
-        tag.appendChild(doc.createTextNode(base64.encodeToString(output.getTag())));
-        signatureValue.appendChild(tag);
-
-        Element proofOfTag = doc.createElementNS(XML_NAMESPACE, "ProofOfTag");
-        proofOfTag.appendChild(doc.createTextNode(base64.encodeToString(output.getProofOfTag())));
-        signatureValue.appendChild(proofOfTag);
-
-        Element accumulator = doc.createElementNS(XML_NAMESPACE, "Accumulator");
-        accumulator.appendChild(doc.createTextNode(base64.encodeToString(output.getAccumulator())));
-        signatureValue.appendChild(accumulator);
-
-        signature.appendChild(references);
-        signature.appendChild(signatureValue);
-        root.appendChild(signature);
-        return doc;
+        return marshall(output);
     }
 
     @Override
     public boolean engineVerify() throws RedactableXMLSignatureException {
-        Base64.Decoder base64 = Base64.getDecoder();
-        Node signatureNode = getSignatureNode(root, XML_NAMESPACE);
-
-        // Enveloped signature; remove signature node from document, before doing any further processing
-        root.removeChild(signatureNode);
-
-        Node references = getFirstChildSafe(signatureNode, "References");
-        Node signatureValue = getNextSiblingSafe(references, "SignatureValue");
-
-        Node tagNode = getFirstChildSafe(signatureValue, "Tag");
-        Node proofOfTagNode = getNextSiblingSafe(tagNode, "ProofOfTag");
-        Node accumulatorNode = getNextSiblingSafe(proofOfTagNode, "Accumulator");
-
-        byte[] tag = base64.decode(getText(tagNode));
-        byte[] proofOfTag = base64.decode(getText(proofOfTagNode));
-        byte[] accumulator = base64.decode(getText(accumulatorNode));
-
-        PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, accumulator);
-
-        NodeList referencesList = references.getChildNodes();
-        for (int i = 0; i < referencesList.getLength(); i++) {
-            Node node = checkNode(referencesList.item(i), "Reference");
-            Node pointer = getFirstChildSafe(node, "Pointer");
-            Node proofNode = getNextSiblingSafe(pointer, "Proof");
-            String uri = getAttributeValue(pointer, "URI");
-            byte[] part = canonicalize(dereference(uri, root));
-            byte[] proof = base64.decode(getText(proofNode));
-            try {
-                builder.add(concat(pointer, part), proof);
-            } catch (PSRSSException e) {
-                throw new RedactableXMLSignatureException(e);
-            }
-        }
-
-        // TODO Copy root and do processing on copy instead of deleting/adding the signature node
-        root.appendChild(signatureNode);
-
-        PSSignatureOutput signatureOutput = builder.build();
         try {
-            return signature.verify(signatureOutput);
+            return psrss.verify(unmarshall());
         } catch (RedactableSignatureException e) {
             throw new RedactableXMLSignatureException(e);
         }
@@ -225,53 +142,63 @@ abstract class PSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public Document engineRedact() throws RedactableXMLSignatureException {
-        Node references = checkNode(getSignatureNode(root, XML_NAMESPACE).getFirstChild(), "References");
-        NodeList referencesList = references.getChildNodes();
-        Set<Element> pointerElements = selectorResults.keySet();
-        Set<String> selectors = new HashSet<>();
-        List<Node> selectedNodes = new ArrayList<>(pointerElements.size());
-        List<Node> referencesToRemove = new LinkedList<>();
+        PSSignatureOutput redacted;
+        PSSignatureOutput original = unmarshall();
 
-        for (Element element : pointerElements) {
-            String uri = element.getAttribute("URI");
-            selectors.add(uri);
-            selectedNodes.add(dereference(uri, root));
+        try {
+            redacted = (PSSignatureOutput) psrss.redact(original);
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
         }
 
-        selectedNodes.sort(new Comparator<Node>() {
-            @Override
-            public int compare(Node node1, Node node2) {
-                if (isDescendant(node1, node2)) {
-                    return 1;
-                }
-                return -1;
+        removeNodes(root, redactUris);
+        root.removeChild(getSignatureNode(root));
+
+        return marshall(redacted);
+    }
+
+    private Document marshall(PSSignatureOutput output) throws RedactableXMLSignatureException {
+        Signature<PSSignatureValue, SimpleProof> sigElement = new Signature<>(PSSignatureValue.class, SimpleProof.class);
+        for (PSSignatureOutput.SignedPart signedPart : output) {
+            SimpleProof proof = new SimpleProof(signedPart.getProof());
+            Reference<SimpleProof> reference = new Reference<>(pointers.get(signedPart.getElement()), proof);
+            sigElement.addReference(reference);
+        }
+        sigElement.setSignatureValue(new PSSignatureValue(output));
+        try {
+            return sigElement.marshall(getOwnerDocument(root));
+        } catch (JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    private PSSignatureOutput unmarshall() throws RedactableXMLSignatureException {
+        Signature<PSSignatureValue, SimpleProof> unmarshalled;
+        try {
+            unmarshalled = Signature.unmarshall(PSSignatureValue.class, SimpleProof.class, getSignatureNode(root));
+        } catch (JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+        PSSignatureValue sigValue = unmarshalled.getSignatureValue();
+        PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(sigValue.getTag(),
+                sigValue.getProofOfTag(), sigValue.getAccumulator());
+
+        List<Reference<SimpleProof>> references = unmarshalled.getReferences();
+        for (Reference<SimpleProof> reference : references) {
+            try {
+                Pointer pointer = reference.getPointer();
+                pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer);
+                builder.add(pointer.getConcatDereference(root), reference.getProof().getBytes());
+            } catch (PSRSSException e) {
+                throw new RedactableXMLSignatureException(e);
             }
-        });
-
-        for (Node selectedNode : selectedNodes) {
-            selectedNode.getParentNode().removeChild(selectedNode);
         }
 
-        for (int i = 0; i < referencesList.getLength(); i++) {
-            Node reference = checkNode(referencesList.item(i), "Reference");
-            Node pointer = getFirstChildSafe(reference, "Pointer");
-            String uri = getAttributeValue(pointer, "URI");
-            if (selectors.contains(uri)) {
-                // Don't remove the reference here, since that changes the referencesList and breaks the iteration.
-                // Instead, save the reference and remove it later.
-                referencesToRemove.add(reference);
-            }
-        }
-
-        for (Node node : referencesToRemove) {
-            node.getParentNode().removeChild(node);
-        }
-
-        return getOwnerDocument(root);
+        return builder.build();
     }
 
     private void reset() {
-        selectorResults.clear();
         root = null;
     }
 

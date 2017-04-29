@@ -21,8 +21,8 @@
   -->
 
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:drs="http://sec.uni-passau.de/2017/03/xmlpsrss"
-        targetNamespace="http://sec.uni-passau.de/2017/03/xmlpsrss"
+        xmlns:drs="https://sec.uni-passau.de/2017/03/xmlrss"
+        targetNamespace="https://sec.uni-passau.de/2017/03/xmlrss"
         version="0.1" elementFormDefault="qualified">
 
     <element name="Signature" type="drs:SignatureType"/>
@@ -45,7 +45,7 @@
     <complexType name="ReferenceType">
         <sequence>
             <element ref="drs:Pointer"/>
-            <element name="Proof" type="string"/>
+            <element ref="drs:Proof"/>
         </sequence>
     </complexType>
 
@@ -55,6 +55,14 @@
         <attribute name="URI" type="anyURI" use="required"/>
         <attribute name="Redactable" type="boolean" use="optional"/>
     </complexType>
+
+    <element name="Proof">
+        <complexType>
+            <sequence>
+                <any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+            </sequence>
+        </complexType>
+    </element>
 
     <element name="SignatureValue">
         <complexType>

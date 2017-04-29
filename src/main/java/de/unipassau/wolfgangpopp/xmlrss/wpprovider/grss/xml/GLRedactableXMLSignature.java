@@ -142,7 +142,7 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
         }
 
         removeNodes(root, redactUris);
-        root.removeChild(getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss"));
+        root.removeChild(getSignatureNode(root));
 
         return marshall(redacted);
     }
@@ -170,7 +170,7 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
 
     private GLRSSSignatureOutput unmarshall() throws RedactableXMLSignatureException {
         Signature<GSSignatureValue, GLProof> signature;
-        Node signatureNode = getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss");
+        Node signatureNode = getSignatureNode(root);
 
         try {
             signature = Signature.unmarshall(GSSignatureValue.class, GLProof.class, signatureNode);
