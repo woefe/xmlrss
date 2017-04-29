@@ -32,6 +32,10 @@ import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Wolfgang Popp
@@ -81,6 +85,28 @@ public abstract class RedactableXMLSignatureSpi {
             return canonicalizer.canonicalizeSubtree(node);
         } catch (CanonicalizationException e) {
             throw new RedactableXMLSignatureException("Cannot canonicalize the given node");
+        }
+    }
+
+    protected void removeNodes(Node root, Set<String> uris) throws RedactableXMLSignatureException {
+        List<Node> selectedNodes = new ArrayList<>(uris.size());
+
+        for (String uri : uris) {
+            selectedNodes.add(dereference(uri, root));
+        }
+
+        selectedNodes.sort(new Comparator<Node>() {
+            @Override
+            public int compare(Node node1, Node node2) {
+                if (isDescendant(node1, node2)) {
+                    return 1;
+                }
+                return -1;
+            }
+        });
+
+        for (Node selectedNode : selectedNodes) {
+            selectedNode.getParentNode().removeChild(selectedNode);
         }
     }
 

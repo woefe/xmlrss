@@ -20,10 +20,10 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
@@ -39,9 +39,12 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Wolfgang Popp
@@ -51,6 +54,8 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
     private final RedactableSignature glrss;
     private Node root;
     private final Map<ByteArray, Pointer> pointers = new HashMap<>();
+    private final List<String> uris = new ArrayList<>();
+    private final Set<String> redactUris = new HashSet<>();
 
     protected GLRedactableXMLSignature(RedactableSignature glrss) throws RedactableXMLSignatureException {
         super();
@@ -85,13 +90,14 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
 
     @Override
     public void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException {
-
+        if (!redactUris.add(uri)) {
+            throw new RedactableXMLSignatureException("A URI cannot be added twice");
+        }
     }
 
     @Override
     public void engineSetRootNode(Node root) {
         this.root = root;
-
     }
 
     @Override
@@ -103,11 +109,50 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
             throw new RedactableXMLSignatureException(e);
         }
 
+        return marshall(output);
+    }
+
+    @Override
+    public boolean engineVerify() throws RedactableXMLSignatureException {
+        try {
+            return glrss.verify(unmarshall());
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    @Override
+    public Document engineRedact() throws RedactableXMLSignatureException {
+        GLRSSSignatureOutput redacted;
+        GLRSSSignatureOutput original = unmarshall();
+
+        for (String uri : redactUris) {
+            Pointer pointer = new Pointer(uri, true);
+            try {
+                glrss.addIdentifier(new Identifier(pointer.getConcatDereference(root), uris.indexOf(uri)));
+            } catch (RedactableSignatureException e) {
+                throw new RedactableXMLSignatureException(e);
+            }
+        }
+
+        try {
+            redacted = (GLRSSSignatureOutput) glrss.redact(original);
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+        removeNodes(root, redactUris);
+        root.removeChild(getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss"));
+
+        return marshall(redacted);
+    }
+
+    private Document marshall(GLRSSSignatureOutput output) throws RedactableXMLSignatureException {
         Signature<GSSignatureValue, GLProof> sigElement = new Signature<>(GSSignatureValue.class, GLProof.class);
 
-        byte[] accumulatorValue = output.getGsrssOutput().getAccumulatorValue();
-        byte[] dSigValue = output.getGsrssOutput().getDSigValue();
-        sigElement.setSignatureValue(new GSSignatureValue(accumulatorValue, dSigValue));
+        byte[] accumulatorValue = output.getGsAccumulator();
+        byte[] dSigValue = output.getGsDsigValue();
+        sigElement.setSignatureValue(new GSSignatureValue(dSigValue, accumulatorValue));
 
         List<GLRSSSignatureOutput.GLRSSSignedPart> signedParts = output.getParts();
         for (GLRSSSignatureOutput.GLRSSSignedPart signedPart : signedParts) {
@@ -123,14 +168,36 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
         }
     }
 
-    @Override
-    public boolean engineVerify() throws RedactableXMLSignatureException {
-        return false;
-    }
+    private GLRSSSignatureOutput unmarshall() throws RedactableXMLSignatureException {
+        Signature<GSSignatureValue, GLProof> signature;
+        Node signatureNode = getSignatureNode(root, "https://sec.uni-passau.de/2017/03/xmlrss");
 
-    @Override
-    public Document engineRedact() throws RedactableXMLSignatureException {
-        return null;
+        try {
+            signature = Signature.unmarshall(GSSignatureValue.class, GLProof.class, signatureNode);
+        } catch (JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+        List<Reference<GLProof>> references = signature.getReferences();
+        GLRSSSignatureOutput.Builder builder = new GLRSSSignatureOutput.Builder(references.size());
+        for (int i = 0; i < references.size(); i++) {
+            Pointer pointer = references.get(i).getPointer();
+            pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer);
+            uris.add(pointer.getUri());
+            GLProof proof = references.get(i).getProof();
+            builder.setMessagePart(i, pointer.getConcatDereference(root))
+                    .setRedactable(i, pointer.isRedactable())
+                    .setRandomValue(i, proof.getRandomValue())
+                    .setAccValue(i, proof.getAccumulatorValue())
+                    .setWitnesses(i, proof.getWitnesses())
+                    .setGSProof(i, proof.getGsProof());
+        }
+
+        GSSignatureValue signatureValue = signature.getSignatureValue();
+        builder.setGSAccumulator(signatureValue.getAccumulatorValue())
+                .setGSDsigValue(signatureValue.getDSigValue());
+
+        return builder.build();
     }
 
     public static class GLRSSwithBPAccumulatorAndRSA extends GLRedactableXMLSignature {

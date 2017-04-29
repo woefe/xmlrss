@@ -36,28 +36,52 @@ import java.util.Set;
  */
 public class GLRSSSignatureOutput implements SignatureOutput {
 
-    private final GSRSSSignatureOutput gsrssOutput;
     private final List<GLRSSSignedPart> parts;
     private final Set<ByteArray> messageParts;
+    private final byte[] gsAccumulator;
+    private final byte[] gsDsigValue;
 
 
-    GLRSSSignatureOutput(GSRSSSignatureOutput gsrssOutput, List<GLRSSSignedPart> parts) {
-        this.gsrssOutput = gsrssOutput;
+    GLRSSSignatureOutput(List<GLRSSSignedPart> parts, byte[] gsAccumulator, byte[] gsDsigValue) {
         this.parts = parts;
         Set<ByteArray> messageParts = new HashSet<>(size());
         for (GLRSSSignedPart part : parts) {
             messageParts.add(new ByteArray(part.getMessagePart()));
         }
         this.messageParts = Collections.unmodifiableSet(messageParts);
-    }
-
-    public GSRSSSignatureOutput getGsrssOutput() {
-        return gsrssOutput;
+        this.gsAccumulator = gsAccumulator;
+        this.gsDsigValue = gsDsigValue;
     }
 
     public List<GLRSSSignedPart> getParts() {
         return Collections.unmodifiableList(parts);
     }
+
+    public byte[] getGsAccumulator() {
+        return Arrays.copyOf(gsAccumulator, gsAccumulator.length);
+    }
+
+    public byte[] getGsDsigValue() {
+        return Arrays.copyOf(gsDsigValue, gsDsigValue.length);
+    }
+
+    public GSRSSSignatureOutput extractGSOutput() {
+        GSRSSSignatureOutput.Builder builder = new GSRSSSignatureOutput.Builder();
+        builder.setDSigValue(getGsDsigValue())
+                .setAccumulatorValue(getGsAccumulator());
+
+        for (GLRSSSignatureOutput.GLRSSSignedPart glrssSignedPart : getParts()) {
+            byte[] value = glrssSignedPart.toGSIdentifier().getBytes();
+            builder.addSignedPart(value, glrssSignedPart.getGsProof(), glrssSignedPart.isRedactable());
+        }
+
+        return builder.build();
+    }
+
+    static byte[] concat(byte[] messagePart, byte[] accumulatorValue, byte[] randomValue) {
+        return new ByteArray(messagePart).concat(accumulatorValue).concat(randomValue).getArray();
+    }
+
 
     @Override
     public boolean contains(byte[] part) {
@@ -105,65 +129,77 @@ public class GLRSSSignatureOutput implements SignatureOutput {
         return parts.size();
     }
 
-    static class Builder {
+    public static class Builder {
 
         private final GLRSSSignedPart[] parts;
-        private GSRSSSignatureOutput gsrssSignatureOutput;
+        private byte[] gsDsigValue;
+        private byte[] gsAccumulator;
 
-        Builder(int size) {
+        public Builder(int size) {
             parts = new GLRSSSignedPart[size];
             for (int i = 0; i < size; i++) {
                 parts[i] = new GLRSSSignedPart();
             }
         }
 
-        Builder setMessagePart(int index, byte[] messagePart) {
+        public Builder setMessagePart(int index, byte[] messagePart) {
             parts[index].messagePart = Arrays.copyOf(messagePart, messagePart.length);
             return this;
         }
 
-        Builder setRedactable(int index, boolean isRedactable) {
+        public Builder setRedactable(int index, boolean isRedactable) {
             parts[index].isRedactable = isRedactable;
             return this;
         }
 
-        Builder setRandomValue(int index, byte[] randomValue) {
+        public Builder setRandomValue(int index, byte[] randomValue) {
             parts[index].randomValue = Arrays.copyOf(randomValue, randomValue.length);
             return this;
         }
 
-        Builder setGSIdentifier(int index, Identifier gsIdentifier) {
-            parts[index].gsIdentifier = gsIdentifier;
+        public Builder setGSProof(int index, byte[] proof) {
+            parts[index].gsProof = proof;
             return this;
         }
 
-        Builder addWittness(int index, byte[] wittness) {
+        public Builder addWittness(int index, byte[] wittness) {
             parts[index].witnesses.add(new ByteArray(Arrays.copyOf(wittness, wittness.length)));
             return this;
         }
 
-        Builder setWitnesses(int index, List<ByteArray> witnesses) {
+        public Builder setWitnesses(int index, List<ByteArray> witnesses) {
             for (ByteArray witness : witnesses) {
                 addWittness(index, witness.getArray());
             }
             return this;
         }
 
-        Builder setAccValue(int index, byte[] accumulatorValue) {
+        public Builder setAccValue(int index, byte[] accumulatorValue) {
             parts[index].accumulatorValue = Arrays.copyOf(accumulatorValue, accumulatorValue.length);
             return this;
         }
 
-        Builder setGSRSSOutput(GSRSSSignatureOutput gsrssOutput) {
-            this.gsrssSignatureOutput = gsrssOutput;
+        public Builder setGSAccumulator(byte[] accumulator) {
+            this.gsAccumulator = Arrays.copyOf(accumulator, accumulator.length);
             return this;
         }
 
-        GLRSSSignatureOutput build() {
+        public Builder setGSDsigValue(byte[] dsigValue) {
+            this.gsDsigValue = Arrays.copyOf(dsigValue, dsigValue.length);
+            return this;
+        }
+
+        Builder embedGSOutput(GSRSSSignatureOutput output) {
+            this.gsAccumulator = output.getAccumulatorValue();
+            this.gsDsigValue = output.getDSigValue();
             for (GLRSSSignedPart part : parts) {
-                part.gsProof = gsrssSignatureOutput.getProof(part.gsIdentifier);
+                part.gsProof = output.getProof(part.toGSIdentifier());
             }
-            return new GLRSSSignatureOutput(gsrssSignatureOutput, Arrays.asList(parts));
+            return this;
+        }
+
+        public GLRSSSignatureOutput build() {
+            return new GLRSSSignatureOutput(Arrays.asList(parts), gsAccumulator, gsDsigValue);
         }
     }
 
@@ -174,7 +210,6 @@ public class GLRSSSignatureOutput implements SignatureOutput {
         private byte[] randomValue;
         private byte[] accumulatorValue;
         private byte[] gsProof;
-        private Identifier gsIdentifier;
         private boolean isRedactable;
         private final List<ByteArray> witnesses = new ArrayList<>();
 
@@ -202,22 +237,27 @@ public class GLRSSSignatureOutput implements SignatureOutput {
             return isRedactable;
         }
 
-        public Identifier getGSIdentifier() {
-            return gsIdentifier;
+        private Identifier toGSIdentifier() {
+            return new Identifier(concat(messagePart, accumulatorValue, randomValue));
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof GLRSSSignedPart)) return false;
+            if (this == o) {
+                return true;
+            }
+
+            if (!(o instanceof GLRSSSignedPart)) {
+                return false;
+            }
 
             GLRSSSignedPart that = (GLRSSSignedPart) o;
 
-            if (isRedactable != that.isRedactable) return false;
-            if (!Arrays.equals(messagePart, that.messagePart)) return false;
-            if (!Arrays.equals(randomValue, that.randomValue)) return false;
-            if (!Arrays.equals(accumulatorValue, that.accumulatorValue)) return false;
-            return witnesses != null ? witnesses.equals(that.witnesses) : that.witnesses == null;
+            return isRedactable == that.isRedactable
+                    && Arrays.equals(messagePart, that.messagePart)
+                    && Arrays.equals(randomValue, that.randomValue)
+                    && Arrays.equals(accumulatorValue, that.accumulatorValue)
+                    && witnesses.equals(that.witnesses);
         }
 
         @Override
@@ -226,7 +266,7 @@ public class GLRSSSignatureOutput implements SignatureOutput {
             result = 31 * result + Arrays.hashCode(randomValue);
             result = 31 * result + Arrays.hashCode(accumulatorValue);
             result = 31 * result + (isRedactable ? 1 : 0);
-            result = 31 * result + (witnesses != null ? witnesses.hashCode() : 0);
+            result = 31 * result + witnesses.hashCode();
             return result;
         }
     }

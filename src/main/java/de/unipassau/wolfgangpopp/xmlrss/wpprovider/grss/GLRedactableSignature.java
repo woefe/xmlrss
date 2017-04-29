@@ -145,16 +145,17 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
                 throw new RedactableSignatureException(e);
             }
 
-            ByteArray concat = new ByteArray(messagePart).concat(accumulatorValue).concat(randomValues[i]);
+            byte[] concat = GLRSSSignatureOutput.concat(messagePart, accumulatorValue, randomValues[i]);
 
             builder.setMessagePart(i, messagePart)
                     .setRedactable(i, isRedactable)
                     .setRandomValue(i, randomValues[i])
-                    .setAccValue(i, accumulatorValue)
-                    .setGSIdentifier(i, gsrss.addPart(concat.getArray(), isRedactable));
+                    .setAccValue(i, accumulatorValue);
+
+            gsrss.addPart(concat, isRedactable);
         }
 
-        builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.sign());
+        builder.embedGSOutput((GSRSSSignatureOutput) gsrss.sign());
 
         parts.clear();
         isRedactable.clear();
@@ -170,7 +171,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
 
         GLRSSSignatureOutput glrssSignatureOutput = (GLRSSSignatureOutput) signature;
         List<GLRSSSignatureOutput.GLRSSSignedPart> parts = glrssSignatureOutput.getParts();
-        boolean verify = gsrss.verify(glrssSignatureOutput.getGsrssOutput());
+        boolean verify = gsrss.verify(glrssSignatureOutput.extractGSOutput());
 
         for (int i = 0; i < parts.size() && verify; i++) {
             GLRSSSignatureOutput.GLRSSSignedPart part = parts.get(i);
@@ -214,7 +215,6 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
                         .setRedactable(builderIndex, part.isRedactable())
                         .setRandomValue(builderIndex, part.getRandomValue())
                         .setAccValue(builderIndex, part.getAccumulatorValue())
-                        .setGSIdentifier(builderIndex, part.getGSIdentifier())
                         .setWitnesses(builderIndex, copy);
 
                 ++builderIndex;
@@ -229,7 +229,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
             gsrss.addIdentifier(new Identifier(concat));
         }
 
-        builder.setGSRSSOutput((GSRSSSignatureOutput) gsrss.redact(original.getGsrssOutput()));
+        builder.embedGSOutput((GSRSSSignatureOutput) gsrss.redact(original.extractGSOutput()));
 
         identifiers.clear();
 

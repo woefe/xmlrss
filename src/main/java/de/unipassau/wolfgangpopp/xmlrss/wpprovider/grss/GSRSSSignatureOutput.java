@@ -129,6 +129,10 @@ public class GSRSSSignatureOutput implements SignatureOutput {
             return this;
         }
 
+        public Builder addSignedPart(byte[] value, byte[] proof, boolean isRedactable) {
+            return addSignedPart(new ByteArray(value), proof, isRedactable);
+        }
+
         public GSRSSSignatureOutput build() {
             if (signatureOutput.dSigValue == null || signatureOutput.accumulatorValue == null) {
                 throw new IllegalStateException("Either the accumulator value or the dsig value are not set");

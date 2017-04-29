@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,7 +44,7 @@ import java.util.List;
 public final class Signature<S extends SignatureValue, P extends Proof> {
     private Class<? extends Proof> proofClass;
     private Class<? extends SignatureValue> signatureValueClass;
-    private List<Reference<P>> references = new LinkedList<>();
+    private List<Reference<P>> references = new ArrayList<>();
     private S signatureValue;
 
     private Signature() {

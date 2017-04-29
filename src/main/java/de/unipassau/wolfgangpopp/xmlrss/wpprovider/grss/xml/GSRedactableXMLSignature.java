@@ -171,25 +171,11 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             throw new RedactableXMLSignatureException(e);
         }
 
-        List<Node> selectedNodes = new ArrayList<>(pointers.size());
-
+        Set<String> uris = new HashSet<>();
         for (Pointer pointer : pointers) {
-            selectedNodes.add(dereference(pointer.getUri(), root));
+            uris.add(pointer.getUri());
         }
-
-        selectedNodes.sort(new Comparator<Node>() {
-            @Override
-            public int compare(Node node1, Node node2) {
-                if (isDescendant(node1, node2)) {
-                    return 1;
-                }
-                return -1;
-            }
-        });
-
-        for (Node selectedNode : selectedNodes) {
-            selectedNode.getParentNode().removeChild(selectedNode);
-        }
+        removeNodes(root, uris);
 
         root.removeChild(signatureNode);
         ListIterator<Reference<GSProof>> it = signature.getReferences().listIterator();
