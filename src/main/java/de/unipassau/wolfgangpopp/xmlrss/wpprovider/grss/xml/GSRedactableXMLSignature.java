@@ -40,9 +40,10 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,7 +53,8 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     private final RedactableSignature gsrss;
     private Node root;
-    private Set<Pointer> pointers = new HashSet<>();
+    private Map<ByteArray, Pointer> pointers = new HashMap<>();
+    private Set<String> redactUris = new HashSet<>();
 
 
     protected GSRedactableXMLSignature(RedactableSignature gsrss) throws RedactableXMLSignatureException {
@@ -81,7 +83,7 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
     @Override
     public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         Pointer pointer = new Pointer(uri, isRedactable);
-        if (!pointers.add(pointer)) {
+        if (pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer) != null) {
             throw new RedactableXMLSignatureException("Cannot add the given URI twice");
         }
         try {
@@ -93,9 +95,13 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
     @Override
     public void engineAddRedactSelector(String uri) throws RedactableXMLSignatureException {
-        Pointer pointer = new Pointer(uri, true);
-        if (!pointers.add(pointer)) {
+        if (!redactUris.add(uri)) {
             throw new RedactableXMLSignatureException("Cannot add the given URI twice");
+        }
+        try {
+            gsrss.addIdentifier(new Identifier(new Pointer(uri).getConcatDereference(root)));
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
         }
     }
 
@@ -113,14 +119,47 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
             throw new RedactableXMLSignatureException(e);
         }
 
-        Signature<GSSignatureValue, SimpleProof> sigElement = new Signature<>(GSSignatureValue.class, SimpleProof.class);
+        return marshall(output);
+    }
 
-        for (Pointer pointer : pointers) {
-            SimpleProof proof = new SimpleProof(output.getProof(new Identifier(pointer.getConcatDereference(root))));
+    @Override
+    public boolean engineVerify() throws RedactableXMLSignatureException {
+        try {
+            return gsrss.verify(unmarshall());
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+    }
+
+    @Override
+    public Document engineRedact() throws RedactableXMLSignatureException {
+        GSRSSSignatureOutput redacted;
+        GSRSSSignatureOutput original = unmarshall();
+
+        try {
+            redacted = (GSRSSSignatureOutput) gsrss.redact(original);
+        } catch (RedactableSignatureException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+
+        removeNodes(root, redactUris);
+        root.removeChild(getSignatureNode(root));
+
+        return marshall(redacted);
+    }
+
+
+    private Document marshall(GSRSSSignatureOutput output) throws RedactableXMLSignatureException {
+        Signature<GSSignatureValue, SimpleProof> sigElement = new Signature<>(GSSignatureValue.class, SimpleProof.class);
+        sigElement.setSignatureValue(new GSSignatureValue(output.getDSigValue(), output.getAccumulatorValue()));
+
+        Map<ByteArray, byte[]> parts = output.getParts();
+        for (Map.Entry<ByteArray, byte[]> signedPart : parts.entrySet()) {
+            SimpleProof proof = new SimpleProof(signedPart.getValue());
+            Pointer pointer = pointers.get(signedPart.getKey());
             Reference<SimpleProof> reference = new Reference<>(pointer, proof);
             sigElement.addReference(reference);
         }
-        sigElement.setSignatureValue(new GSSignatureValue(output.getDSigValue(), output.getAccumulatorValue()));
 
         try {
             return sigElement.marshall(getOwnerDocument(root));
@@ -129,8 +168,7 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
         }
     }
 
-    @Override
-    public boolean engineVerify() throws RedactableXMLSignatureException {
+    private GSRSSSignatureOutput unmarshall() throws RedactableXMLSignatureException {
         Signature<GSSignatureValue, SimpleProof> signature;
         Node signatureNode = getSignatureNode(root);
 
@@ -148,48 +186,12 @@ public class GSRedactableXMLSignature extends RedactableXMLSignatureSpi {
 
         for (Reference<SimpleProof> reference : references) {
             Pointer pointer = reference.getPointer();
+            pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer);
             builder.addSignedPart(new ByteArray(pointer.getConcatDereference(root)),
                     reference.getProof().getBytes(), pointer.isRedactable());
         }
 
-        try {
-            return gsrss.verify(builder.build());
-        } catch (RedactableSignatureException e) {
-            throw new RedactableXMLSignatureException(e);
-        }
-    }
-
-    @Override
-    public Document engineRedact() throws RedactableXMLSignatureException {
-        Signature<GSSignatureValue, SimpleProof> signature;
-        Node signatureNode = getSignatureNode(root);
-
-        try {
-            signature = Signature.unmarshall(GSSignatureValue.class, SimpleProof.class, signatureNode);
-        } catch (JAXBException e) {
-            throw new RedactableXMLSignatureException(e);
-        }
-
-        Set<String> uris = new HashSet<>();
-        for (Pointer pointer : pointers) {
-            uris.add(pointer.getUri());
-        }
-        removeNodes(root, uris);
-
-        root.removeChild(signatureNode);
-        ListIterator<Reference<SimpleProof>> it = signature.getReferences().listIterator();
-        while (it.hasNext()) {
-            Reference<SimpleProof> reference = it.next();
-            if (pointers.contains(reference.getPointer())) {
-                it.remove();
-            }
-        }
-
-        try {
-            return signature.marshall(getOwnerDocument(root));
-        } catch (JAXBException e) {
-            throw new RedactableXMLSignatureException(e);
-        }
+        return builder.build();
     }
 
     private void reset() {
