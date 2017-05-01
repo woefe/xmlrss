@@ -227,17 +227,17 @@ public abstract class AbstractRSSTest {
 
         rss.initRedact(keyPair.getPublic());
         rss.addIdentifier(identifier0);
-        rss.addIdentifier(identifier1);
         rss.addIdentifier(identifier2);
+        rss.addIdentifier(identifier4);
         SignatureOutput redacted1 = rss.redact(original);
 
+        rss.addIdentifier(identifier1);
         rss.addIdentifier(identifier3);
-        rss.addIdentifier(identifier4);
         rss.addIdentifier(identifier5);
         SignatureOutput redacted2 = rss.redact(original);
 
-        assertTrue(redacted1.containsAll(TEST_MESSAGE[3], TEST_MESSAGE[4], TEST_MESSAGE[5]));
-        assertTrue(redacted2.containsAll(TEST_MESSAGE[0], TEST_MESSAGE[1], TEST_MESSAGE[2]));
+        assertTrue(redacted1.containsAll(TEST_MESSAGE[1], TEST_MESSAGE[3], TEST_MESSAGE[5]));
+        assertTrue(redacted2.containsAll(TEST_MESSAGE[0], TEST_MESSAGE[2], TEST_MESSAGE[4]));
         assertEquals(redacted1.size(), 3);
         assertEquals(redacted2.size(), 3);
         assertFalse(redacted1.contains(TEST_MESSAGE[0]));

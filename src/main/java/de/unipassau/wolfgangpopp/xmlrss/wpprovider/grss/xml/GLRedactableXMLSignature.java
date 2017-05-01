@@ -64,17 +64,27 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
 
     @Override
     public void engineInitSign(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
+        reset();
         glrss.initSign(keyPair, random);
     }
 
     @Override
     public void engineInitVerify(PublicKey publicKey) throws InvalidKeyException {
+        reset();
         glrss.initVerify(publicKey);
     }
 
     @Override
     public void engineInitRedact(PublicKey publicKey) throws InvalidKeyException {
+        reset();
         glrss.initRedact(publicKey);
+    }
+
+    private void reset() {
+        root = null;
+        pointers.clear();
+        uris.clear();
+        redactUris.clear();
     }
 
     @Override

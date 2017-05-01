@@ -63,45 +63,10 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         ));
     }
 
-    @Test
-    public void engineSign() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
-
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", true);
-        Document document = sig.sign();
-
-        validateXSD(document);
-
-        printDocument(document);
-    }
-
-    private void validateXSD(Document signedDoc) throws SAXException, IOException {
-        NodeList nodeList = signedDoc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
-        assertEquals(1, nodeList.getLength());
-
-        Node signature = nodeList.item(0);
-        NodeList childNodes = signature.getChildNodes();
-        int actualNodes = 0;
-        for (int i = 0; i < childNodes.getLength(); i++) {
-            if (childNodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                ++actualNodes;
-            }
-        }
-        assertEquals(2, actualNodes);
-
-        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFactory.newSchema(new File("xmlrss_schema.xsd"));
-        Validator validator = schema.newValidator();
-        validator.validate(new DOMSource(signature));
-    }
-
+    @Override
     @Test(expected = RedactableXMLSignatureException.class)
-    public void engineAddPartSelectorDuplicate() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+    public void testAddPartSelectorDuplicate() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
 
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
@@ -109,28 +74,18 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         sig.addSignSelector("#xpointer(id('a3'))", true); // throws RedactableXMLSignatureException
     }
 
-    // TODO add nonredactable
-
-    @Test
-    public void engineVerify() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
-
+    @Override
+    @Test(expected = RedactableXMLSignatureException.class)
+    public void testAddNonRedactable() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
         sig.initSign(keyPair);
         sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", true);
-        Document signedDocument = sig.sign();
-
-        sig.initVerify(keyPair.getPublic());
-        sig.setDocument(signedDocument);
-        assertTrue(sig.verify());
-        validateXSD(signedDocument);
+        sig.addSignSelector("#xpointer(id('a3'))", false);
     }
 
     @Test
     public void engineVerifyFail() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
@@ -146,91 +101,4 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         validateXSD(document);
     }
 
-    @Test
-    public void engineRedact() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
-
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", true);
-        Document document = sig.sign();
-
-        sig.initRedact(keyPair.getPublic());
-        sig.setDocument(document);
-        sig.addRedactSelector("#xpointer(id('a3'))");
-        sig.redact();
-
-        validateXSD(document);
-
-        sig.initVerify(keyPair.getPublic());
-        sig.setDocument(document);
-        assertTrue(sig.verify());
-
-        // ensure that a3 is actually removed
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        assertNull(xPath.evaluate("//*[@id='a3']", document, XPathConstants.NODE));
-        assertNull(xPath.evaluate("//*[@URI=\"#xpointer(id('a3'))\"]", document, XPathConstants.NODE));
-
-        //printDocument(document)
-    }
-
-    @Test
-    public void testRedactOverlapDTD() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
-
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a1'))", true);
-        sig.addSignSelector("#xpointer(id('g1'))", true);
-        sig.addSignSelector("#xpointer(id('j1'))", true);
-        sig.addSignSelector("#xpointer(id('a2'))", true);
-        Document document = sig.sign();
-
-        sig.initRedact(keyPair.getPublic());
-        sig.setDocument(document);
-        sig.addRedactSelector("#xpointer(id('j1'))");
-        sig.addRedactSelector("#xpointer(id('g1'))");
-        sig.addRedactSelector("#xpointer(id('a1'))");
-        sig.redact();
-
-        sig.initVerify(keyPair.getPublic());
-        sig.setDocument(document);
-        assertTrue(sig.verify());
-    }
-
-    @Test
-    public void testRedactOverlapSchema() throws Exception {
-        Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(new File("testdata/test1.xsd"));
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance("XMLPSRSSwithPSA");
-
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/test1.xml"), schema);
-        sig.addSignSelector("#xpointer(id('i1'))", true);
-        sig.addSignSelector("#xpointer(id('l1'))", true);
-        sig.addSignSelector("#xpointer(id('e1'))", true);
-        sig.addSignSelector("#xpointer(id('e2'))", true);
-        sig.addSignSelector("#xpointer(id('e3'))", true);
-        sig.addSignSelector("#xpointer(id('i3'))", true);
-        sig.addSignSelector("#xpointer(id('i2'))", true);
-        sig.addSignSelector("#xpointer(id('s1'))", true);
-        Document document = sig.sign();
-
-        printDocument(document);
-
-        sig.initRedact(keyPair.getPublic());
-        sig.setDocument(document);
-        sig.addRedactSelector("#xpointer(id('i1'))");
-        sig.addRedactSelector("#xpointer(id('e2'))");
-        sig.addRedactSelector("#xpointer(id('e3'))");
-        sig.addRedactSelector("#xpointer(id('e1'))");
-        sig.addRedactSelector("#xpointer(id('l1'))");
-        sig.addRedactSelector("#xpointer(id('i3'))");
-        sig.redact();
-
-        sig.initVerify(keyPair.getPublic());
-        sig.setDocument(document);
-        assertTrue(sig.verify());
-    }
 }

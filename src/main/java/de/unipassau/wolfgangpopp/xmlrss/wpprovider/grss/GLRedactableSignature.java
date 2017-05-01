@@ -240,7 +240,7 @@ public abstract class GLRedactableSignature extends RedactableSignatureSpi {
         ByteArray invalid = new ByteArray(null);
         for (Identifier identifier : identifiers) {
             int position = identifier.getPosition();
-            if (position < witnesses.size() && witnesses.get(position).equals(identifier.getByteArray())) {
+            if (position < witnesses.size()) {
                 witnesses.set(position, invalid);
             }
         }

@@ -23,10 +23,12 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Proof;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -34,20 +36,21 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Proof")
+@XmlRootElement(name = "Proof", namespace = RedactableXMLSignature.XML_NAMESPACE)
+@XmlType(propOrder = {"gsProof", "randomValue", "accumulatorValue", "witnesses"})
 public class GLProof implements Proof {
 
-    @XmlElement(name = "SimpleProof")
+    @XmlElement(name = "GSProof", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String gsProof;
 
-    @XmlElement(name = "RandomValue")
+    @XmlElement(name = "RandomValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String randomValue;
 
-    @XmlElement(name = "AccumulatorValue")
+    @XmlElement(name = "AccumulatorValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String accumulatorValue;
 
-    @XmlElementWrapper(name = "Witnesses")
-    @XmlElement(name = "Witness")
+    @XmlElementWrapper(name = "Witnesses", namespace = RedactableXMLSignature.XML_NAMESPACE)
+    @XmlElement(name = "Witness", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private final List<String> witnesses = new ArrayList<>();
 
     private final Base64.Encoder encoder = Base64.getEncoder();
