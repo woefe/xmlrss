@@ -65,17 +65,6 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
 
     @Override
     @Test(expected = RedactableXMLSignatureException.class)
-    public void testAddPartSelectorDuplicate() throws Exception {
-        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
-
-        sig.initSign(keyPair);
-        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
-        sig.addSignSelector("#xpointer(id('a3'))", true);
-        sig.addSignSelector("#xpointer(id('a3'))", true); // throws RedactableXMLSignatureException
-    }
-
-    @Override
-    @Test(expected = RedactableXMLSignatureException.class)
     public void testAddNonRedactable() throws Exception {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
         sig.initSign(keyPair);

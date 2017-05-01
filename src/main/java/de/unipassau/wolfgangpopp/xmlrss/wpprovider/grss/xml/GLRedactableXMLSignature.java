@@ -90,7 +90,9 @@ public abstract class GLRedactableXMLSignature extends RedactableXMLSignatureSpi
     @Override
     public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         Pointer pointer = new Pointer(uri, isRedactable);
-        pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer);
+        if (pointers.put(new ByteArray(pointer.getConcatDereference(root)), pointer)!=null) {
+            throw new RedactableXMLSignatureException("A URI cannot be added twice");
+        }
         try {
             glrss.addPart(pointer.getConcatDereference(root), isRedactable);
         } catch (RedactableSignatureException e) {

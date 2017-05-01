@@ -46,11 +46,6 @@ public class GSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
     }
 
     @Override
-    public void testAddPartSelectorDuplicate() throws Exception {
-
-    }
-
-    @Override
     public void testAddNonRedactable() throws Exception {
 
     }

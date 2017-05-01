@@ -21,6 +21,7 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -226,8 +227,15 @@ public abstract class AbstractXMLRSSTest {
         //TODO improve checks on result
     }
 
-    @Test
-    public abstract void testAddPartSelectorDuplicate() throws Exception;
+    @Test(expected = RedactableXMLSignatureException.class)
+    public void testAddPartSelectorDuplicate() throws Exception{
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
+
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+    }
 
     @Test
     public abstract void testAddNonRedactable() throws Exception;
