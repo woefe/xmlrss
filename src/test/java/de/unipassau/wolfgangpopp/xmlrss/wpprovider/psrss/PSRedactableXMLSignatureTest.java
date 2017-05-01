@@ -94,7 +94,7 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         assertEquals(2, actualNodes);
 
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFactory.newSchema(new File("psrss_schema.xsd"));
+        Schema schema = schemaFactory.newSchema(new File("xmlrss_schema.xsd"));
         Validator validator = schema.newValidator();
         validator.validate(new DOMSource(signature));
     }

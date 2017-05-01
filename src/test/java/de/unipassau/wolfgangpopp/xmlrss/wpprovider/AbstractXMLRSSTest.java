@@ -45,17 +45,18 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractXMLRSSTest {
 
+    protected static KeyPair keyPair;
+    private static String keyGenAlgorithm = "";
     protected String algorithm;
     protected String providerName;
     protected Provider provider;
-    protected KeyPair keyPair;
 
     public AbstractXMLRSSTest(String algorithm, Provider provider, KeyPair keyPair) {
         Security.insertProviderAt(provider, 1);
         this.algorithm = algorithm;
         this.providerName = provider.getName();
         this.provider = provider;
-        this.keyPair = keyPair;
+        AbstractXMLRSSTest.keyPair = keyPair;
     }
 
     public AbstractXMLRSSTest(String algorithm, Provider provider, String keyPairGeneratorAlgorithm, int keySize) throws NoSuchAlgorithmException {
@@ -63,9 +64,13 @@ public abstract class AbstractXMLRSSTest {
         this.algorithm = algorithm;
         this.providerName = provider.getName();
         this.provider = provider;
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(keyPairGeneratorAlgorithm);
-        keyGen.initialize(keySize);
-        this.keyPair = keyGen.generateKeyPair();
+
+        if (!keyGenAlgorithm.equals(keyPairGeneratorAlgorithm)) {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(keyPairGeneratorAlgorithm);
+            keyGen.initialize(keySize);
+            keyPair = keyGen.generateKeyPair();
+            keyGenAlgorithm = keyPairGeneratorAlgorithm;
+        }
     }
 
     @Test
