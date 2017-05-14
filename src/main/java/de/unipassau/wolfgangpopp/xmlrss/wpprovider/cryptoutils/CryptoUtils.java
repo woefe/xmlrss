@@ -36,72 +36,66 @@ public final class CryptoUtils {
 
     /**
      * Calculates a full domain hash (FDH) for the given byte array and the given maximum, where
-     * <code>FDH < publicKey</code>
+     * <code>FDH < max</code>
      *
      * @param max the maximum value of the resulting FDH
-     * @param m   message for which the hash shall be calculated
+     * @param m   message for which the hash is calculated
      * @return a big integer representing the full domain hash
      * @throws NoSuchAlgorithmException if no SHA-512 implementation is found
      */
     public static BigInteger fullDomainHash(BigInteger max, byte[] m) throws NoSuchAlgorithmException {
+        BigInteger fdh;
         BigInteger counter = BigInteger.ZERO;
         MessageDigest md = MessageDigest.getInstance("SHA-512");
         int digestLength = md.getDigestLength();
         int bitLength = max.bitLength();
-        BigInteger fdh;
 
-        //Calculate a sha-512 of m
-        md.update(m);
-        md.update(counter.toByteArray());
-        byte[] shortHash = md.digest();
+        byte[] shortHash = getShortHash(md, m, counter);
         byte[] largeHash = shortHash;
         counter = counter.add(BigInteger.ONE);
 
-        //while the length of the hash is smaller than bitlength of the key, calculated more hashes
-        //with increased counter and concactenate the hashes until the bitlength is bigger/equals the bitlength
-        //of the bitlength of the key
+        // concatenate new small hashes to the large hash until the bitlenght of the large hash is bigger than or equal
+        // to the bitlength of max
         while ((largeHash.length * 8) < bitLength) {
-            md.update(m);
-            md.update(counter.toByteArray());
-            shortHash = md.digest();
-
+            shortHash = getShortHash(md, m, counter);
             counter = counter.add(BigInteger.ONE);
-
             largeHash = new ByteArray(largeHash).concat(shortHash).getArray();
         }
 
-        // set first bit to 1. This ensures, that the BigInteger (in the next step) has the correct bitlength.
-        largeHash[0] |= 0x80;
+        fdh = convertHashToBigInt(largeHash, bitLength);
 
-        fdh = new BigInteger(1, largeHash);
-        //cut the hash to the same size as the public key
-        fdh = fdh.shiftRight((largeHash.length * 8) - bitLength);
-
-        // set last bit to 1 to ensure that the hash is odd. (Add 1 if the hash is even)
-        fdh = fdh.setBit(0);
-
+        // while resulting fdh is too big, cut off the first part of the fdh and append a new short hash
         while (fdh.compareTo(max) > 0) {
             counter = counter.add(BigInteger.ONE);
-            md.update(m);
-            md.update(counter.toByteArray());
-            shortHash = md.digest();
+            shortHash = getShortHash(md, m, counter);
             System.arraycopy(largeHash, digestLength, largeHash, 0, largeHash.length - digestLength);
             System.arraycopy(shortHash, 0, largeHash, largeHash.length - digestLength, digestLength);
 
-            // set first bit to 1. This ensures, that the BigInteger (in the next step) has the correct bitlength.
-            largeHash[0] |= 0x80;
-
-            fdh = new BigInteger(1, largeHash);
-            //cut the hash to the same size as the public key
-            fdh = fdh.shiftRight((largeHash.length * 8) - bitLength);
-
-            // set last bit to 1 to ensure that the hash is odd. (Add 1 if the hash is even)
-            fdh = fdh.setBit(0);
+            fdh = convertHashToBigInt(largeHash, bitLength);
         }
 
         return fdh;
     }
 
+    private static byte[] getShortHash(MessageDigest md, byte[] message, BigInteger counter) {
+        md.reset();
+        md.update(message);
+        md.update(counter.toByteArray());
+        return md.digest();
+    }
+
+    private static BigInteger convertHashToBigInt(byte[] largeHash, int bitLength) {
+        // set first bit to 1. This ensures, that the BigInteger (in the next step) has the correct bitlength.
+        largeHash[0] |= 0x80;
+
+        BigInteger fdh = new BigInteger(1, largeHash);
+
+        //cut the hash to the same size as the public key
+        fdh = fdh.shiftRight((largeHash.length * 8) - bitLength);
+
+        // set last bit to 1 to ensure that the hash is odd. (Add 1 if the hash is even)
+        return fdh.setBit(0);
+    }
 
     /**
      * Creates a safe prime number of the given bit length. A prime number <code>p</code> is safe, if p=2*q+1, where q
