@@ -25,58 +25,38 @@
         targetNamespace="https://sec.uni-passau.de/2017/03/xmlrss"
         version="0.1" elementFormDefault="qualified">
 
-    <element name="Signature" type="drs:SignatureType"/>
-    <complexType name="SignatureType">
-        <sequence>
-            <element ref="drs:References"/>
-            <element ref="drs:SignatureValue"/>
-            <element ref="drs:KeyInfo" minOccurs="0" maxOccurs="unbounded"/>
-        </sequence>
-    </complexType>
-
-    <element name="References" type="drs:ReferencesType"/>
-    <complexType name="ReferencesType">
-        <sequence>
-            <element ref="drs:Reference" maxOccurs="unbounded"/>
-        </sequence>
-    </complexType>
-
-    <element name="Reference" type="drs:ReferenceType"/>
-    <complexType name="ReferenceType">
-        <sequence>
-            <element ref="drs:Pointer"/>
-            <element ref="drs:Proof"/>
-        </sequence>
-    </complexType>
-
-    <element name="Pointer" type="drs:PointerType"/>
-    <complexType name="PointerType">
-        <attribute name="Id" type="ID" use="optional"/>
-        <attribute name="URI" type="anyURI" use="required"/>
-        <attribute name="Redactable" type="boolean" use="optional"/>
-    </complexType>
-
-    <element name="Proof">
+    <element name="Signature">
         <complexType>
             <sequence>
-                <any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+                <element ref="drs:References"/>
+                <element name="SignatureValue" type="anyType"/>
+                <element name="KeyInfo" type="anyType" minOccurs="0" maxOccurs="1"/>
             </sequence>
         </complexType>
     </element>
 
-    <element name="SignatureValue">
+    <element name="References">
         <complexType>
             <sequence>
-                <any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+                <element ref="drs:Reference" maxOccurs="unbounded"/>
             </sequence>
         </complexType>
     </element>
 
-    <element name="KeyInfo">
+    <element name="Reference">
         <complexType>
             <sequence>
-                <any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+                <element ref="drs:Pointer"/>
+                <element name="Proof" type="anyType"/>
             </sequence>
+        </complexType>
+    </element>
+
+    <element name="Pointer">
+        <complexType>
+            <attribute name="Id" type="ID" use="optional"/>
+            <attribute name="URI" type="anyURI" use="required"/>
+            <attribute name="Redactable" type="boolean" use="optional"/>
         </complexType>
     </element>
 </schema>
