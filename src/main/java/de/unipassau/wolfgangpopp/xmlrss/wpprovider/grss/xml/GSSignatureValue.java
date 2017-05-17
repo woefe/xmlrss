@@ -34,10 +34,10 @@ import java.util.Base64;
 @XmlRootElement(name = "SignatureValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
 @XmlType(propOrder = {"dsigValue", "accumulatorValue"})
 public class GSSignatureValue implements SignatureValue {
-    @XmlElement(name = "DSigValue")
+    @XmlElement(name = "DSigValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String dsigValue;
 
-    @XmlElement(name = "AccumulatorValue")
+    @XmlElement(name = "AccumulatorValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String accumulatorValue;
 
     private GSSignatureValue() {
