@@ -46,7 +46,20 @@ public class GSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
     }
 
     @Override
+    @Test
     public void testAddNonRedactable() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", false);
+        Document document = sig.sign();
+        printDocument(document);
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertTrue(sig.verify());
+        validateXSD(document);
 
     }
 }

@@ -51,6 +51,7 @@ import java.security.Provider;
 import java.security.Security;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -136,6 +137,49 @@ public abstract class AbstractXMLRSSTest {
         sig.initVerify(keyPair.getPublic());
         sig.setDocument(document);
         assertTrue(sig.verify());
+        validateXSD(document);
+    }
+
+    @Test
+    public void testVerifyFalseModifiedDoc() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
+        Document document = sig.sign();
+        printDocument(document);
+
+        document.getDocumentElement().getFirstChild().getFirstChild().getFirstChild().setNodeValue("broken");
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        assertFalse(sig.verify());
+        validateXSD(document);
+    }
+
+    @Test
+    public void testVerifyFalseModfiedSig() throws Exception {
+        RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
+        sig.initSign(keyPair);
+        sig.setDocument(new FileInputStream("testdata/vehicles.xml"));
+        sig.addSignSelector("#xpointer(id('a1'))", true);
+        sig.addSignSelector("#xpointer(id('a2'))", true);
+        sig.addSignSelector("#xpointer(id('a3'))", true);
+        Document document = sig.sign();
+        printDocument(document);
+
+        Node proof = document.getElementsByTagName("drs:Proof").item(0);
+        proof.removeChild(proof.getFirstChild());
+
+        sig.initVerify(keyPair.getPublic());
+        sig.setDocument(document);
+        try {
+            assertFalse(sig.verify());
+        } catch (Exception e) {
+            assertTrue(true);
+        }
         validateXSD(document);
     }
 
@@ -228,7 +272,7 @@ public abstract class AbstractXMLRSSTest {
     }
 
     @Test(expected = RedactableXMLSignatureException.class)
-    public void testAddPartSelectorDuplicate() throws Exception{
+    public void testAddPartSelectorDuplicate() throws Exception {
         RedactableXMLSignature sig = RedactableXMLSignature.getInstance(algorithm);
 
         sig.initSign(keyPair);
