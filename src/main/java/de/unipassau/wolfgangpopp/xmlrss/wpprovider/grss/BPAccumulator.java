@@ -34,7 +34,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.cryptoutils.CryptoUtils.fullDomainHash;
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.CryptoUtils.fullDomainHash;
 
 /**
  * The BPAccumulator implements the accumulator scheme proposed by Barić and Pfitzmann and adjusted in

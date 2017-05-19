@@ -29,7 +29,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.cryptoutils.CryptoUtils.safePrime;
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.CryptoUtils.safePrime;
 
 /**
  * @author Wolfgang Popp

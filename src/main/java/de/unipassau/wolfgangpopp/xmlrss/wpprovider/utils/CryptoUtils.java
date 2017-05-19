@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.cryptoutils;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 

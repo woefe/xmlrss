@@ -32,7 +32,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.cryptoutils.CryptoUtils.safePrime;
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.CryptoUtils.safePrime;
 
 
 /**
