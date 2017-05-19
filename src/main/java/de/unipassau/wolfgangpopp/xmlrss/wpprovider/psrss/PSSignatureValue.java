@@ -33,7 +33,7 @@ import java.util.Base64;
  */
 @XmlRootElement(name = "SignatureValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
 @XmlType(propOrder = {"tag", "proofOfTag", "accumulator"})
-public class PSSignatureValue implements SignatureValue{
+public class PSSignatureValue implements SignatureValue {
 
     @XmlElement(name = "Tag", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String tag;

@@ -33,7 +33,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -86,6 +85,7 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
         return document;
     }
 
+    @SuppressWarnings("unchecked")
     public static <S extends SignatureValue, P extends Proof>
     Signature<S, P> unmarshall(Class<S> signatureValueClass, Class<P> proofClass, Node signatureNode) throws JAXBException {
 

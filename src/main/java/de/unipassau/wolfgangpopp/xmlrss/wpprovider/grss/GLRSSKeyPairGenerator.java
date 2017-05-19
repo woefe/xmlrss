@@ -59,7 +59,8 @@ public abstract class GLRSSKeyPairGenerator extends KeyPairGeneratorSpi {
 
     public static class GLRSSwithRSAandBPA extends GLRSSKeyPairGenerator {
         public GLRSSwithRSAandBPA() throws NoSuchAlgorithmException {
-            super("GLRSSwithRSAandBPA", KeyPairGenerator.getInstance("GSRSSwithRSAandBPA"), KeyPairGenerator.getInstance("BPA"));
+            super("GLRSSwithRSAandBPA", KeyPairGenerator.getInstance("GSRSSwithRSAandBPA"),
+                    KeyPairGenerator.getInstance("BPA"));
         }
     }
 

@@ -71,7 +71,9 @@ public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, GLProof proof) throws RedactableXMLSignatureException {
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, GLProof proof)
+            throws RedactableXMLSignatureException {
+
         ensureBuilderExists(messageSize);
         builder.setMessagePart(index, getMessagePartForPointer(pointer))
                 .setRedactable(index, pointer.isRedactable())

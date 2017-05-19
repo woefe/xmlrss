@@ -25,7 +25,7 @@ import java.security.Key;
 /**
  * @author Wolfgang Popp
  */
-public class GRSSKey implements Key{
+public class GRSSKey implements Key {
 
     private final String algorithm;
 

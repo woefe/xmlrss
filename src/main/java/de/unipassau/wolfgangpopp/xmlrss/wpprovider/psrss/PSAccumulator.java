@@ -74,7 +74,9 @@ public class PSAccumulator extends AccumulatorSpi {
     }
 
     @Override
-    protected void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException {
+    protected void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements)
+            throws AccumulatorException {
+
         this.accumulatorValueRaw = Arrays.copyOf(accumulatorValue, accumulatorValue.length);
         this.accumulatorValue = new BigInteger(accumulatorValueRaw);
     }

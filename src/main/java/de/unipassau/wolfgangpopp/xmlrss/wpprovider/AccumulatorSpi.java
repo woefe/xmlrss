@@ -58,7 +58,8 @@ public abstract class AccumulatorSpi {
      * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException;
+    protected abstract void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements)
+            throws AccumulatorException;
 
     protected void engineRestoreWitness(AccumulatorState savedState) throws AccumulatorException {
         engineRestoreWitness(savedState.accumulatorValue, savedState.auxiliaryValue, savedState.elements);

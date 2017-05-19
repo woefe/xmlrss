@@ -34,13 +34,16 @@ public class ByteArray implements Comparable<ByteArray> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ByteArray part = (ByteArray) o;
 
         return Arrays.equals(array, part.array);
-
     }
 
     @Override

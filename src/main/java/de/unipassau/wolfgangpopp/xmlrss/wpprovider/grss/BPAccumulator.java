@@ -82,7 +82,9 @@ public class BPAccumulator extends AccumulatorSpi {
     }
 
     @Override
-    protected void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException {
+    protected void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements)
+            throws AccumulatorException {
+
         this.accumulatorValue = new BigInteger(accumulatorValue);
         this.startValue = new BigInteger(auxiliaryValue);
         this.elements = elements;

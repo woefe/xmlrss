@@ -47,7 +47,9 @@ public class BPKeyPairGenerator extends KeyPairGeneratorSpi {
     }
 
     @Override
-    public void initialize(AlgorithmParameterSpec params, SecureRandom random) throws InvalidAlgorithmParameterException {
+    public void initialize(AlgorithmParameterSpec params, SecureRandom random)
+            throws InvalidAlgorithmParameterException {
+
         //TODO
         super.initialize(params, random);
     }

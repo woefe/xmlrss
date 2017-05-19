@@ -55,13 +55,17 @@ public final class Reference<P extends Proof> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Reference<?> reference = (Reference<?>) o;
 
-        if (pointer != null ? !pointer.equals(reference.pointer) : reference.pointer != null) return false;
-        return proof != null ? proof.equals(reference.proof) : reference.proof == null;
+        return (pointer != null ? pointer.equals(reference.pointer) : reference.pointer == null)
+                && (proof != null ? proof.equals(reference.proof) : reference.proof == null);
     }
 
     @Override

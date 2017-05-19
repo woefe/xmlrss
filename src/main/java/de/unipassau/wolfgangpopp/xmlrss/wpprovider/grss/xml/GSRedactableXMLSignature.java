@@ -49,13 +49,17 @@ public class GSRedactableXMLSignature extends AbstractRedactableXMLSignature<GSS
     }
 
     @Override
-    protected GSSignatureValue marshallSignatureValue(SignatureOutput signatureOutput) throws RedactableXMLSignatureException {
+    protected GSSignatureValue marshallSignatureValue(SignatureOutput signatureOutput)
+            throws RedactableXMLSignatureException {
+
         GSRSSSignatureOutput output = (GSRSSSignatureOutput) signatureOutput;
         return new GSSignatureValue(output.getDSigValue(), output.getAccumulatorValue());
     }
 
     @Override
-    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput) throws RedactableXMLSignatureException {
+    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput)
+            throws RedactableXMLSignatureException {
+
         Set<Reference<SimpleProof>> references = new HashSet<>();
         GSRSSSignatureOutput output = (GSRSSSignatureOutput) signatureOutput;
 
@@ -74,14 +78,18 @@ public class GSRedactableXMLSignature extends AbstractRedactableXMLSignature<GSS
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof) throws RedactableXMLSignatureException {
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof)
+            throws RedactableXMLSignatureException {
+
         ensureBuilderExists();
         builder.addSignedPart(new ByteArray(getMessagePartForPointer(pointer)),
                 proof.getBytes(), pointer.isRedactable());
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, GSSignatureValue signatureValue) throws RedactableXMLSignatureException {
+    protected void prepareUnmarshallSignatureValue(int messageSize, GSSignatureValue signatureValue)
+            throws RedactableXMLSignatureException {
+
         ensureBuilderExists();
         builder.setAccumulatorValue(signatureValue.getAccumulatorValue())
                 .setDSigValue(signatureValue.getDSigValue());

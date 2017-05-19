@@ -63,7 +63,8 @@ public abstract class RedactableXMLSignature {
     }
 
     public static RedactableXMLSignature getInstance(String algorithm) throws NoSuchAlgorithmException {
-        NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + " RedactableXMLSignature not available");
+        NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm
+                + " RedactableXMLSignature not available");
         List<Provider.Service> services = GetInstance.getServices(TYPE, algorithm);
 
         for (Provider.Service service : services) {
@@ -77,13 +78,17 @@ public abstract class RedactableXMLSignature {
         throw failure;
     }
 
-    public static RedactableXMLSignature getInstance(String algorithm, String provider) throws NoSuchProviderException, NoSuchAlgorithmException {
+    public static RedactableXMLSignature getInstance(String algorithm, String provider)
+            throws NoSuchProviderException, NoSuchAlgorithmException {
+
         GetInstance.Instance instance = GetInstance.getInstance(TYPE,
                 RedactableXMLSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
     }
 
-    public static RedactableXMLSignature getInstance(String algorithm, Provider provider) throws NoSuchAlgorithmException {
+    public static RedactableXMLSignature getInstance(String algorithm, Provider provider)
+            throws NoSuchAlgorithmException {
+
         GetInstance.Instance instance = GetInstance.getInstance(TYPE,
                 RedactableXMLSignatureSpi.class, algorithm, provider);
         return getInstance(instance, algorithm);
@@ -222,5 +227,4 @@ public abstract class RedactableXMLSignature {
             super(engine, algorithm);
         }
     }
-
 }

@@ -96,7 +96,8 @@ public abstract class RedactableSignature {
      *                                  algorithm.
      */
     public static RedactableSignature getInstance(String algorithm) throws NoSuchAlgorithmException {
-        NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + "RedactableSignature not available");
+        NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm +
+                "RedactableSignature not available");
         List<Provider.Service> services = GetInstance.getServices(TYPE, algorithm);
 
         for (Provider.Service service : services) {
@@ -347,7 +348,9 @@ public abstract class RedactableSignature {
      * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if the two
      *                                      signatures cannot be merged
      */
-    public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
+    public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2)
+            throws RedactableSignatureException {
+
         if (state == STATE.MERGE) {
             return engine.engineMerge(signature1, signature2);
         }

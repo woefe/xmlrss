@@ -54,7 +54,9 @@ public class PSRSSKeyPairGenerator extends KeyPairGeneratorSpi {
     }
 
     @Override
-    public void initialize(AlgorithmParameterSpec params, SecureRandom random) throws InvalidAlgorithmParameterException {
+    public void initialize(AlgorithmParameterSpec params, SecureRandom random)
+            throws InvalidAlgorithmParameterException {
+
         //TODO
         super.initialize(params, random);
     }
@@ -72,7 +74,8 @@ public class PSRSSKeyPairGenerator extends KeyPairGeneratorSpi {
             for (BigInteger safePrimeA : safePrimes) {
                 for (BigInteger safePrimeB : safePrimes) {
                     if (inRange(safePrimeA, safePrimeB)) {
-                        PrivateKey privateKey = new PSRSSPrivateKey(safePrimeA.subtract(BigInteger.ONE).multiply(safePrimeB.subtract(BigInteger.ONE)));
+                        PrivateKey privateKey = new PSRSSPrivateKey(safePrimeA.subtract(BigInteger.ONE)
+                                .multiply(safePrimeB.subtract(BigInteger.ONE)));
                         PublicKey publicKey = new PSRSSPublicKey(safePrimeA.multiply(safePrimeB));
                         return new KeyPair(publicKey, privateKey);
                     }

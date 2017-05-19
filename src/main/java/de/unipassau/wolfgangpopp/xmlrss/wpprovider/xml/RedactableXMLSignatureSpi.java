@@ -84,7 +84,8 @@ public abstract class RedactableXMLSignatureSpi {
 
     protected Node getSignatureNode(Node root) throws RedactableXMLSignatureException {
         Document doc = getOwnerDocument(root);
-        return checkNode(doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0), "Signature");
+        return checkNode(doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0),
+                "Signature");
     }
 
     protected Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {

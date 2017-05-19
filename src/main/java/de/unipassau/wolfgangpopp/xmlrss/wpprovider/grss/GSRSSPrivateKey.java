@@ -25,7 +25,7 @@ import java.security.PrivateKey;
 /**
  * @author Wolfgang Popp
  */
-public class GSRSSPrivateKey extends GRSSKey implements PrivateKey{
+public class GSRSSPrivateKey extends GRSSKey implements PrivateKey {
     private final PrivateKey dsigKey;
     private final PrivateKey accKey;
 

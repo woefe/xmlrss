@@ -25,7 +25,7 @@ import java.security.PublicKey;
 /**
  * @author Wolfgang Popp
  */
-public class GSRSSPublicKey extends GRSSKey implements PublicKey{
+public class GSRSSPublicKey extends GRSSKey implements PublicKey {
     private final PublicKey dsigKey;
     private final PublicKey accKey;
 

@@ -46,12 +46,16 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
     }
 
     @Override
-    protected PSSignatureValue marshallSignatureValue(SignatureOutput signatureOutput) throws RedactableXMLSignatureException {
+    protected PSSignatureValue marshallSignatureValue(SignatureOutput signatureOutput)
+            throws RedactableXMLSignatureException {
+
         return new PSSignatureValue((PSSignatureOutput) signatureOutput);
     }
 
     @Override
-    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput) throws RedactableXMLSignatureException {
+    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput)
+            throws RedactableXMLSignatureException {
+
         Set<Reference<SimpleProof>> references = new HashSet<>();
         PSSignatureOutput output = (PSSignatureOutput) signatureOutput;
         for (PSSignatureOutput.SignedPart signedPart : output) {
@@ -69,7 +73,9 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof) throws RedactableXMLSignatureException {
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof)
+            throws RedactableXMLSignatureException {
+
         ensureBuilderExists();
         try {
             builder.add(getMessagePartForPointer(pointer), proof.getBytes());
@@ -85,7 +91,9 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, PSSignatureValue signatureValue) throws RedactableXMLSignatureException {
+    protected void prepareUnmarshallSignatureValue(int messageSize, PSSignatureValue signatureValue)
+            throws RedactableXMLSignatureException {
+
         ensureBuilderExists();
         builder.setAccumulator(signatureValue.getAccumulator())
                 .setProofOfTag(signatureValue.getProofOfTag())

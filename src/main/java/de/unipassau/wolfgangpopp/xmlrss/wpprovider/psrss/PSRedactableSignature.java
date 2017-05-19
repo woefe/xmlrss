@@ -150,12 +150,13 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         PSSignatureOutput.Builder builder = new PSSignatureOutput.Builder(tag, proofOfTag, acc);
 
-        Function<ByteArray, PSSignatureOutput.SignedPart> signFunction = new Function<ByteArray, PSSignatureOutput.SignedPart>() {
-            @Override
-            public PSSignatureOutput.SignedPart execute(ByteArray element) throws Exception {
-                return signPart(element, tag);
-            }
-        };
+        Function<ByteArray, PSSignatureOutput.SignedPart> signFunction =
+                new Function<ByteArray, PSSignatureOutput.SignedPart>() {
+                    @Override
+                    public PSSignatureOutput.SignedPart execute(ByteArray element) throws Exception {
+                        return signPart(element, tag);
+                    }
+                };
 
         builder.addAll(map(signFunction, parts));
 
@@ -187,16 +188,15 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         final byte tag[] = sig.getTag();
 
-        Function<PSSignatureOutput.SignedPart, Boolean> verifyFunction
-                = new Function<PSSignatureOutput.SignedPart, Boolean>() {
-
-            @Override
-            public Boolean execute(PSSignatureOutput.SignedPart argument) throws Exception {
-                byte[] proof = argument.getProof();
-                byte[] value = argument.getElement().getArray();
-                return accumulator.verify(proof, concat(tag, value));
-            }
-        };
+        Function<PSSignatureOutput.SignedPart, Boolean> verifyFunction =
+                new Function<PSSignatureOutput.SignedPart, Boolean>() {
+                    @Override
+                    public Boolean execute(PSSignatureOutput.SignedPart argument) throws Exception {
+                        byte[] proof = argument.getProof();
+                        byte[] value = argument.getElement().getArray();
+                        return accumulator.verify(proof, concat(tag, value));
+                    }
+                };
 
         Collection<Boolean> results = map(verifyFunction, sig);
 
@@ -234,7 +234,9 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
         return builder.build();
     }
 
-    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
+    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2)
+            throws RedactableSignatureException {
+
         //verifySignature(key, s);
         //verifySignature(key, t);
 

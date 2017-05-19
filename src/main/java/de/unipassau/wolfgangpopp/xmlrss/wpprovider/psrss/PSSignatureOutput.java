@@ -225,7 +225,8 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
             this.accumulator = accumulator;
         }
 
-        public Builder(){ }
+        public Builder() {
+        }
 
         /**
          * Creates a new <code>Builder</code>, which is initialized with the given {@link PSSignatureOutput}. The

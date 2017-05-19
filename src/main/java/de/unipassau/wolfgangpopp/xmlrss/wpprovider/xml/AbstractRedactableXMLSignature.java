@@ -44,7 +44,8 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P extends Proof> extends RedactableXMLSignatureSpi {
+public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P extends Proof>
+        extends RedactableXMLSignatureSpi {
 
     private final RedactableSignature rss;
     private Node root;
@@ -54,7 +55,8 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
     private final Class<S> signatureValueClass;
     private final Class<P> proofClass;
 
-    protected AbstractRedactableXMLSignature(RedactableSignature rss, Class<S> signatureValueClass, Class<P> proofClass) {
+    protected AbstractRedactableXMLSignature(RedactableSignature rss, Class<S> signatureValueClass,
+                                             Class<P> proofClass) {
         super();
         this.rss = rss;
         this.proofClass = proofClass;
@@ -230,13 +232,16 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
 
     protected abstract S marshallSignatureValue(SignatureOutput signatureOutput) throws RedactableXMLSignatureException;
 
-    protected abstract Collection<Reference<P>> marshallReferences(SignatureOutput signatureOutput) throws RedactableXMLSignatureException;
+    protected abstract Collection<Reference<P>> marshallReferences(SignatureOutput signatureOutput)
+            throws RedactableXMLSignatureException;
 
     protected abstract Identifier createIdentifier(byte[] messagePart, int index) throws RedactableXMLSignatureException;
 
-    protected abstract void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, P proof) throws RedactableXMLSignatureException;
+    protected abstract void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, P proof)
+            throws RedactableXMLSignatureException;
 
-    protected abstract void prepareUnmarshallSignatureValue(int messageSize, S signatureValue) throws RedactableXMLSignatureException;
+    protected abstract void prepareUnmarshallSignatureValue(int messageSize, S signatureValue)
+            throws RedactableXMLSignatureException;
 
     protected abstract SignatureOutput doUnmarshall() throws RedactableXMLSignatureException;
 }

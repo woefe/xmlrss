@@ -221,8 +221,8 @@ public abstract class GSRedactableSignature extends RedactableSignatureSpi {
         builder.setDSigValue(signatureOutput.getDSigValue())
                 .setAccumulatorValue(signatureOutput.getAccumulatorValue());
 
-        for (ByteArray redactablePart : messageParts.keySet()) {
-            if (nonRedactableParts.contains(redactablePart)) {
+        for (ByteArray messagePart : messageParts.keySet()) {
+            if (nonRedactableParts.contains(messagePart)) {
                 throw new RedactableSignatureException("Cannot perform the redaction since a given part is not redactable");
             }
         }

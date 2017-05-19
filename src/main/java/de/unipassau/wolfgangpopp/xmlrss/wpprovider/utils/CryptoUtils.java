@@ -20,8 +20,6 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

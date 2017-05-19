@@ -60,7 +60,9 @@ public abstract class RedactableSignatureSpi {
 
     protected abstract SignatureOutput engineRedact(SignatureOutput signature) throws RedactableSignatureException;
 
-    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2) throws RedactableSignatureException {
+    protected SignatureOutput engineMerge(SignatureOutput signature1, SignatureOutput signature2)
+            throws RedactableSignatureException {
+
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support merging");
     }
 
@@ -68,7 +70,8 @@ public abstract class RedactableSignatureSpi {
         throw new UnsupportedOperationException("This Redactable Signature Scheme does not support updating");
     }
 
-    protected abstract void engineSetParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException;
+    protected abstract void engineSetParameters(AlgorithmParameters parameters)
+            throws InvalidAlgorithmParameterException;
 
     protected abstract AlgorithmParameters engineGetParameters();
 
