@@ -25,13 +25,6 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Pointer;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Proof;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureSpi;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Reference;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Signature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.SignatureValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -153,6 +146,10 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
         SignatureOutput redacted;
         SignatureOutput original = unmarshall();
 
+        if (!checkRedactUris()) {
+            throw new RedactableXMLSignatureException("Cannot perform redaction. Invalid redaction detected");
+        }
+
         for (String uri : redactUris) {
             Pointer pointer = new Pointer(uri, true);
             try {
@@ -172,6 +169,15 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
         root.removeChild(getSignatureNode(root));
 
         return marshall(redacted);
+    }
+
+    private boolean checkRedactUris() {
+        for (Pointer pointer : pointers.values()) {
+            if (!pointer.isRedactable()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected Pointer getPointerForMessagePart(byte[] messagePart) {
