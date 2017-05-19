@@ -81,21 +81,21 @@ public abstract class AbstractRSSTest {
     public void testGetInstance() throws Exception {
         Security.insertProviderAt(provider, 1);
         RedactableSignature rss = RedactableSignature.getInstance(algorithm);
-        assertEquals(rss.getAlgorithm(), algorithm);
+        assertEquals(algorithm, rss.getAlgorithm());
     }
 
     @Test
     public void testGetInstanceFromSpecificProviderString() throws Exception {
         Security.insertProviderAt(new WPProvider(), 1);
         RedactableSignature rss = RedactableSignature.getInstance(algorithm, providerName);
-        assertEquals(rss.getAlgorithm(), algorithm);
+        assertEquals(algorithm, rss.getAlgorithm());
     }
 
     @Test
     public void testGetInstanceFromSpecificProviderObject() throws Exception {
         Security.insertProviderAt(new WPProvider(), 1);
         RedactableSignature rss = RedactableSignature.getInstance(algorithm, provider);
-        assertEquals(rss.getAlgorithm(), algorithm);
+        assertEquals(algorithm, rss.getAlgorithm());
     }
 
     @Test
@@ -112,7 +112,7 @@ public abstract class AbstractRSSTest {
 
         SignatureOutput output = rss.sign();
         assertTrue(output.containsAll(TEST_MESSAGE));
-        assertEquals(output.size(), TEST_MESSAGE.length);
+        assertEquals(TEST_MESSAGE.length, output.size());
     }
 
     @Test
@@ -207,9 +207,9 @@ public abstract class AbstractRSSTest {
         SignatureOutput second = rss.sign();
 
         assertTrue(first.containsAll(TEST_MESSAGE[2], TEST_MESSAGE[3], TEST_MESSAGE[6]));
-        assertEquals(first.size(), 3);
+        assertEquals(3, first.size());
         assertTrue(second.containsAll(TEST_MESSAGE[2], TEST_MESSAGE[4], TEST_MESSAGE[5]));
-        assertEquals(second.size(), 3);
+        assertEquals(3, second.size());
         assertFalse(second.contains(TEST_MESSAGE[3]));
     }
 
@@ -238,8 +238,8 @@ public abstract class AbstractRSSTest {
 
         assertTrue(redacted1.containsAll(TEST_MESSAGE[1], TEST_MESSAGE[3], TEST_MESSAGE[5]));
         assertTrue(redacted2.containsAll(TEST_MESSAGE[0], TEST_MESSAGE[2], TEST_MESSAGE[4]));
-        assertEquals(redacted1.size(), 3);
-        assertEquals(redacted2.size(), 3);
+        assertEquals(3, redacted1.size());
+        assertEquals(3, redacted2.size());
         assertFalse(redacted1.contains(TEST_MESSAGE[0]));
         assertFalse(redacted2.contains(TEST_MESSAGE[3]));
     }

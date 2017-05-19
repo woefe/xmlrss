@@ -26,30 +26,17 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Wolfgang Popp
@@ -82,7 +69,7 @@ public class PSRedactableXMLSignatureTest extends AbstractXMLRSSTest {
         Document document = documentBuilder.parse(new File("testdata/vehicles.sig.xml"));
 
         NodeList nodeList = document.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature");
-        assertEquals(nodeList.getLength(), 1);
+        assertEquals(1, nodeList.getLength());
 
         sig.initVerify(keyPair.getPublic());
         sig.setDocument(document);

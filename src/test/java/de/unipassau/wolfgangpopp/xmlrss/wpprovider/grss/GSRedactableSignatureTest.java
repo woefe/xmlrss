@@ -57,7 +57,7 @@ public class GSRedactableSignatureTest extends AbstractRSSTest {
         sig.initVerify(keyPair.getPublic());
         assertTrue(sig.verify(output));
         assertTrue(output.containsAll(Arrays.copyOfRange(TEST_MESSAGE, 0, 4)));
-        assertEquals(output.size(), 4);
+        assertEquals(4, output.size());
     }
 
     @Test(expected = RedactableSignatureException.class)

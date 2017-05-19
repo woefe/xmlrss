@@ -24,16 +24,11 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.AbstractXMLRSSTest;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.WPProvider;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
-import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
 import java.io.FileInputStream;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
 
 import static org.junit.Assert.assertTrue;
 

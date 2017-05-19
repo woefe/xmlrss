@@ -127,7 +127,7 @@ public class PSRedactableSignatureTest extends AbstractRSSTest {
 
         rss.initVerify(keyPair.getPublic());
         assertTrue(rss.verify(updated));
-        assertEquals(updated.size(), 5);
+        assertEquals(5, updated.size());
         assertTrue(updated.containsAll(
                 "test1".getBytes(),
                 "test2".getBytes(),

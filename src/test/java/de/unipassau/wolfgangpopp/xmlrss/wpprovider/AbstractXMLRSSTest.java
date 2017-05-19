@@ -92,21 +92,21 @@ public abstract class AbstractXMLRSSTest {
     public void testGetInstance() throws Exception {
         Security.insertProviderAt(provider, 1);
         RedactableXMLSignature rss = RedactableXMLSignature.getInstance(algorithm);
-        assertEquals(rss.getAlgorithm(), algorithm);
+        assertEquals(algorithm, rss.getAlgorithm());
     }
 
     @Test
     public void testGetInstanceFromSpecificProviderString() throws Exception {
         Security.insertProviderAt(new WPProvider(), 1);
         RedactableXMLSignature rss = RedactableXMLSignature.getInstance(algorithm, providerName);
-        assertEquals(rss.getAlgorithm(), algorithm);
+        assertEquals(algorithm, rss.getAlgorithm());
     }
 
     @Test
     public void testGetInstanceFromSpecificProviderObject() throws Exception {
         Security.insertProviderAt(new WPProvider(), 1);
         RedactableXMLSignature rss = RedactableXMLSignature.getInstance(algorithm, provider);
-        assertEquals(rss.getAlgorithm(), algorithm);
+        assertEquals(algorithm, rss.getAlgorithm());
     }
 
     @Test

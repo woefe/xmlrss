@@ -30,9 +30,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -64,7 +62,7 @@ public class GLRedactableSignatureTest extends AbstractRSSTest {
 
         SignatureOutput output = rss.sign();
 
-        assertEquals(output.size(), 5);
+        assertEquals(5, output.size());
         for (Identifier identifier : identifiers) {
             assertTrue(output.contains(identifier));
         }
@@ -117,6 +115,7 @@ public class GLRedactableSignatureTest extends AbstractRSSTest {
         rss.redact(output);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testNonVerify() throws Exception {
         RedactableSignature rss = RedactableSignature.getInstance(algorithm);
@@ -129,6 +128,7 @@ public class GLRedactableSignatureTest extends AbstractRSSTest {
         GLRSSSignatureOutput.GLRSSSignedPart signedPart = output.getParts().get(2);
         Field witnessField = signedPart.getClass().getDeclaredField("witnesses");
         witnessField.setAccessible(true);
+
         List<ByteArray> witnesses = (List<ByteArray>) witnessField.get(signedPart);
         witnesses.set(0, new ByteArray("h4ck3d".getBytes()));
 
