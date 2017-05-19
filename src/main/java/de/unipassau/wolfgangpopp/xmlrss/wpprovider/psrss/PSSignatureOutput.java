@@ -40,7 +40,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     private final byte[] tag;
     private final byte[] proofOfTag;
     private final byte[] accumulator;
-    private final Map<ByteArray, byte[]> signedParts;
+    private final Map<ByteArray, byte[]> partToProof; // Key: messagePart, value: proof
 
     //TODO rename proof to witness
 
@@ -48,7 +48,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
         this.tag = tag;
         this.proofOfTag = proofOfTag;
         this.accumulator = accumulator;
-        this.signedParts = new HashMap<>();
+        this.partToProof = new HashMap<>();
     }
 
     /**
@@ -136,7 +136,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     }
 
     public int size() {
-        return signedParts.size();
+        return partToProof.size();
     }
 
     /**
@@ -145,13 +145,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @return the set of values without their corresponding proofs
      */
     public Set<ByteArray> values() {
-        return signedParts.keySet();
-    }
-
-    private PSSignatureOutput copy() {
-        PSSignatureOutput outputSet = new PSSignatureOutput(getTag(), getProofOfTag(), getAccumulator());
-        outputSet.signedParts.putAll(signedParts);
-        return outputSet;
+        return partToProof.keySet();
     }
 
     /**
@@ -161,7 +155,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
     public Iterator<SignedPart> iterator() {
         return new Iterator<SignedPart>() {
 
-            private final Iterator<ByteArray> iterator = signedParts.keySet().iterator();
+            private final Iterator<ByteArray> iterator = partToProof.keySet().iterator();
 
             @Override
             public boolean hasNext() {
@@ -171,7 +165,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
             @Override
             public SignedPart next() {
                 ByteArray next = iterator.next();
-                return new SignedPart(signedParts.get(next), next);
+                return new SignedPart(partToProof.get(next), next);
             }
         };
     }
@@ -183,7 +177,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
 
         PSSignatureOutput that = (PSSignatureOutput) o;
 
-        return signedParts.equals(that.signedParts)
+        return partToProof.equals(that.partToProof)
                 && Arrays.equals(getTag(), that.getTag())
                 && Arrays.equals(getProofOfTag(), that.getProofOfTag())
                 && Arrays.equals(getAccumulator(), that.getAccumulator());
@@ -192,7 +186,7 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
 
     @Override
     public int hashCode() {
-        int result = signedParts.hashCode();
+        int result = partToProof.hashCode();
         result = 31 * result + Arrays.hashCode(getTag());
         result = 31 * result + Arrays.hashCode(getProofOfTag());
         result = 31 * result + Arrays.hashCode(getAccumulator());
@@ -206,14 +200,17 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
      * @return the proof for the given message part
      */
     public byte[] getProof(byte[] part) {
-        return signedParts.get(new ByteArray(part));
+        return partToProof.get(new ByteArray(part));
     }
 
     /**
      * This builder creates a new {@link PSSignatureOutput}.
      */
     static class Builder {
-        private PSSignatureOutput psSignatureOutput;
+        private byte[] tag;
+        private byte[] proofOfTag;
+        private byte[] accumulator;
+        private final Map<ByteArray, byte[]> partToProof = new HashMap<>();
 
         /**
          * Creates a new Builder, which is initialized with an empty {@link PSSignatureOutput}.
@@ -223,8 +220,12 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
          * @param accumulator the accumulator of the <code>SignedSet</code>
          */
         public Builder(byte[] tag, byte[] proofOfTag, byte[] accumulator) {
-            psSignatureOutput = new PSSignatureOutput(tag, proofOfTag, accumulator);
+            this.tag = tag;
+            this.proofOfTag = proofOfTag;
+            this.accumulator = accumulator;
         }
+
+        public Builder(){ }
 
         /**
          * Creates a new <code>Builder</code>, which is initialized with the given {@link PSSignatureOutput}. The
@@ -233,9 +234,11 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
          * @param signedSet the <code>SignedSet</code> that initializes this builder
          */
         public Builder(PSSignatureOutput signedSet) {
-            this.psSignatureOutput = signedSet.copy();
+            this.tag = signedSet.getTag();
+            this.proofOfTag = signedSet.getProofOfTag();
+            this.accumulator = signedSet.getAccumulator();
+            this.partToProof.putAll(signedSet.partToProof);
         }
-
 
         /**
          * Adds the given part together with its proof to the {@link PSSignatureOutput}.
@@ -249,16 +252,11 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
         }
 
         public Builder add(SignedPart signedPart) throws PSRSSException {
-            return add(signedPart.getElement(), signedPart.getProof());
+            return add(signedPart.part, signedPart.proof);
         }
 
         public Builder add(ByteArray part, byte[] proof) throws PSRSSException {
-
-            if (psSignatureOutput.signedParts.containsKey(part)) {
-                throw new PSRSSException("Every part can be added only once");
-            }
-
-            psSignatureOutput.signedParts.put(part, proof);
+            partToProof.put(part, proof);
             return this;
         }
 
@@ -269,13 +267,30 @@ public final class PSSignatureOutput implements SignatureOutput, Iterable<PSSign
             return this;
         }
 
+        public Builder setTag(byte[] tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public Builder setProofOfTag(byte[] proofOfTag) {
+            this.proofOfTag = proofOfTag;
+            return this;
+        }
+
+        public Builder setAccumulator(byte[] accumulator) {
+            this.accumulator = accumulator;
+            return this;
+        }
+
         /**
          * Constructs a {@link PSSignatureOutput} from the components in this builder.
          *
          * @return a new <code>{@link PSSignatureOutput}</code>
          */
         public PSSignatureOutput build() {
-            return psSignatureOutput;
+            PSSignatureOutput output = new PSSignatureOutput(tag, proofOfTag, accumulator);
+            output.partToProof.putAll(partToProof);
+            return output;
         }
     }
 
