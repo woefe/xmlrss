@@ -20,27 +20,21 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
-import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Reference")
-@XmlType(propOrder = {"pointer", "proof"})
-public final class Reference<P extends Proof> {
-    @XmlElement(name = "Pointer")
+public final class Reference extends BindingElement<Reference> {
     private Pointer pointer;
+    private Proof proof;
 
-    @XmlAnyElement(lax = true)
-    private P proof;
-
-    private Reference() {
+    public Reference() {
     }
 
-    public Reference(Pointer pointer, P proof) {
+    public Reference(Pointer pointer, Proof proof) {
         this.pointer = pointer;
         this.proof = proof;
     }
@@ -49,9 +43,10 @@ public final class Reference<P extends Proof> {
         return pointer;
     }
 
-    public P getProof() {
+    public Proof getProof() {
         return proof;
     }
+
 
     @Override
     public boolean equals(Object o) {
@@ -62,7 +57,7 @@ public final class Reference<P extends Proof> {
             return false;
         }
 
-        Reference<?> reference = (Reference<?>) o;
+        Reference reference = (Reference) o;
 
         return (pointer != null ? pointer.equals(reference.pointer) : reference.pointer == null)
                 && (proof != null ? proof.equals(reference.proof) : reference.proof == null);
@@ -73,5 +68,18 @@ public final class Reference<P extends Proof> {
         int result = pointer != null ? pointer.hashCode() : 0;
         result = 31 * result + (proof != null ? proof.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public Reference unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        Element reference = createThisElement(document);
+        reference.appendChild(pointer.marshall(document));
+        reference.appendChild(proof.marshall(document));
+        return reference;
     }
 }

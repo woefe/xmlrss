@@ -20,37 +20,52 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "SignatureInfo")
-@XmlType(propOrder = {"canonicalizationMethod", "redactableSignatureAlgorithm"})
-public class SignatureInfo {
+public class SignatureInfo extends BindingElement<SignatureInfo> {
 
-    @XmlElement(name = "CanonicalizationMethod")
-    private AlgorithmElement canonicalizationMethod;
+    private String canonicalizationMethod;
 
-    @XmlElement(name = "RedactableSignatureAlgorithm")
-    private AlgorithmElement redactableSignatureAlgorithm;
+    private String redactableSignatureAlgorithm;
 
-    private SignatureInfo() {
+    public SignatureInfo() {
     }
 
     public SignatureInfo(String canonicalizationMethod, String redactableSignatureMethod) {
-        this.canonicalizationMethod = new AlgorithmElement(canonicalizationMethod);
-        this.redactableSignatureAlgorithm = new AlgorithmElement(redactableSignatureMethod);
+        this.canonicalizationMethod = canonicalizationMethod;
+        this.redactableSignatureAlgorithm = redactableSignatureMethod;
     }
 
     public String getCanonicalizationMethod() {
-        return canonicalizationMethod.getAlgorithm();
+        return canonicalizationMethod;
     }
 
     public String getRedactableSignatureMethod() {
-        return redactableSignatureAlgorithm.getAlgorithm();
+        return redactableSignatureAlgorithm;
     }
 
+    @Override
+    public SignatureInfo unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        Element signatureInfo = createThisElement(document);
+        Element canonicalizationMethod = createElement(document, "CanonicalizationMethod");
+        Element redactableSignatureAlgorithm = createElement(document, "RedactableSignatureAlgorithm");
+
+        canonicalizationMethod.setAttribute("Algorithm", this.canonicalizationMethod);
+        redactableSignatureAlgorithm.setAttribute("Algorithm", this.redactableSignatureAlgorithm);
+
+        signatureInfo.appendChild(canonicalizationMethod);
+        signatureInfo.appendChild(redactableSignatureAlgorithm);
+
+        return signatureInfo;
+    }
 }

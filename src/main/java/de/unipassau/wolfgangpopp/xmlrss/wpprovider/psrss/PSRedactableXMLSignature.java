@@ -24,9 +24,11 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.AbstractRedactableXMLSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Reference;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SimpleProof;
 
 import java.security.NoSuchAlgorithmException;
@@ -37,12 +39,12 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<PSSignatureValue, SimpleProof> {
+abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature {
 
     private PSSignatureOutput.Builder builder;
 
     PSRedactableXMLSignature(RedactableSignature signature) throws RedactableXMLSignatureException {
-        super(signature, PSSignatureValue.class, SimpleProof.class);
+        super(signature);
     }
 
     @Override
@@ -63,15 +65,15 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
     }
 
     @Override
-    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput)
+    protected Collection<Reference> marshallReferences(SignatureOutput signatureOutput)
             throws RedactableXMLSignatureException {
 
-        Set<Reference<SimpleProof>> references = new HashSet<>();
+        Set<Reference> references = new HashSet<>();
         PSSignatureOutput output = (PSSignatureOutput) signatureOutput;
         for (PSSignatureOutput.SignedPart signedPart : output) {
             SimpleProof proof = new SimpleProof(signedPart.getProof());
             Pointer pointer = getPointerForMessagePart(signedPart.getElement().getArray());
-            Reference<SimpleProof> reference = new Reference<>(pointer, proof);
+            Reference reference = new Reference(pointer, proof);
             references.add(reference);
         }
         return references;
@@ -83,12 +85,12 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof)
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, Proof proof)
             throws RedactableXMLSignatureException {
 
         ensureBuilderExists();
         try {
-            builder.add(getMessagePartForPointer(pointer), proof.getBytes());
+            builder.add(getMessagePartForPointer(pointer), ((SimpleProof) proof).getBytes());
         } catch (PSRSSException e) {
             throw new RedactableXMLSignatureException(e);
         }
@@ -101,13 +103,14 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, PSSignatureValue signatureValue)
+    protected void prepareUnmarshallSignatureValue(int messageSize, SignatureValue signatureValue)
             throws RedactableXMLSignatureException {
 
         ensureBuilderExists();
-        builder.setAccumulator(signatureValue.getAccumulator())
-                .setProofOfTag(signatureValue.getProofOfTag())
-                .setTag(signatureValue.getTag());
+        PSSignatureValue psSignatureValue = (PSSignatureValue) signatureValue;
+        builder.setAccumulator(psSignatureValue.getAccumulator())
+                .setProofOfTag(psSignatureValue.getProofOfTag())
+                .setTag(psSignatureValue.getTag());
     }
 
     @Override

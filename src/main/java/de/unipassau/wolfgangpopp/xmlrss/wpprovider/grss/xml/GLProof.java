@@ -23,12 +23,9 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -36,26 +33,15 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Proof", namespace = RedactableXMLSignature.XML_NAMESPACE)
-@XmlType(propOrder = {"gsProof", "randomValue", "accumulatorValue", "witnesses"})
-public class GLProof implements Proof {
-
-    @XmlElement(name = "GSProof", namespace = RedactableXMLSignature.XML_NAMESPACE)
+public class GLProof extends Proof {
     private String gsProof;
-
-    @XmlElement(name = "RandomValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String randomValue;
-
-    @XmlElement(name = "AccumulatorValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String accumulatorValue;
-
-    @XmlElementWrapper(name = "Witnesses", namespace = RedactableXMLSignature.XML_NAMESPACE)
-    @XmlElement(name = "Witness", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private final List<String> witnesses = new ArrayList<>();
 
     private final Base64.Decoder decoder = Base64.getDecoder();
 
-    private GLProof() {
+    public GLProof() {
 
     }
 
@@ -87,5 +73,15 @@ public class GLProof implements Proof {
             decoded.add(new ByteArray(decoder.decode(witness)));
         }
         return decoded;
+    }
+
+    @Override
+    public Proof unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        return null;
     }
 }

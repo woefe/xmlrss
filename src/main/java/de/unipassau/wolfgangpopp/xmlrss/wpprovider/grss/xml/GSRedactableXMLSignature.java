@@ -26,9 +26,11 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GSRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.AbstractRedactableXMLSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Reference;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SimpleProof;
 
 import java.security.NoSuchAlgorithmException;
@@ -40,12 +42,12 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSignature<GSSignatureValue, SimpleProof> {
+public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSignature {
 
     private GSRSSSignatureOutput.Builder builder;
 
     protected GSRedactableXMLSignature(RedactableSignature gsrss) throws RedactableXMLSignatureException {
-        super(gsrss, GSSignatureValue.class, SimpleProof.class);
+        super(gsrss);
     }
 
     @Override
@@ -67,17 +69,17 @@ public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput)
+    protected Collection<Reference> marshallReferences(SignatureOutput signatureOutput)
             throws RedactableXMLSignatureException {
 
-        Set<Reference<SimpleProof>> references = new HashSet<>();
+        Set<Reference> references = new HashSet<>();
         GSRSSSignatureOutput output = (GSRSSSignatureOutput) signatureOutput;
 
         Map<ByteArray, byte[]> parts = output.getParts();
         for (Map.Entry<ByteArray, byte[]> signedPart : parts.entrySet()) {
             SimpleProof proof = new SimpleProof(signedPart.getValue());
             Pointer pointer = getPointerForMessagePart(signedPart.getKey().getArray());
-            references.add(new Reference<>(pointer, proof));
+            references.add(new Reference(pointer, proof));
         }
         return references;
     }
@@ -88,21 +90,23 @@ public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof)
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, Proof proof)
             throws RedactableXMLSignatureException {
 
+        SimpleProof simpleProof = ((SimpleProof) proof);
         ensureBuilderExists();
         builder.addSignedPart(new ByteArray(getMessagePartForPointer(pointer)),
-                proof.getBytes(), pointer.isRedactable());
+                simpleProof.getBytes(), pointer.isRedactable());
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, GSSignatureValue signatureValue)
+    protected void prepareUnmarshallSignatureValue(int messageSize, SignatureValue signatureValue)
             throws RedactableXMLSignatureException {
 
         ensureBuilderExists();
-        builder.setAccumulatorValue(signatureValue.getAccumulatorValue())
-                .setDSigValue(signatureValue.getDSigValue());
+        GSSignatureValue gsSignatureValue = ((GSSignatureValue) signatureValue);
+        builder.setAccumulatorValue(gsSignatureValue.getAccumulatorValue())
+                .setDSigValue(gsSignatureValue.getDSigValue());
     }
 
     @Override

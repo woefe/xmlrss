@@ -23,5 +23,9 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 /**
  * @author Wolfgang Popp
  */
-public interface SignatureValue {
+public abstract class SignatureValue extends BindingElement<SignatureValue> {
+    @Override
+    public String getTagName() {
+        return "SignatureValue";
+    }
 }

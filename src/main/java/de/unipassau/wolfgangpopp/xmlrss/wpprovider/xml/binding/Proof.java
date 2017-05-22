@@ -20,11 +20,12 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Proof")
-public interface Proof {
+public abstract class Proof extends BindingElement<Proof> {
+    @Override
+    public String getTagName() {
+        return "Proof";
+    }
 }

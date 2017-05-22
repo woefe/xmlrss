@@ -20,21 +20,19 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Base64;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Proof")
-public class SimpleProof implements Proof {
-    @XmlElement(name = "Data")
+public class SimpleProof extends Proof {
     private String proof;
 
-    private SimpleProof() {
+    public SimpleProof() {
     }
 
     public SimpleProof(byte[] proof) {
@@ -62,5 +60,19 @@ public class SimpleProof implements Proof {
     @Override
     public int hashCode() {
         return proof != null ? proof.hashCode() : 0;
+    }
+
+    @Override
+    public Proof unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        Element simpleProof = createThisElement(document);
+        Element data = createElement(document, "Data");
+        data.setTextContent(proof);
+        simpleProof.appendChild(data);
+        return simpleProof;
     }
 }

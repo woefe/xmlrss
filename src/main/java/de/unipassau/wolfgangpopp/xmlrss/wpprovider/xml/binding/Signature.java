@@ -20,73 +20,53 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Signature")
-@XmlType(propOrder = {"signatureInfo", "references", "signatureValue"})
-public final class Signature<S extends SignatureValue, P extends Proof> {
-    private Class<? extends Proof> proofClass;
-    private Class<? extends SignatureValue> signatureValueClass;
-    private List<Reference<P>> references = new ArrayList<>();
-    private S signatureValue;
+public final class Signature extends BindingElement<Signature> {
+    private List<Reference> references = new ArrayList<>();
+    private SignatureValue signatureValue;
     private SignatureInfo signatureInfo;
 
-    private Signature() {
-        this(null, null);
+    public Signature() {
     }
 
-    public Signature(Class<S> signatureValueClass, Class<P> proofClass) {
-        this.proofClass = proofClass;
-        this.signatureValueClass = signatureValueClass;
-    }
-
-    @XmlElement(name = "SignatureInfo")
     public SignatureInfo getSignatureInfo() {
         return signatureInfo;
     }
 
-    @XmlElementWrapper(name = "References")
-    @XmlElement(name = "Reference")
-    public List<Reference<P>> getReferences() {
+    public List<Reference> getReferences() {
         return references;
     }
 
-    @XmlAnyElement(lax = true)
-    public S getSignatureValue() {
+    public SignatureValue getSignatureValue() {
         return signatureValue;
     }
 
-    public Signature<S, P> setSignatureInfo(SignatureInfo signatureInfo) {
+    public Signature setSignatureInfo(SignatureInfo signatureInfo) {
         this.signatureInfo = signatureInfo;
         return this;
     }
 
-    public Signature<S, P> addReference(Reference<P> reference) {
+    public Signature addReference(Reference reference) {
         references.add(reference);
         return this;
     }
 
-    public Signature<S, P> setSignatureValue(S signatureValue) {
+    public Signature setSignatureValue(SignatureValue signatureValue) {
         this.signatureValue = signatureValue;
         return this;
     }
 
+    /*
     public Document marshall(Document document) throws JAXBException {
         final JAXBContext context = JAXBContext.newInstance(this.getClass(), proofClass, signatureValueClass);
         Marshaller m = context.createMarshaller();
@@ -96,9 +76,8 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
         return document;
     }
 
-    @SuppressWarnings("unchecked")
-    public static <S extends SignatureValue, P extends Proof>
-    Signature<S, P> unmarshall(Class<S> signatureValueClass, Class<P> proofClass, Node signatureNode) throws JAXBException {
+    /*
+    public static Signature unmarshall(Node signatureNode) throws JAXBException {
 
         final JAXBContext context = JAXBContext.newInstance(Signature.class, proofClass, signatureValueClass);
         Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -106,5 +85,26 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
         signature.proofClass = proofClass;
         signature.signatureValueClass = signatureValueClass;
         return signature;
+    }
+    */
+
+    @Override
+    public Signature unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        Element element = createThisElement(document);
+        element.appendChild(signatureInfo.marshall(document));
+        Node references = element.appendChild(createElement(document, "References"));
+        for (Reference reference : this.references) {
+            references.appendChild(reference.marshall(document));
+        }
+
+        element.appendChild(references);
+        element.appendChild(signatureValue.marshall(document));
+        element.setAttribute("xmlns", RedactableXMLSignature.XML_NAMESPACE);
+        return element;
     }
 }

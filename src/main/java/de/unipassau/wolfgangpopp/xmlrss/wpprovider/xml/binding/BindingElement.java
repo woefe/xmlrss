@@ -20,26 +20,29 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * @author Wolfgang Popp
  */
-public class AlgorithmElement {
-
-    @XmlAttribute(name = "Algorithm")
-    private String algorithm;
-
-    private AlgorithmElement() {
+public abstract class BindingElement<T> {
+    public String getTagName() {
+        return getClass().getSimpleName();
     }
 
-    public AlgorithmElement(String algorithm) {
-
-        this.algorithm = algorithm;
+    public Element createThisElement(Document document) {
+        return document.createElementNS(RedactableXMLSignature.XML_NAMESPACE, getTagName());
     }
 
-    public String getAlgorithm() {
-        return algorithm;
+    public Element createElement(Document document, String name) {
+        return document.createElementNS(RedactableXMLSignature.XML_NAMESPACE, name);
     }
+
+    public abstract T unmarshall(Node node);
+
+    public abstract Node marshall(Document document);
+
 }

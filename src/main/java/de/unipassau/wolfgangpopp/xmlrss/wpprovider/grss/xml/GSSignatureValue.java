@@ -20,24 +20,17 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import java.util.Base64;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "SignatureValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
-@XmlType(propOrder = {"dsigValue", "accumulatorValue"})
-public class GSSignatureValue implements SignatureValue {
-    @XmlElement(name = "DSigValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
+public class GSSignatureValue extends SignatureValue {
     private String dsigValue;
-
-    @XmlElement(name = "AccumulatorValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private String accumulatorValue;
 
     private GSSignatureValue() {
@@ -55,5 +48,15 @@ public class GSSignatureValue implements SignatureValue {
 
     public byte[] getAccumulatorValue() {
         return Base64.getDecoder().decode(accumulatorValue);
+    }
+
+    @Override
+    public SignatureValue unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        return null;
     }
 }

@@ -25,46 +25,35 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Canonicalizer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Dereferencer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.createNode;
 import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.getOwnerDocument;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "Pointer")
-@XmlType(propOrder = {"uri", "isRedactable", "id"})
-public final class Pointer {
-    @XmlAttribute(name = "URI", required = true)
+public final class Pointer extends BindingElement<Pointer> {
     private String uri;
-
-    @XmlAttribute(name = "Redactable")
     private Boolean isRedactable;
-
-    @XmlAttribute(name = "id")
     private String id;
 
     private byte[] concatDereference;
 
-    private Pointer() throws RedactableXMLSignatureException {
-        this(null);
+    public Pointer() {
+        this(null, null, null);
     }
 
-    public Pointer(String uri) throws RedactableXMLSignatureException {
-        this(uri, null);
+    public Pointer(String uri) {
+        this(uri, null, null);
     }
 
-    public Pointer(String uri, Boolean isRedactable) throws RedactableXMLSignatureException {
+    public Pointer(String uri, Boolean isRedactable) {
         this(uri, isRedactable, null);
     }
 
-    public Pointer(String uri, Boolean isRedactable, String id) throws RedactableXMLSignatureException {
+    public Pointer(String uri, Boolean isRedactable, String id) {
         this.uri = uri;
         this.isRedactable = isRedactable;
         this.id = id;
@@ -81,23 +70,19 @@ public final class Pointer {
     }
 
     public byte[] concatNode(Node node, Node root) throws RedactableXMLSignatureException {
-        byte[] c14n;
+        byte[] c14nNode;
         try {
-            c14n = Canonicalizer.canonicalize(node);
+            c14nNode = Canonicalizer.canonicalize(node);
         } catch (CanonicalizationException e) {
             throw new RedactableXMLSignatureException(e);
         }
 
         try {
-            return new ByteArray(c14n).concat(marshall(root)).getArray();
-        } catch (CanonicalizationException | JAXBException e) {
+            byte[] c14nPointer = Canonicalizer.canonicalize(marshall(getOwnerDocument(root)));
+            return new ByteArray(c14nNode).concat(c14nPointer).getArray();
+        } catch (CanonicalizationException e) {
             throw new RedactableXMLSignatureException(e);
         }
-    }
-
-    private byte[] marshall(Node root) throws CanonicalizationException, JAXBException {
-        Node node = createNode(getOwnerDocument(root), this, getClass(), "Pointer");
-        return Canonicalizer.canonicalize(node);
     }
 
     @Override
@@ -129,5 +114,26 @@ public final class Pointer {
 
     public String getId() {
         return id;
+    }
+
+    @Override
+    public Pointer unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        Element pointer = createThisElement(document);
+        if (id != null) {
+            pointer.setAttribute("Id", id);
+        }
+        if (uri == null) {
+            throw new IllegalStateException("URI cannot be null");
+        }
+        pointer.setAttribute("URI", uri);
+        if (isRedactable != null) {
+            pointer.setAttribute("Redactable", isRedactable.toString());
+        }
+        return pointer;
     }
 }

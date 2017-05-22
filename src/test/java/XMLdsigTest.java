@@ -49,14 +49,13 @@ import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.Key;
@@ -84,30 +83,17 @@ public class XMLdsigTest {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("vehicles.xml"));
+        Document document = documentBuilder.parse(new FileInputStream("testdata/vehicles.xml"));
 
         // Generate DSA Keypair
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
-        keyPairGenerator.initialize(512);
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
 
         XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
 
         // A reference to the whole document. One Transformation is applied to generate the enveloped signature
-        Reference externalReference = factory.newReference("http://www.w3.org/TR/2000/REC-xhtml1-20000126/",
-                factory.newDigestMethod(DigestMethod.SHA512, null),
-                null,
-                null,
-                null);
-
-        Reference internalReference = factory.newReference("#xpointer(id('a1'))",
-                factory.newDigestMethod(DigestMethod.SHA512, null),
-                Collections.singletonList(factory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
-                null,
-                null);
-
-        Reference xpathReference = factory.newReference("/Vehicle/Aircraft",
+        Reference internalReference = factory.newReference("",
                 factory.newDigestMethod(DigestMethod.SHA512, null),
                 Collections.singletonList(factory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
                 null,
@@ -116,8 +102,8 @@ public class XMLdsigTest {
         // SignedInfo is the part that actually gets signed. It contains the above reference
         SignedInfo signedInfo = factory.newSignedInfo(
                 factory.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE_WITH_COMMENTS, (C14NMethodParameterSpec) null),
-                factory.newSignatureMethod(SignatureMethod.DSA_SHA1, null),
-                Arrays.asList(externalReference, internalReference, xpathReference));
+                factory.newSignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", null),
+                Collections.singletonList(internalReference));
 
         // Optional Keyinfo
         KeyInfoFactory keyInfoFactory = factory.getKeyInfoFactory();
@@ -132,8 +118,50 @@ public class XMLdsigTest {
         // Pretty print and save document
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer trans = tf.newTransformer();
-        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+        trans.transform(new DOMSource(document), new StreamResult(new File("vehicles.dsig.xml")));
+    }
+
+    @Test
+    public void testSign2() throws Exception {
+        //Read document from file
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        DocumentBuilder docBuilder = dbf.newDocumentBuilder();
+        Document document = docBuilder.parse(new File("vehicles.xml"));
+
+        // Generate DSA Keypair
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
+        keyGen.initialize(512);
+        KeyPair keyPair = keyGen.generateKeyPair();
+
+        XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
+
+        // A reference to the whole document. One Transformation is applied
+        // to generate the enveloped signature
+        Reference ref = factory.newReference("",
+                factory.newDigestMethod(DigestMethod.SHA512, null),
+                Arrays.asList(factory.newTransform(Transform.ENVELOPED,
+                        (TransformParameterSpec) null)),
+                null,
+                null);
+
+        // SignedInfo is the part that actually gets signed. It contains
+        // the above reference
+        SignedInfo signedInfo = factory.newSignedInfo(
+                factory.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE_WITH_COMMENTS,
+                        (C14NMethodParameterSpec) null),
+                factory.newSignatureMethod(SignatureMethod.DSA_SHA1, null),
+                Collections.singletonList(ref));
+
+        // Sign the document
+        XMLSignature xmlSignature = factory.newXMLSignature(signedInfo, null);
+        DOMSignContext domSignContext = new DOMSignContext(keyPair.getPrivate(), document.getDocumentElement());
+        xmlSignature.sign(domSignContext);
+
+        // Save document
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer trans = tf.newTransformer();
         trans.transform(new DOMSource(document), new StreamResult(System.out));
     }
 
@@ -213,12 +241,8 @@ public class XMLdsigTest {
             if (algName.equalsIgnoreCase("DSA") &&
                     algURI.equalsIgnoreCase(SignatureMethod.DSA_SHA1)) {
                 return true;
-            } else if (algName.equalsIgnoreCase("RSA") &&
-                    algURI.equalsIgnoreCase(SignatureMethod.RSA_SHA1)) {
-                return true;
-            } else {
-                return false;
-            }
+            } else return algName.equalsIgnoreCase("RSA") &&
+                    algURI.equalsIgnoreCase(SignatureMethod.RSA_SHA1);
         }
     }
 

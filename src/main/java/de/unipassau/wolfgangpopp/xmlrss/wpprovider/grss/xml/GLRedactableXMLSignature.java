@@ -27,7 +27,9 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.AbstractRedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Reference;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -37,12 +39,12 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSignature<GSSignatureValue, GLProof> {
+public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSignature {
 
     private GLRSSSignatureOutput.Builder builder;
 
     protected GLRedactableXMLSignature(RedactableSignature rss) {
-        super(rss, GSSignatureValue.class, GLProof.class);
+        super(rss);
     }
 
     @Override
@@ -62,14 +64,14 @@ public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected Collection<Reference<GLProof>> marshallReferences(SignatureOutput signatureOutput) {
+    protected Collection<Reference> marshallReferences(SignatureOutput signatureOutput) {
         GLRSSSignatureOutput output = (GLRSSSignatureOutput) signatureOutput;
-        List<Reference<GLProof>> references = new LinkedList<>();
+        List<Reference> references = new LinkedList<>();
 
         for (GLRSSSignatureOutput.GLRSSSignedPart glrssSignedPart : output.getParts()) {
             GLProof proof = new GLProof(glrssSignedPart);
             Pointer pointer = getPointerForMessagePart(glrssSignedPart.getMessagePart());
-            references.add(new Reference<>(pointer, proof));
+            references.add(new Reference(pointer, proof));
         }
 
         return references;
@@ -81,23 +83,27 @@ public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, GLProof proof)
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, Proof proof)
             throws RedactableXMLSignatureException {
 
+        GLProof glProof = (GLProof) proof;
         ensureBuilderExists(messageSize);
         builder.setMessagePart(index, getMessagePartForPointer(pointer))
                 .setRedactable(index, pointer.isRedactable())
-                .setRandomValue(index, proof.getRandomValue())
-                .setAccValue(index, proof.getAccumulatorValue())
-                .setWitnesses(index, proof.getWitnesses())
-                .setGSProof(index, proof.getGsProof());
+                .setRandomValue(index, glProof.getRandomValue())
+                .setAccValue(index, glProof.getAccumulatorValue())
+                .setWitnesses(index, glProof.getWitnesses())
+                .setGSProof(index, glProof.getGsProof());
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, GSSignatureValue signatureValue) {
+    protected void prepareUnmarshallSignatureValue(int messageSize, SignatureValue signatureValue) {
         ensureBuilderExists(messageSize);
-        builder.setGSAccumulator(signatureValue.getAccumulatorValue())
-                .setGSDsigValue(signatureValue.getDSigValue());
+
+        GSSignatureValue gsSignatureValue = (GSSignatureValue) signatureValue;
+
+        builder.setGSAccumulator(gsSignatureValue.getAccumulatorValue())
+                .setGSDsigValue(gsSignatureValue.getDSigValue());
 
     }
 
@@ -113,6 +119,7 @@ public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSign
         builder = null;
         return signatureOutput;
     }
+
 
     public static class GLRSSwithBPAccumulatorAndRSA extends GLRedactableXMLSignature {
         public GLRSSwithBPAccumulatorAndRSA() throws RedactableXMLSignatureException, NoSuchAlgorithmException {

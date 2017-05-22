@@ -20,34 +20,24 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import java.util.Base64;
 
 /**
  * @author Wolfgang Popp
  */
-@XmlRootElement(name = "SignatureValue", namespace = RedactableXMLSignature.XML_NAMESPACE)
-@XmlType(propOrder = {"tag", "proofOfTag", "accumulator"})
-public class PSSignatureValue implements SignatureValue {
-
-    @XmlElement(name = "Tag", namespace = RedactableXMLSignature.XML_NAMESPACE)
-    private String tag;
-
-    @XmlElement(name = "ProofOfTag", namespace = RedactableXMLSignature.XML_NAMESPACE)
-    private String proofOfTag;
-
-    @XmlElement(name = "Accumulator", namespace = RedactableXMLSignature.XML_NAMESPACE)
-    private String accumulator;
-
+public class PSSignatureValue extends SignatureValue {
     private final Base64.Encoder encoder = Base64.getEncoder();
     private final Base64.Decoder decoder = Base64.getDecoder();
+    private String tag;
+    private String proofOfTag;
+    private String accumulator;
 
-    private PSSignatureValue() {
+    public PSSignatureValue() {
     }
 
     public PSSignatureValue(byte[] tag, byte[] proofOfTag, byte[] accumulator) {
@@ -70,5 +60,29 @@ public class PSSignatureValue implements SignatureValue {
 
     public byte[] getAccumulator() {
         return decoder.decode(accumulator);
+    }
+
+    @Override
+    public SignatureValue unmarshall(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node marshall(Document document) {
+        Element signatureValue = createThisElement(document);
+
+        Element tag = document.createElement("Tag");
+        tag.setTextContent(this.tag);
+        signatureValue.appendChild(tag);
+
+        Element proofOfTag = document.createElement("ProofOfTag");
+        proofOfTag.setTextContent(this.proofOfTag);
+        signatureValue.appendChild(proofOfTag);
+
+        Element accumulatorValue = document.createElement("AccumulatorValue");
+        accumulatorValue.setTextContent(this.accumulator);
+        signatureValue.appendChild(accumulatorValue);
+
+        return signatureValue;
     }
 }
