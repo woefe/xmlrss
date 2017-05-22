@@ -21,7 +21,7 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.SignatureValue;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

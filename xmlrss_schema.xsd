@@ -28,12 +28,35 @@
     <element name="Signature">
         <complexType>
             <sequence>
+                <element ref="drs:SignatureInfo"/>
                 <element ref="drs:References"/>
                 <element name="SignatureValue" type="anyType"/>
                 <element name="KeyInfo" type="anyType" minOccurs="0" maxOccurs="1"/>
             </sequence>
         </complexType>
     </element>
+
+    <element name="SignatureInfo">
+        <complexType>
+            <sequence>
+                <element ref="drs:CanonicalizationMethod"/>
+                <element ref="drs:RedactableSignatureAlgorithm"/>
+            </sequence>
+        </complexType>
+    </element>
+
+    <element name="RedactableSignatureAlgorithm">
+        <complexType>
+            <attribute name="Algorithm" type="anyURI" use="required"/>
+        </complexType>
+    </element>
+
+    <element name="CanonicalizationMethod">
+        <complexType>
+            <attribute name="Algorithm" type="anyURI" use="required"/>
+        </complexType>
+    </element>
+
 
     <element name="References">
         <complexType>

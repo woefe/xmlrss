@@ -296,7 +296,7 @@ public abstract class AbstractXMLRSSTest {
                 ++actualNodes;
             }
         }
-        assertEquals(2, actualNodes);
+        assertEquals(3, actualNodes);
 
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         Schema schema = schemaFactory.newSchema(new File("xmlrss_schema.xsd"));

@@ -18,14 +18,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
+
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * @author Wolfgang Popp
  */
-@XmlSchema(namespace = "https://sec.uni-passau.de/2017/03/xmlrss",
-        elementFormDefault = XmlNsForm.QUALIFIED,
-        xmlns = @XmlNs(prefix = "drs", namespaceURI = "https://sec.uni-passau.de/2017/03/xmlrss"))
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
+@XmlRootElement(name = "RedactableSignatureMethod")
+public class RSSMethod {
 
-import javax.xml.bind.annotation.XmlNs;
-import javax.xml.bind.annotation.XmlNsForm;
-import javax.xml.bind.annotation.XmlSchema;
+    @XmlAttribute(name = "Algorithm")
+    private String algorithm;
+
+    private RSSMethod() {
+    }
+
+    public RSSMethod(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+}

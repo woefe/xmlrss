@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -39,12 +39,13 @@ import java.util.List;
  * @author Wolfgang Popp
  */
 @XmlRootElement(name = "Signature")
-@XmlType(propOrder = {"references", "signatureValue"})
+@XmlType(propOrder = {"signatureInfo", "references", "signatureValue"})
 public final class Signature<S extends SignatureValue, P extends Proof> {
     private Class<? extends Proof> proofClass;
     private Class<? extends SignatureValue> signatureValueClass;
     private List<Reference<P>> references = new ArrayList<>();
     private S signatureValue;
+    private SignatureInfo signatureInfo;
 
     private Signature() {
         this(null, null);
@@ -53,6 +54,11 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
     public Signature(Class<S> signatureValueClass, Class<P> proofClass) {
         this.proofClass = proofClass;
         this.signatureValueClass = signatureValueClass;
+    }
+
+    @XmlElement(name = "SignatureInfo")
+    public SignatureInfo getSignatureInfo() {
+        return signatureInfo;
     }
 
     @XmlElementWrapper(name = "References")
@@ -66,12 +72,17 @@ public final class Signature<S extends SignatureValue, P extends Proof> {
         return signatureValue;
     }
 
-    public Signature addReference(Reference<P> reference) {
+    public Signature<S, P> setSignatureInfo(SignatureInfo signatureInfo) {
+        this.signatureInfo = signatureInfo;
+        return this;
+    }
+
+    public Signature<S, P> addReference(Reference<P> reference) {
         references.add(reference);
         return this;
     }
 
-    public Signature setSignatureValue(S signatureValue) {
+    public Signature<S, P> setSignatureValue(S signatureValue) {
         this.signatureValue = signatureValue;
         return this;
     }

@@ -22,7 +22,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Proof;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -53,7 +53,6 @@ public class GLProof implements Proof {
     @XmlElement(name = "Witness", namespace = RedactableXMLSignature.XML_NAMESPACE)
     private final List<String> witnesses = new ArrayList<>();
 
-    private final Base64.Encoder encoder = Base64.getEncoder();
     private final Base64.Decoder decoder = Base64.getDecoder();
 
     private GLProof() {
@@ -61,6 +60,7 @@ public class GLProof implements Proof {
     }
 
     public GLProof(GLRSSSignatureOutput.GLRSSSignedPart signedPart) {
+        Base64.Encoder encoder = Base64.getEncoder();
         this.randomValue = encoder.encodeToString(signedPart.getRandomValue());
         this.accumulatorValue = encoder.encodeToString(signedPart.getAccumulatorValue());
         this.gsProof = encoder.encodeToString(signedPart.getGsProof());

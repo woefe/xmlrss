@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -27,7 +28,7 @@ import org.w3c.dom.Node;
 /**
  * @author Wolfgang Popp
  */
-class Dereferencer {
+public class Dereferencer {
     private static final String XPOINTER_BEGIN = "#xpointer(id(";
     private static final int XPOINTER_BEGIN_LEN = XPOINTER_BEGIN.length();
     private static final String XPOINTER_END = "))";
@@ -42,23 +43,34 @@ class Dereferencer {
                 || (xPointer.startsWith(XPOINTER_BEGIN + "\"") && xPointer.endsWith("\"" + XPOINTER_END));
     }
 
+    private static boolean isSignatureInfoURI(String uri) {
+        return "SignatureInfo".equals(uri);
+    }
+
     private static String extractId(String xPointer) {
         return xPointer.substring(XPOINTER_BEGIN_LEN + 1, xPointer.length() - XPOINTER_END_LEN - 1);
     }
 
-    static Node dereference(String xPointer, Node root) throws RedactableXMLSignatureException {
-        if (xPointer == null || xPointer.length() == 0) {
+    private static Node dereferenceSignatureInfo(Node root) throws RedactableXMLSignatureException {
+        Node signatureNode = XMLUtils.getSignatureNode(root);
+        return XMLUtils.checkNode(signatureNode.getFirstChild(), "SignatureInfo");
+    }
+
+    public static Node dereference(String uri, Node root) throws RedactableXMLSignatureException {
+        if (uri == null || uri.length() == 0) {
             throw new RedactableXMLSignatureException("unsupported URI");
-        } else if (isRootNodeXPointer(xPointer)) {
+        } else if (isRootNodeXPointer(uri)) {
             return root;
-        } else if (isIdXPointer(xPointer)) {
+        } else if (isIdXPointer(uri)) {
             Document doc = root.getOwnerDocument();
-            String id = extractId(xPointer);
+            String id = extractId(uri);
             Element element = doc.getElementById(id);
             if (element == null) {
                 throw new RedactableXMLSignatureException("Cannot resolve element with ID " + id);
             }
             return element;
+        } else if (isSignatureInfoURI(uri)) {
+            return dereferenceSignatureInfo(root);
         }
 
         throw new RedactableXMLSignatureException("unsupported URI");

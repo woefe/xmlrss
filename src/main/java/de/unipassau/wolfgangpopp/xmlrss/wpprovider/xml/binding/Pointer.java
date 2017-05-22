@@ -18,15 +18,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
 import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Canonicalizer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Dereferencer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.w3c.dom.Node;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.createNode;
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.getOwnerDocument;
 
 /**
  * @author Wolfgang Popp
@@ -50,14 +57,14 @@ public final class Pointer {
     }
 
     public Pointer(String uri) throws RedactableXMLSignatureException {
-        this(uri, true);
+        this(uri, null);
     }
 
-    public Pointer(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
+    public Pointer(String uri, Boolean isRedactable) throws RedactableXMLSignatureException {
         this(uri, isRedactable, null);
     }
 
-    public Pointer(String uri, boolean isRedactable, String id) throws RedactableXMLSignatureException {
+    public Pointer(String uri, Boolean isRedactable, String id) throws RedactableXMLSignatureException {
         this.uri = uri;
         this.isRedactable = isRedactable;
         this.id = id;
@@ -68,32 +75,29 @@ public final class Pointer {
             return this;
         }
 
-        byte[] c14n;
         Node dereference = Dereferencer.dereference(uri, root);
+        this.concatDereference = concatNode(dereference, root);
+        return this;
+    }
+
+    public byte[] concatNode(Node node, Node root) throws RedactableXMLSignatureException {
+        byte[] c14n;
         try {
-            c14n = Canonicalizer.canonicalize(dereference);
+            c14n = Canonicalizer.canonicalize(node);
         } catch (CanonicalizationException e) {
             throw new RedactableXMLSignatureException(e);
         }
 
-        this.concatDereference = new ByteArray(c14n).concat(marshall()).getArray();
-        return this;
+        try {
+            return new ByteArray(c14n).concat(marshall(root)).getArray();
+        } catch (CanonicalizationException | JAXBException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
     }
 
-    private byte[] marshall() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<Pointer ");
-        sb.append("URI=\"").append(uri).append('"');
-
-        if (isRedactable != null) {
-            sb.append(" Redactable=\"").append(isRedactable).append('"');
-        }
-
-        if (id != null) {
-            sb.append(" id=\"").append(id).append('"');
-        }
-
-        return sb.append("/>").toString().getBytes();
+    private byte[] marshall(Node root) throws CanonicalizationException, JAXBException {
+        Node node = createNode(getOwnerDocument(root), this, getClass(), "Pointer");
+        return Canonicalizer.canonicalize(node);
     }
 
     @Override
@@ -111,7 +115,7 @@ public final class Pointer {
         return uri.hashCode();
     }
 
-    public byte[] getConcatDereference(Node root) throws RedactableXMLSignatureException {
+    public byte[] concatDereference(Node root) throws RedactableXMLSignatureException {
         return initConcatDereference(root).concatDereference;
     }
 

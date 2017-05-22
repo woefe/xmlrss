@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -80,27 +81,6 @@ public abstract class RedactableXMLSignatureSpi {
         for (Node selectedNode : selectedNodes) {
             selectedNode.getParentNode().removeChild(selectedNode);
         }
-    }
-
-    protected Node getSignatureNode(Node root) throws RedactableXMLSignatureException {
-        Document doc = getOwnerDocument(root);
-        return checkNode(doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0),
-                "Signature");
-    }
-
-    protected Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
-        if (node == null || !node.getLocalName().equals(expectedNodeName)) {
-            throw new RedactableXMLSignatureException("Cannot find expected node '" + expectedNodeName + "'");
-        }
-
-        return node;
-    }
-
-    protected Document getOwnerDocument(Node node) {
-        if (node.getNodeType() == Node.DOCUMENT_NODE) {
-            return (Document) node;
-        }
-        return node.getOwnerDocument();
     }
 
     public void engineInitSign(KeyPair keyPair) throws InvalidKeyException {

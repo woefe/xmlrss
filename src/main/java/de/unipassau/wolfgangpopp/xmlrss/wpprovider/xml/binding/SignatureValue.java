@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
 /**
  * @author Wolfgang Popp

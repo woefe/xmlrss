@@ -24,10 +24,10 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.Identifier;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.RedactableSignature;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.SignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.AbstractRedactableXMLSignature;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Pointer;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Reference;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.SimpleProof;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Reference;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SimpleProof;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -43,6 +43,16 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<P
 
     PSRedactableXMLSignature(RedactableSignature signature) throws RedactableXMLSignatureException {
         super(signature, PSSignatureValue.class, SimpleProof.class);
+    }
+
+    @Override
+    protected String getRedactableSignatureMethod() {
+        return "http://sec.uni-passau.de/2017/xmlrss/psrss";
+    }
+
+    @Override
+    protected String getCanonicalizationMethod() {
+        return com.sun.org.apache.xml.internal.security.c14n.Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS;
     }
 
     @Override

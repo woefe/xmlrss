@@ -18,10 +18,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
+package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
+
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Wolfgang Popp
  */
-public interface Proof {
+public class AlgorithmElement {
+
+    @XmlAttribute(name = "Algorithm")
+    private String algorithm;
+
+    private AlgorithmElement() {
+    }
+
+    public AlgorithmElement(String algorithm) {
+
+        this.algorithm = algorithm;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
 }

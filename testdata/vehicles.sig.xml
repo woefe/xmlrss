@@ -16,6 +16,10 @@
     <Motorcycle Brand="Honda" Model="RC212V"/>
   </MotorVehicles>
   <drs:Signature xmlns:drs="https://sec.uni-passau.de/2017/03/xmlrss">
+    <drs:SignatureInfo>
+      <drs:CanonicalizationMethod Algorithm="http://www.w3.org/2006/12/xml-c14n11"/>
+      <drs:RedactableSignatureAlgorithm Algorithm="http://sec.uni-passau.de/2017/xmlrss/psrss"/>
+    </drs:SignatureInfo>
     <drs:References>
       <drs:Reference>
         <drs:Pointer Redactable="true" URI="#xpointer(id('a3'))"/>
