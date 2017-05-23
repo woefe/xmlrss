@@ -20,12 +20,15 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.psrss;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.Base64;
+
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
 
 /**
  * @author Wolfgang Popp
@@ -62,9 +65,20 @@ public class PSSignatureValue extends SignatureValue {
         return decoder.decode(accumulator);
     }
 
+
     @Override
-    public SignatureValue unmarshall(Node node) {
-        return null;
+    public PSSignatureValue unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node signatureValue = checkThisNode(node);
+        Node tag = checkNode(signatureValue.getFirstChild(), "Tag");
+        this.tag = tag.getTextContent();
+
+        Node proofOfTag = checkNode(tag.getNextSibling(), "ProofOfTag");
+        this.proofOfTag = proofOfTag.getTextContent();
+
+        Node accumulatorValue = checkNode(proofOfTag.getNextSibling(), "AccumulatorValue");
+        this.accumulator = accumulatorValue.getTextContent();
+
+        return this;
     }
 
     @Override

@@ -20,11 +20,15 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.Base64;
+
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
 
 /**
  * @author Wolfgang Popp
@@ -33,7 +37,7 @@ public class GSSignatureValue extends SignatureValue {
     private String dsigValue;
     private String accumulatorValue;
 
-    private GSSignatureValue() {
+    public GSSignatureValue() {
     }
 
     public GSSignatureValue(byte[] dsigValue, byte[] accumulatorValue) {
@@ -51,12 +55,29 @@ public class GSSignatureValue extends SignatureValue {
     }
 
     @Override
-    public SignatureValue unmarshall(Node node) {
-        return null;
+    public GSSignatureValue unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node signatureValue = checkThisNode(node);
+        Node dSigValue = checkNode(signatureValue.getFirstChild(), "DSigValue");
+        this.dsigValue = dSigValue.getTextContent();
+
+        Node accumulatorValue = checkNode(dSigValue.getNextSibling(), "AccumulatorValue");
+        this.accumulatorValue = accumulatorValue.getTextContent();
+
+        return this;
     }
 
     @Override
     public Node marshall(Document document) {
-        return null;
+        Element signatureValue = createThisElement(document);
+
+        Element tag = document.createElement("DSigValue");
+        tag.setTextContent(this.dsigValue);
+        signatureValue.appendChild(tag);
+
+        Element accumulatorValue = document.createElement("AccumulatorValue");
+        accumulatorValue.setTextContent(this.accumulatorValue);
+        signatureValue.appendChild(accumulatorValue);
+
+        return signatureValue;
     }
 }

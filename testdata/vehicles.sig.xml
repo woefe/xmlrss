@@ -1,49 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE Vehicle SYSTEM "vehicles.dtd">
 <Vehicle>
-  <Aircraft id="a1">
-    <Glider id="g1">DG-800</Glider>
-    <Jet id="j1">Airbus A380</Jet>
-  </Aircraft>
-  <Watercraft id="a2">
-    <Sailboat>Bavaria 36</Sailboat>
-    <Motorboat>Bavaria Sport 29</Motorboat>
-  </Watercraft>
-  <MotorVehicles id="a3">
-    <Car Brand="Audi" Model="A3"/>
-    <Car Brand="Audi" Model="A4"/>
-    <Car Brand="BMW" Model="i7"/>
-    <Motorcycle Brand="Honda" Model="RC212V"/>
-  </MotorVehicles>
-  <drs:Signature xmlns:drs="https://sec.uni-passau.de/2017/03/xmlrss">
-    <drs:SignatureInfo>
-      <drs:CanonicalizationMethod Algorithm="http://www.w3.org/2006/12/xml-c14n11"/>
-      <drs:RedactableSignatureAlgorithm Algorithm="http://sec.uni-passau.de/2017/xmlrss/psrss"/>
-    </drs:SignatureInfo>
-    <drs:References>
-      <drs:Reference>
-        <drs:Pointer Redactable="true" URI="#xpointer(id('a3'))"/>
-        <drs:Proof>
-          <drs:Data>e3jQ9LVNcw47GnDvxtM0wqP4O7ZxJNcEf0znhFbMicEtwa8ylOY+T7LhxyjkWs3BtElgG/4I2ylW42+Km0TTcA==</drs:Data>
-        </drs:Proof>
-      </drs:Reference>
-      <drs:Reference>
-        <drs:Pointer Redactable="true" URI="#xpointer(id('a2'))"/>
-        <drs:Proof>
-          <drs:Data>AIdtlCu8Jczqi82fOPQnqV6DY8s9e4XCkn+Pi1tu+3EtQvi5mXeCdR/L3GpNWIxkg4+ak4CPYVNrRX8PNfxXP6g=</drs:Data>
-        </drs:Proof>
-      </drs:Reference>
-      <drs:Reference>
-        <drs:Pointer Redactable="true" URI="#xpointer(id('a1'))"/>
-        <drs:Proof>
-          <drs:Data>cHduZWRwd25lZHB3bmVkcHduZWRwd25lZHB3bmVkcHduZWQ=</drs:Data>
-        </drs:Proof>
-      </drs:Reference>
-    </drs:References>
-    <drs:SignatureValue>
-      <drs:Tag>lDT8/zi91Bf75k9H4ygpuBR22unuETQmCOcYgaSjQPEIBLzTMKBKDekp1Gp5TYUeYY2z4sulHRKbbRXLbbQdi173KSrl1JAV9teHGcFZDmfNjRakhptS+O/dFDdaOIMbFTRL6sZHqsVZa9g/ab70oKmd83OUu0wx0PCqCC83s5UP3viJz0zoXuo88CiY/n+L2dsbbOG2Y1ef5oUOVrpvUAC20fo0VYWuWUdeiAjwUZ6L/bnsnNCr3SizclG6sKcuy+//ncQR/1XsMpTXNYyC4c2gNs8Lzpkf5Dg77XqlTpqTan+igsKpnjKJEbCy+cTJAMyoogirMGPW0AXyTBYHuh5JwIzAqjDVxkDfaodfPH4tbNRFs6GshomNcOKU/gApTCRZBcIZt0haHbckxGIl7fl2exupB76nUil1pJnKEbKX1r431QJesdDPAnFsOvlyyLKznob4q85ygKXpHoE5ASnW4xI0wij3s32PYfemdpaIYJKzaJf3Eobdy2prWVIuVrg2N9DN7fsnRnlOYhRrxONSrHp3unkLHGL97n74USkqTd/CcN3vqcwUnsIUxt5IEgUjDb+mYDsq3KdjRB0yY2HiGDNS5dH4zoSTHYqimimnPEXNbxNZzgiroqQuMGsKkgRXcRl3RIX/nM4wmgPb3f7rTZGX9pqRWGEcn4xfooI=</drs:Tag>
-      <drs:ProofOfTag>Uj/V4/x86gPHMyc72uGJUreU0vrTczkpv1+wGvcpUo0iZA8BsS43lQUMS7NBj294JZRslEa9ko/kv09FQ68fIg==</drs:ProofOfTag>
-      <drs:Accumulator>At9EKvNP7Fu8iAt9Uq0+crbvUWlXDE4dHlRCS9fcESStptXNDENSUaQQTPzqz4ifdVygkZC4K0vU9fgxlLsQyA==</drs:Accumulator>
-    </drs:SignatureValue>
-  </drs:Signature>
+    <Aircraft id="a1">
+        <Glider id="g1">DG-800</Glider>
+        <Jet id="j1">Airbus A380</Jet>
+    </Aircraft>
+    <Watercraft id="a2">
+        <Sailboat>Bavaria 36</Sailboat>
+        <Motorboat>Bavaria Sport 29</Motorboat>
+    </Watercraft>
+    <MotorVehicles id="a3">
+        <Car Brand="Audi" Model="A3"/>
+        <Car Brand="Audi" Model="A4"/>
+        <Car Brand="BMW" Model="i7"/>
+        <Motorcycle Brand="Honda" Model="RC212V"/>
+    </MotorVehicles>
+    <Signature xmlns="https://sec.uni-passau.de/2017/03/xmlrss"><SignatureInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2006/12/xml-c14n11"/><RedactableSignatureAlgorithm Algorithm="http://sec.uni-passau.de/2017/xmlrss/psrss"/></SignatureInfo><References><Reference><Pointer Redactable="true" URI="#xpointer(id('a1'))"/><Proof><Data>bOT5ApQjRwPgrwW4RRm6uWQyYCRo+myPN5uHQwDykB2EyU/pJQ7kU+wciP88BvJOArTWq49lYoPcEdwbt2+nmA==</Data></Proof></Reference><Reference><Pointer Redactable="true" URI="#xpointer(id('a2'))"/><Proof><Data>TjhTt4+4YojbnlrZ1S3HgHdHAPMuodrIwlCT4qgWC+kg6NIiDBUP14jWJo8/kzYHgRPxS58pgXRvhr18/v91yg==</Data></Proof></Reference><Reference><Pointer Redactable="true" URI="#xpointer(id('a3'))"/><Proof><Data>Q89wHAu560FrP3qqImoDVBxkHjHRFlWypanWcAsMZ0dVYTG4gPcFD50xfj4sBJp52qKR3R0m6esTgGD7lSHMig==</Data></Proof></Reference><Reference><Pointer URI="SignatureInfo"/><Proof><Data>TGMmvVt31FVxPnxlyJ3nEXzWtcG+C10Z/lY4elqJ4FftF7YV/FM8I6CmENyc/9VNDbiDY03Yd1Go18oSelxKRA==</Data></Proof></Reference></References><SignatureValue><Tag>6+r1xczhumLVquHMlgNVdm7vewdEspZmdd4tZW5YTcf1few2HReU375fMqF2yvr8aJH3gwTRgBcci4RzgQq4x0jf/Z8bWxJ/aR5xmZYx7oSfuLXKMy36FKx30GHxeqRTBzBQfzhfQHR/ip4jI95opE4PqyRasQFcHm3go+IfNwuSP8Fvl4JTxrmWhQvslfZHypEcDtOtJljYagV6QlRS68E90eQ0g72ppy2NtO8w2Ml+kxutGJZaOQiwsbCkusE1wdV0zn6S2qSP4ZbQ2rQrwSk1Q4cSk7P92WM1lU7KARbIqzoJogiwXhu4pPNDGExCcG5s0OleoHG+W+gFnDqTJTQd4Ps3wfFU+CqISmgTSYTelOtC8FVy8CNXmzR72NEMWQXNlqLzRA6W4CATde6VhsbcCgUjSL94NHLg8SGr+pcNUIjWELGtjYWPzHJLnVSRhgxHbIprkdOLmZiKebWSo9VofZJLYZ+pLrPQt8OfDcqXMOFmSYVfQI9dN9uCrn0N6UNs8YGKlijS8ljHUZwr+v6bVBMEuz79+BHzw8oMM3NCE0tOAwKzTHvf6pznPC8ZY2QTkIh4G6qowqErhLsIMh2oncrvOC+fgpvRoanUBbnA+rDkaCxyMU1H6rrjuJ5y6s3GzW568XzZzfjP0TVPh/70iCoPAQeMXbWxxvx9TjA=</Tag><ProofOfTag>RRre51bcrOC/q5cacLGqPd9OfROJT9hFLUnjVids2p8aU6uaS4WZXglylwOWtgyvEUjRU0JV0GJuKgOFcYOEBA==</ProofOfTag><AccumulatorValue>AoemHwqXyrr8XrjkUM2rRZP4ToPn25AoqZkrQo19ABWNDwhY+w2hpT3k0e2+jNQe8SfzlnprKo23eUsyP56apQ==</AccumulatorValue></SignatureValue></Signature>
 </Vehicle>

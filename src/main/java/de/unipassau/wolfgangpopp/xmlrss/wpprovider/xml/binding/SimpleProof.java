@@ -20,11 +20,14 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import java.util.Base64;
+
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
 
 /**
  * @author Wolfgang Popp
@@ -63,8 +66,11 @@ public class SimpleProof extends Proof {
     }
 
     @Override
-    public Proof unmarshall(Node node) {
-        return null;
+    public Proof unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node proof = checkThisNode(node);
+        Node data = checkNode(proof.getFirstChild(), "Data");
+        this.proof = data.getTextContent();
+        return this;
     }
 
     @Override

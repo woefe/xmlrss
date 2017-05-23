@@ -21,9 +21,11 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,23 +33,28 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-public final class Signature extends BindingElement<Signature> {
-    private List<Reference> references = new ArrayList<>();
-    private SignatureValue signatureValue;
+public final class Signature<S extends SignatureValue, P extends Proof> extends BindingElement<Signature> {
+
+    private final Class<P> proofClass;
+    private final Class<S> signatureValueClass;
+    private List<Reference<P>> references = new ArrayList<>();
+    private S signatureValue;
     private SignatureInfo signatureInfo;
 
-    public Signature() {
+    public Signature(Class<P> proofClass, Class<S> signatureValueClass) {
+        this.proofClass = proofClass;
+        this.signatureValueClass = signatureValueClass;
     }
 
     public SignatureInfo getSignatureInfo() {
         return signatureInfo;
     }
 
-    public List<Reference> getReferences() {
+    public List<Reference<P>> getReferences() {
         return references;
     }
 
-    public SignatureValue getSignatureValue() {
+    public S getSignatureValue() {
         return signatureValue;
     }
 
@@ -56,12 +63,12 @@ public final class Signature extends BindingElement<Signature> {
         return this;
     }
 
-    public Signature addReference(Reference reference) {
+    public Signature addReference(Reference<P> reference) {
         references.add(reference);
         return this;
     }
 
-    public Signature setSignatureValue(SignatureValue signatureValue) {
+    public Signature setSignatureValue(S signatureValue) {
         this.signatureValue = signatureValue;
         return this;
     }
@@ -89,8 +96,26 @@ public final class Signature extends BindingElement<Signature> {
     */
 
     @Override
-    public Signature unmarshall(Node node) {
-        return null;
+    public Signature<S, P> unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node signature = checkThisNode(node);
+        Node signatureInfo = signature.getFirstChild();
+        this.signatureInfo = new SignatureInfo().unmarshall(signatureInfo);
+
+        Node referencesNode = signatureInfo.getNextSibling();
+        NodeList references = referencesNode.getChildNodes();
+        this.references.clear();
+        for (int i = 0; i < references.getLength(); i++) {
+            this.references.add(new Reference<>(proofClass).unmarshall(references.item(i)));
+        }
+
+        Node signatureValue = referencesNode.getNextSibling();
+        try {
+            this.signatureValue = (S) signatureValueClass.newInstance().unmarshall(signatureValue);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RedactableXMLSignatureException(signatureValueClass.getName() +
+                    " has no public default constructor", e);
+        }
+        return this;
     }
 
     @Override

@@ -27,6 +27,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Dereferencer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.getOwnerDocument;
@@ -117,8 +118,25 @@ public final class Pointer extends BindingElement<Pointer> {
     }
 
     @Override
-    public Pointer unmarshall(Node node) {
-        return null;
+    public Pointer unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node pointer = checkThisNode(node);
+        NamedNodeMap attributes = pointer.getAttributes();
+
+        Node id = attributes.getNamedItem("Id");
+        if (id != null) {
+            this.id = id.getTextContent();
+        }
+
+        Node uri = attributes.getNamedItem("URI");
+        if (uri != null) {
+            this.uri = uri.getTextContent();
+        }
+
+        Node isRedactable = attributes.getNamedItem("Redactable");
+        if (isRedactable != null) {
+            this.isRedactable = Boolean.valueOf(isRedactable.getTextContent());
+        }
+        return this;
     }
 
     @Override

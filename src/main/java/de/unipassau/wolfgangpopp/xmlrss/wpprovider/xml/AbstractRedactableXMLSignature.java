@@ -48,20 +48,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.getSignatureNode;
+
 /**
  * @author Wolfgang Popp
  */
-public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignatureSpi {
+public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P extends Proof>
+        extends RedactableXMLSignatureSpi {
 
     private final RedactableSignature rss;
+    private final Class<P> proofClass;
+    private final Class<S> signatureValueClass;
     private Node root;
     private final Map<ByteArray, Pointer> pointers = new HashMap<>();
     private final List<String> uris = new ArrayList<>();
     private final Set<String> redactUris = new HashSet<>();
 
-    protected AbstractRedactableXMLSignature(RedactableSignature rss) {
+    protected AbstractRedactableXMLSignature(RedactableSignature rss, Class<P> proofClass,
+                                             Class<S> signatureValueClass) {
         super();
         this.rss = rss;
+        this.proofClass = proofClass;
+        this.signatureValueClass = signatureValueClass;
     }
 
     @Override
@@ -93,16 +102,10 @@ public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignat
     public void engineAddSignSelector(String uri, boolean isRedactable) throws RedactableXMLSignatureException {
         if (pointers.size() < 1) {
             SignatureInfo signatureInfo = new SignatureInfo(getCanonicalizationMethod(), getRedactableSignatureMethod());
-            Node signatureInfoNode;
-            try {
-                Document document = XMLUtils.getOwnerDocument(root);
-                signatureInfoNode = XMLUtils.createNode(document, signatureInfo, signatureInfo.getClass(), "SignatureInfo");
-            } catch (JAXBException e) {
-                throw new RedactableXMLSignatureException(e);
-            }
 
             Pointer signatureInfoPointer = new Pointer("SignatureInfo");
-            byte[] pointerConcatSINode = signatureInfoPointer.concatNode(signatureInfoNode, root);
+            Document document = XMLUtils.getOwnerDocument(root);
+            byte[] pointerConcatSINode = signatureInfoPointer.concatNode(signatureInfo.marshall(document), root);
             pointers.put(new ByteArray(pointerConcatSINode), signatureInfoPointer);
             try {
                 rss.addPart(pointerConcatSINode);
@@ -155,6 +158,7 @@ public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignat
         if (root == null) {
             throw new RedactableXMLSignatureException("root node not set");
         }
+        checkNode(getSignatureNode(root).getFirstChild(), "SignatureInfo");
         try {
             return rss.verify(unmarshall());
         } catch (RedactableSignatureException e) {
@@ -190,7 +194,7 @@ public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignat
         }
 
         removeNodes(root, redactUris);
-        root.removeChild(XMLUtils.getSignatureNode(root));
+        root.removeChild(getSignatureNode(root));
 
         return marshall(redacted);
     }
@@ -213,12 +217,12 @@ public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignat
     }
 
     private Document marshall(SignatureOutput output) throws RedactableXMLSignatureException {
-        Signature sigElement = new Signature();
+        Signature<S, P> sigElement = new Signature<>(proofClass, signatureValueClass);
 
         sigElement.setSignatureValue(marshallSignatureValue(output))
                 .setSignatureInfo(new SignatureInfo(getCanonicalizationMethod(), getRedactableSignatureMethod()));
 
-        for (Reference reference : marshallReferences(output)) {
+        for (Reference<P> reference : marshallReferences(output)) {
             sigElement.addReference(reference);
         }
 
@@ -232,21 +236,21 @@ public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignat
         return convertSignature(unmarshallXML());
     }
 
-    private Signature unmarshallXML() throws RedactableXMLSignatureException {
-        Node signatureNode = XMLUtils.getSignatureNode(root);
-        Signature signature = new Signature();
+    private Signature<S, P> unmarshallXML() throws RedactableXMLSignatureException {
+        Node signatureNode = getSignatureNode(root);
+        Signature<S, P> signature = new Signature<>(proofClass, signatureValueClass);
         return signature.unmarshall(signatureNode);
     }
 
-    private SignatureOutput convertSignature(Signature signature) throws RedactableXMLSignatureException {
-        List<Reference> references = signature.getReferences();
+    private SignatureOutput convertSignature(Signature<S, P> signature) throws RedactableXMLSignatureException {
+        List<Reference<P>> references = signature.getReferences();
         prepareUnmarshallSignatureValue(references.size(), signature.getSignatureValue());
 
         for (int i = 0; i < references.size(); i++) {
             Pointer pointer = references.get(i).getPointer();
             pointers.put(new ByteArray(pointer.concatDereference(root)), pointer);
             uris.add(pointer.getUri());
-            Proof proof = references.get(i).getProof();
+            P proof = references.get(i).getProof();
             prepareUnmarshallReference(references.size(), i, pointer, proof);
         }
 
@@ -257,17 +261,17 @@ public abstract class AbstractRedactableXMLSignature extends RedactableXMLSignat
 
     protected abstract String getCanonicalizationMethod();
 
-    protected abstract SignatureValue marshallSignatureValue(SignatureOutput signatureOutput) throws RedactableXMLSignatureException;
+    protected abstract S marshallSignatureValue(SignatureOutput signatureOutput) throws RedactableXMLSignatureException;
 
-    protected abstract Collection<Reference> marshallReferences(SignatureOutput signatureOutput)
+    protected abstract Collection<Reference<P>> marshallReferences(SignatureOutput signatureOutput)
             throws RedactableXMLSignatureException;
 
     protected abstract Identifier createIdentifier(byte[] messagePart, int index) throws RedactableXMLSignatureException;
 
-    protected abstract void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, Proof proof)
+    protected abstract void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, P proof)
             throws RedactableXMLSignatureException;
 
-    protected abstract void prepareUnmarshallSignatureValue(int messageSize, SignatureValue signatureValue)
+    protected abstract void prepareUnmarshallSignatureValue(int messageSize, S signatureValue)
             throws RedactableXMLSignatureException;
 
     protected abstract SignatureOutput doUnmarshall() throws RedactableXMLSignatureException;

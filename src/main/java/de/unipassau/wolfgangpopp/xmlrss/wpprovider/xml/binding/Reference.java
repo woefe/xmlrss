@@ -20,6 +20,7 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -27,23 +28,26 @@ import org.w3c.dom.Node;
 /**
  * @author Wolfgang Popp
  */
-public final class Reference extends BindingElement<Reference> {
+public final class Reference<P extends Proof> extends BindingElement<Reference> {
     private Pointer pointer;
-    private Proof proof;
+    private P proof;
+    private Class<P> proofClass;
 
-    public Reference() {
+    public Reference(Class<P> proofClass) {
+        this.proofClass = proofClass;
     }
 
-    public Reference(Pointer pointer, Proof proof) {
+    public Reference(Pointer pointer, P proof, Class<P> proofClass) {
         this.pointer = pointer;
         this.proof = proof;
+        this.proofClass = proofClass;
     }
 
     public Pointer getPointer() {
         return pointer;
     }
 
-    public Proof getProof() {
+    public P getProof() {
         return proof;
     }
 
@@ -71,8 +75,18 @@ public final class Reference extends BindingElement<Reference> {
     }
 
     @Override
-    public Reference unmarshall(Node node) {
-        return null;
+    public Reference<P> unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node reference = checkThisNode(node);
+        Node pointer = reference.getFirstChild();
+        this.pointer = new Pointer().unmarshall(pointer);
+
+        Node proof = pointer.getNextSibling();
+        try {
+            this.proof = (P) proofClass.newInstance().unmarshall(proof);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RedactableXMLSignatureException(e);
+        }
+        return this;
     }
 
     @Override

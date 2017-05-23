@@ -20,7 +20,9 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignature;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -41,7 +43,11 @@ public abstract class BindingElement<T> {
         return document.createElementNS(RedactableXMLSignature.XML_NAMESPACE, name);
     }
 
-    public abstract T unmarshall(Node node);
+    public Node checkThisNode(Node node) throws RedactableXMLSignatureException {
+        return XMLUtils.checkNode(node, getTagName());
+    }
+
+    public abstract T unmarshall(Node node) throws RedactableXMLSignatureException;
 
     public abstract Node marshall(Document document);
 

@@ -31,4 +31,19 @@ public class RedactableXMLSignatureException extends Exception {
     public RedactableXMLSignatureException(String message) {
         super(message);
     }
+
+    public RedactableXMLSignatureException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public RedactableXMLSignatureException(Throwable cause) {
+        super(cause);
+    }
+
+    public RedactableXMLSignatureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public RedactableXMLSignatureException() {
+    }
 }

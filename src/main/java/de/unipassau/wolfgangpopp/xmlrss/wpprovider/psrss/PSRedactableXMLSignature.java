@@ -39,12 +39,12 @@ import java.util.Set;
 /**
  * @author Wolfgang Popp
  */
-abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature {
+abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<PSSignatureValue, SimpleProof> {
 
     private PSSignatureOutput.Builder builder;
 
     PSRedactableXMLSignature(RedactableSignature signature) throws RedactableXMLSignatureException {
-        super(signature);
+        super(signature, SimpleProof.class, PSSignatureValue.class);
     }
 
     @Override
@@ -65,15 +65,15 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature {
     }
 
     @Override
-    protected Collection<Reference> marshallReferences(SignatureOutput signatureOutput)
+    protected Collection<Reference<SimpleProof>> marshallReferences(SignatureOutput signatureOutput)
             throws RedactableXMLSignatureException {
 
-        Set<Reference> references = new HashSet<>();
+        Set<Reference<SimpleProof>> references = new HashSet<>();
         PSSignatureOutput output = (PSSignatureOutput) signatureOutput;
         for (PSSignatureOutput.SignedPart signedPart : output) {
             SimpleProof proof = new SimpleProof(signedPart.getProof());
             Pointer pointer = getPointerForMessagePart(signedPart.getElement().getArray());
-            Reference reference = new Reference(pointer, proof);
+            Reference<SimpleProof> reference = new Reference<>(pointer, proof, SimpleProof.class);
             references.add(reference);
         }
         return references;
@@ -85,12 +85,12 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature {
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, Proof proof)
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, SimpleProof proof)
             throws RedactableXMLSignatureException {
 
         ensureBuilderExists();
         try {
-            builder.add(getMessagePartForPointer(pointer), ((SimpleProof) proof).getBytes());
+            builder.add(getMessagePartForPointer(pointer), proof.getBytes());
         } catch (PSRSSException e) {
             throw new RedactableXMLSignatureException(e);
         }
@@ -103,14 +103,13 @@ abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature {
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, SignatureValue signatureValue)
+    protected void prepareUnmarshallSignatureValue(int messageSize, PSSignatureValue signatureValue)
             throws RedactableXMLSignatureException {
 
         ensureBuilderExists();
-        PSSignatureValue psSignatureValue = (PSSignatureValue) signatureValue;
-        builder.setAccumulator(psSignatureValue.getAccumulator())
-                .setProofOfTag(psSignatureValue.getProofOfTag())
-                .setTag(psSignatureValue.getTag());
+        builder.setAccumulator(signatureValue.getAccumulator())
+                .setProofOfTag(signatureValue.getProofOfTag())
+                .setTag(signatureValue.getTag());
     }
 
     @Override

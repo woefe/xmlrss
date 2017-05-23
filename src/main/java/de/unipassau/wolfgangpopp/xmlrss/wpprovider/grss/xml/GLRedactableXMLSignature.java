@@ -39,12 +39,12 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSignature {
+public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSignature<GSSignatureValue, GLProof> {
 
     private GLRSSSignatureOutput.Builder builder;
 
     protected GLRedactableXMLSignature(RedactableSignature rss) {
-        super(rss);
+        super(rss, GLProof.class, GSSignatureValue.class);
     }
 
     @Override
@@ -64,14 +64,14 @@ public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected Collection<Reference> marshallReferences(SignatureOutput signatureOutput) {
+    protected Collection<Reference<GLProof>> marshallReferences(SignatureOutput signatureOutput) {
         GLRSSSignatureOutput output = (GLRSSSignatureOutput) signatureOutput;
-        List<Reference> references = new LinkedList<>();
+        List<Reference<GLProof>> references = new LinkedList<>();
 
         for (GLRSSSignatureOutput.GLRSSSignedPart glrssSignedPart : output.getParts()) {
             GLProof proof = new GLProof(glrssSignedPart);
             Pointer pointer = getPointerForMessagePart(glrssSignedPart.getMessagePart());
-            references.add(new Reference(pointer, proof));
+            references.add(new Reference<>(pointer, proof, GLProof.class));
         }
 
         return references;
@@ -83,27 +83,24 @@ public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSign
     }
 
     @Override
-    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, Proof proof)
+    protected void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, GLProof proof)
             throws RedactableXMLSignatureException {
 
-        GLProof glProof = (GLProof) proof;
         ensureBuilderExists(messageSize);
         builder.setMessagePart(index, getMessagePartForPointer(pointer))
                 .setRedactable(index, pointer.isRedactable())
-                .setRandomValue(index, glProof.getRandomValue())
-                .setAccValue(index, glProof.getAccumulatorValue())
-                .setWitnesses(index, glProof.getWitnesses())
-                .setGSProof(index, glProof.getGsProof());
+                .setRandomValue(index, proof.getRandomValue())
+                .setAccValue(index, proof.getAccumulatorValue())
+                .setWitnesses(index, proof.getWitnesses())
+                .setGSProof(index, proof.getGsProof());
     }
 
     @Override
-    protected void prepareUnmarshallSignatureValue(int messageSize, SignatureValue signatureValue) {
+    protected void prepareUnmarshallSignatureValue(int messageSize, GSSignatureValue signatureValue) {
         ensureBuilderExists(messageSize);
 
-        GSSignatureValue gsSignatureValue = (GSSignatureValue) signatureValue;
-
-        builder.setGSAccumulator(gsSignatureValue.getAccumulatorValue())
-                .setGSDsigValue(gsSignatureValue.getDSigValue());
+        builder.setGSAccumulator(signatureValue.getAccumulatorValue())
+                .setGSDsigValue(signatureValue.getDSigValue());
 
     }
 

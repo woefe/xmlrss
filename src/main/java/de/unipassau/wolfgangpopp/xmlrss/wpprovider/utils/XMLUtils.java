@@ -49,7 +49,7 @@ public class XMLUtils {
     }
 
     public static Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
-        if (node == null || !node.getLocalName().equals(expectedNodeName)) {
+        if (node == null || !expectedNodeName.equals(node.getNodeName())) {
             throw new RedactableXMLSignatureException("Cannot find expected node '" + expectedNodeName + "'");
         }
 

@@ -170,7 +170,7 @@ public abstract class AbstractXMLRSSTest {
         Document document = sig.sign();
         printDocument(document);
 
-        Node proof = document.getElementsByTagName("drs:Proof").item(0);
+        Node proof = document.getElementsByTagName("Proof").item(0);
         proof.removeChild(proof.getFirstChild());
 
         sig.initVerify(keyPair.getPublic());
@@ -308,8 +308,8 @@ public abstract class AbstractXMLRSSTest {
     protected void printDocument(Document document) throws TransformerException {
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer trans = tf.newTransformer();
-        trans.setOutputProperty(OutputKeys.INDENT, "yes");
-        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+//        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+//        trans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         trans.transform(new DOMSource(document), new StreamResult(System.out));
     }
 }

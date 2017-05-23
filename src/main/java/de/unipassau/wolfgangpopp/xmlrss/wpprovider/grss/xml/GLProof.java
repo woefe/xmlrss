@@ -22,13 +22,19 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils;
+import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+
+import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
 
 /**
  * @author Wolfgang Popp
@@ -76,12 +82,54 @@ public class GLProof extends Proof {
     }
 
     @Override
-    public Proof unmarshall(Node node) {
-        return null;
+    public Proof unmarshall(Node node) throws RedactableXMLSignatureException {
+        Node proof = checkThisNode(node);
+
+        Node gsProof = checkNode(proof.getFirstChild(), "GSProof");
+        this.gsProof = gsProof.getTextContent();
+
+        Node randomValue = checkNode(gsProof.getNextSibling(), "RandomValue");
+        this.randomValue = randomValue.getTextContent();
+
+        Node accumulatorValue = checkNode(randomValue.getNextSibling(), "AccumulatorValue");
+        this.accumulatorValue = accumulatorValue.getTextContent();
+
+        NodeList witnesses = checkNode(accumulatorValue.getNextSibling(), "Witnesses").getChildNodes();
+        this.witnesses.clear();
+
+        for (int i = 0; i < witnesses.getLength(); i++) {
+            Node witness = checkNode(witnesses.item(i), "Witness");
+            this.witnesses.add(witness.getTextContent());
+        }
+
+        return this;
     }
 
     @Override
     public Node marshall(Document document) {
-        return null;
+        Element proof = createThisElement(document);
+
+        Element gsProof = createElement(document, "GSProof");
+        gsProof.setTextContent(this.gsProof);
+        proof.appendChild(gsProof);
+
+        Element randomValue = createElement(document, "RandomValue");
+        randomValue.setTextContent(this.randomValue);
+        proof.appendChild(randomValue);
+
+        Element accumulatorValue = createElement(document, "AccumulatorValue");
+        accumulatorValue.setTextContent(this.accumulatorValue);
+        proof.appendChild(accumulatorValue);
+
+        Element witnesses = createElement(document, "Witnesses");
+        proof.appendChild(witnesses);
+
+        for (String witnessData : this.witnesses) {
+            Element witness = createElement(document, "Witness");
+            witness.setTextContent(witnessData);
+            witnesses.appendChild(witness);
+        }
+
+        return proof;
     }
 }
