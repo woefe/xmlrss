@@ -20,9 +20,9 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
-import com.sun.org.apache.xml.internal.security.Init;
-import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
-import com.sun.org.apache.xml.internal.security.c14n.InvalidCanonicalizerException;
+import org.apache.xml.security.Init;
+import org.apache.xml.security.c14n.CanonicalizationException;
+import org.apache.xml.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Node;
 
 /**
@@ -30,13 +30,14 @@ import org.w3c.dom.Node;
  */
 public class Canonicalizer {
 
-    private static com.sun.org.apache.xml.internal.security.c14n.Canonicalizer canonicalizer;
+    private static org.apache.xml.security.c14n.Canonicalizer canonicalizer;
 
     static {
         Init.init();
         try {
-            canonicalizer = com.sun.org.apache.xml.internal.security.c14n.Canonicalizer.getInstance(
-                    com.sun.org.apache.xml.internal.security.c14n.Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS);
+            canonicalizer = org.apache.xml.security.c14n.Canonicalizer.getInstance(
+                    org.apache.xml.security.c14n.Canonicalizer.ALGO_ID_C14N11_WITH_COMMENTS
+            );
         } catch (InvalidCanonicalizerException e) {
             throw new IllegalStateException(e);
         }

@@ -72,9 +72,8 @@ import java.util.List;
 /**
  * @author Wolfgang Popp
  */
-public class XMLdsigTest {
+public class XMLDsigExample {
 
-    @Test
     public void testSign() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             ParserConfigurationException, IOException, SAXException, KeyException, MarshalException,
             XMLSignatureException, TransformerException {
@@ -121,7 +120,6 @@ public class XMLdsigTest {
         trans.transform(new DOMSource(document), new StreamResult(new File("vehicles.dsig.xml")));
     }
 
-    @Test
     public void testSign2() throws Exception {
         //Read document from file
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -165,14 +163,13 @@ public class XMLdsigTest {
         trans.transform(new DOMSource(document), new StreamResult(System.out));
     }
 
-    @Test
     public void testVerify() throws ParserConfigurationException, IOException, SAXException, XMLSignatureException, MarshalException {
 
         // Read signed document from file
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setNamespaceAware(true);
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        Document document = documentBuilder.parse(new File("cars.xml.sig"));
+        Document document = documentBuilder.parse(new FileInputStream("vehicles.dsig.xml"));
 
         NodeList signatureElement = document.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
         if (signatureElement.getLength() == 0) {

@@ -20,11 +20,11 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
-import com.sun.org.apache.xml.internal.security.c14n.CanonicalizationException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Canonicalizer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.Dereferencer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
+import org.apache.xml.security.c14n.CanonicalizationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;

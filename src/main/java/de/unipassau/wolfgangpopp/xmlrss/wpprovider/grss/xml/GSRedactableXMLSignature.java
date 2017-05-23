@@ -31,6 +31,7 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Pointer;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Reference;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SimpleProof;
+import org.apache.xml.security.c14n.Canonicalizer;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -56,7 +57,7 @@ public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSign
 
     @Override
     protected String getCanonicalizationMethod() {
-        return com.sun.org.apache.xml.internal.security.c14n.Canonicalizer.ALGO_ID_C14N11_OMIT_COMMENTS;
+        return Canonicalizer.ALGO_ID_C14N11_WITH_COMMENTS;
     }
 
     @Override
