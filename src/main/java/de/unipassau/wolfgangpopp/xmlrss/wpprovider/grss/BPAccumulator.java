@@ -51,11 +51,6 @@ public class BPAccumulator extends AccumulatorSpi {
     private SecureRandom random;
 
     @Override
-    protected void engineInitWitness(KeyPair keyPair) throws InvalidKeyException {
-        engineInitWitness(keyPair, new SecureRandom());
-    }
-
-    @Override
     protected void engineInitWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         checkAndSetParm(keyPair);
         this.random = random;

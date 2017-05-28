@@ -41,26 +41,59 @@ public abstract class AccumulatorSpi {
      * Initializes this accumulator engine for creating witnesses for the given elements under the given keypair.
      *
      * @param keyPair  the keypair used for creating witnesses
-     * @param elements all elements that are accumulated
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
-    protected abstract void engineInitWitness(KeyPair keyPair) throws InvalidKeyException;
+    protected void engineInitWitness(KeyPair keyPair) throws InvalidKeyException {
+        engineInitWitness(keyPair, new SecureRandom());
+    }
 
+    /**
+     * Initializes this accumulator engine for creating witnesses for the given elements under the given keypair using
+     * the given source of randomness.
+     *
+     * @param keyPair the keypair used for creating witnesses
+     * @param random  the source of randomness
+     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     */
     protected abstract void engineInitWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException;
 
+    /**
+     * Digests the given elements to the accumulator value.
+     * <p>
+     * The accumulator value should be saved internally, because it is later used to create witnesses.
+     *
+     * @param elements the accumulated elements
+     * @throws AccumulatorException if the given elements cannot be digested; e.g. the elements contain duplicates
+     */
     protected abstract void engineDigest(byte[]... elements) throws AccumulatorException;
 
     /**
-     * Initializes this accumulator engine for creating witnesses under the given keypair. This accumulator is
-     * initialized with an already existing accumulator value.
+     * Restores the state of this accumulator engine for creating witnesses.
+     * <p>
+     * This accumulator is initialized with an already existing accumulator value. The state of this accumuator after a
+     * call of this method should be the same as after a call of {@link #engineRestoreWitness(AccumulatorState)}.
      *
-     * @param keyPair          the keypair used for creating witnesses
      * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
-     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     * @param auxiliaryValue   the auxiliary value used by this accumulator as retrieved by {@link #engineGetAccumulatorValue()}
+     * @param elements         the elements that were used to create the accumulator value
+     * @throws AccumulatorException if the given keypair is inappropriate for initializing this Accumulator object.
      */
     protected abstract void engineRestoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements)
             throws AccumulatorException;
 
+    /**
+     * Restores the state of this accumulator engine for creating witnesses.
+     * <p>
+     * This accumulator is initialized with an already existing accumulator value. The state of this accumuator after a
+     * call of this method should be the same as after a call of
+     * {@link #engineRestoreWitness(byte[], byte[], byte[]...)}.
+     * <p>
+     * This method can be overridden in case additional helper values are added to a custom
+     * <code>AccumulatorState</code>.
+     *
+     * @param savedState the saved state of an accumulator
+     * @throws AccumulatorException if the given saved state cannot be used to restore this accumulator
+     */
     protected void engineRestoreWitness(AccumulatorState savedState) throws AccumulatorException {
         engineRestoreWitness(savedState.accumulatorValue, savedState.auxiliaryValue, savedState.elements);
     }
@@ -68,12 +101,16 @@ public abstract class AccumulatorSpi {
     /**
      * Initializes this accumulator for verification (membership testing).
      *
-     * @param publicKey        the public key of the keypair that was used for creating witnesses.
-     * @param accumulatorValue the accumulator value as retrieved by {@link #engineGetAccumulatorValue()}
+     * @param publicKey the public key of the keypair that was used for creating witnesses.
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
     protected abstract void engineInitVerify(PublicKey publicKey) throws InvalidKeyException;
 
+    /**
+     * Restores the accumulator state from the given accumulator value for verification.
+     *
+     * @param accumulatorValue the accumulator value
+     */
     protected abstract void engineRestoreVerify(byte[] accumulatorValue);
 
     /**
@@ -81,20 +118,18 @@ public abstract class AccumulatorSpi {
      *
      * @param element the element
      * @return the witness certifying the membership of the element in the accumulated set
-     * @throws AccumulatorException if the engine is not initialized properly or if this accumulator algorithm is unable
-     *                              to process the given element
+     * @throws AccumulatorException if this accumulator algorithm is unable to process the given element
      */
     protected abstract byte[] engineCreateWitness(byte[] element) throws AccumulatorException;
 
     /**
-     * Checks if the given witness certifies the membership of the given element in the accumulated set.
+     * Checks whether the given witness certifies the membership of the given element in the accumulated set.
      *
      * @param witness the witness for the given element
      * @param element the element whose set-membersip is verfied
      * @return true if the given <code>witness</code> is indeed a witness for <code>element</code> being an element of
      * the accumulated set.
-     * @throws AccumulatorException if the engine is not initialized properly or if this accumulator algorithm is unable
-     *                              to process the given element
+     * @throws AccumulatorException if this accumulator algorithm is unable to process the given element
      */
     protected abstract boolean engineVerify(byte[] witness, byte[] element) throws AccumulatorException;
 
@@ -106,8 +141,20 @@ public abstract class AccumulatorSpi {
      */
     protected abstract byte[] engineGetAccumulatorValue() throws AccumulatorException;
 
+    /**
+     * Returns the auxiliary value used by this accumulator.
+     *
+     * @return the auxiliary value or null if this accumulator does not use an auxiliary value
+     * @throws AccumulatorException if the auxiliary value cannot be retrieved
+     */
     protected abstract byte[] engineGetAuxiliaryValue() throws AccumulatorException;
 
+    /**
+     * Returns the accumulator state that can be used to restore an accumulator.
+     *
+     * @return the accumulator state
+     * @throws AccumulatorException if the accumulator state cannot be retrieved
+     */
     protected abstract AccumulatorState engineGetAccumulatorState() throws AccumulatorException;
 
     /**

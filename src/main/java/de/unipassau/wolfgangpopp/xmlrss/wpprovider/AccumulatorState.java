@@ -21,14 +21,26 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 
 /**
+ * The <code>AccumulatorState</code> is a container for various values that are necessary to restore the state of an
+ * {@link Accumulator}. Algorithm specific subclasses of this container may add additional values, but it must always be
+ * possible to restore an accumulator from the accumulator value, the auxiliary value and the accumulated elements. Any
+ * other additional values should be used to improve performance of accumulator restoration.
+ *
  * @author Wolfgang Popp
  */
-public final class AccumulatorState {
+public class AccumulatorState {
 
     public final byte[] accumulatorValue;
     public final byte[] auxiliaryValue;
     public final byte[][] elements;
 
+    /**
+     * Constructs a new AccumulatorState from the given values and elements
+     *
+     * @param accumulatorValue the accumulator value generated from the given elements
+     * @param auxiliaryValue   the auxiliary value used by the accumulator
+     * @param elements         the elements used to create the accumulator value
+     */
     public AccumulatorState(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) {
         this.accumulatorValue = accumulatorValue;
         this.auxiliaryValue = auxiliaryValue;

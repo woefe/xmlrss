@@ -282,7 +282,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
 
         try {
             accumulator.restoreWitness(psSig.getAccumulator(), null);
-        } catch (InvalidKeyException | AccumulatorException e) {
+        } catch (AccumulatorException e) {
             throw new PSRSSException(e);
         }
 

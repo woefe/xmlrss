@@ -40,12 +40,26 @@ import java.util.List;
  * An Accumulator object can be used to create witnesses for a given value or to verify the membership of a given value
  * in the accumulated set. Witnesses certify the membership of a given value in the accumulator.
  * <p>
- * An Accumulator object is used in two phases:
+ *
+ * Creating witnesses for newly generated accumulator value:
  * <ol>
- * <li> Initialization via: {@link #initWitness(KeyPair, byte[]...) initWitness},
- * {@link #initVerify(PublicKey, byte[]) initVerify}, {@link #restore(KeyPair, byte[]) restore}
- * <li> Creating witnesses or verifying membership. See {@link #verify(byte[], byte[]) verify},
- * {@link #createWitness(byte[]) createWitness}
+ * <li> {@link #initWitness(KeyPair)}
+ * <li> {@link #digest(byte[]...)}
+ * <li> {@link #createWitness(byte[])}
+ * </ol>
+ *
+ * Creating witnesses for existing accumulator value:
+ * <ol>
+ * <li> {@link #initWitness(KeyPair)}
+ * <li> {@link #restoreWitness(AccumulatorState)}
+ * <li> {@link #createWitness(byte[])}
+ * </ol>
+ *
+ * Verifying (witnesses, element):
+ * <ol>
+ * <li> {@link #initVerify(PublicKey)}
+ * <li> {@link #restoreVerify(byte[])}
+ * <li> {@link #verify(byte[], byte[])}
  * </ol>
  *
  * @author Wolfgang Popp
@@ -61,7 +75,7 @@ public abstract class Accumulator {
     }
 
     /**
-     * Constructs a accumulator with the specified algorithm name and engine.
+     * Constructs an accumulator with the specified algorithm name and engine.
      *
      * @param algorithm the algorithm of this accumulator
      * @param engine    the actual implementation
@@ -73,7 +87,7 @@ public abstract class Accumulator {
     }
 
     /**
-     * Returns a Accumulator object that implements the specified accumulator algorithm.
+     * Returns an Accumulator object that implements the specified accumulator algorithm.
      * <p>
      * This method traverses the list of registered security Providers, starting with the most preferred Provider. A new
      * Accumulator object encapsulating the AccumulatorSpi implementation from the first Provider that supports the
@@ -82,9 +96,9 @@ public abstract class Accumulator {
      * Note that the list of registered providers may be retrieved via the <code>Security.getProviders()</code> method.
      *
      * @param algorithm the name of the requested algorithm
-     * @return a new Accumulator object.
-     * @throws NoSuchAlgorithmException if no Provider supports a Accumulator implementation for the specified
-     *                                  algorithm.
+     * @return a new Accumulator object
+     * @throws NoSuchAlgorithmException if no Provider supports an Accumulator implementation for the specified
+     *                                  algorithm
      */
     public static Accumulator getInstance(String algorithm) throws NoSuchAlgorithmException {
         NoSuchAlgorithmException failure = new NoSuchAlgorithmException(algorithm + "Accumulator not available");
@@ -102,7 +116,7 @@ public abstract class Accumulator {
     }
 
     /**
-     * Returns a Accumulator object that implements the specified accumulator algorithm.
+     * Returns an Accumulator object that implements the specified accumulator algorithm.
      * <p>
      * A new Accumulator object encapsulating the AccumulatorSpi implementation from the specified provider is returned.
      * The specified provider must be registered in the security provider list.
@@ -113,7 +127,7 @@ public abstract class Accumulator {
      * @param provider  the name of the provider
      * @return a new Accumulator object.
      * @throws NoSuchProviderException  if the specified provider is not registered in the security provider list.
-     * @throws NoSuchAlgorithmException if a AccumulatorSpi implementation for the specified algorithm is not available
+     * @throws NoSuchAlgorithmException if an AccumulatorSpi implementation for the specified algorithm is not available
      *                                  from the specified provider.
      */
     public static Accumulator getInstance(String algorithm, String provider)
@@ -125,7 +139,7 @@ public abstract class Accumulator {
     }
 
     /**
-     * Returns a Accumulator object that implements the specified accumulator algorithm.
+     * Returns an Accumulator object that implements the specified accumulator algorithm.
      * <p>
      * A new Accumulator object encapsulating the AccumulatorSpi implementation from the specified provider object is
      * returned. Note that the specified provider object does not have to be registered in the security provider list.
@@ -133,7 +147,7 @@ public abstract class Accumulator {
      * @param algorithm the name of the requested algorithm
      * @param provider  the provider
      * @return a new Accumulator object.
-     * @throws NoSuchAlgorithmException if a AccumulatorSpi implementation for the specified algorithm is not available
+     * @throws NoSuchAlgorithmException if an AccumulatorSpi implementation for the specified algorithm is not available
      *                                  from the specified provider.
      */
     public static Accumulator getInstance(String algorithm, Provider provider) throws NoSuchAlgorithmException {
@@ -165,14 +179,12 @@ public abstract class Accumulator {
     }
 
     /**
-     * Initializes this object for creating witnesses. The given elements are accumulated into a short accumulator
-     * value, which can be retrieved via {@link #getAccumulatorValue()}.
+     * Initializes this object for creating witnesses.
      * <p>
      * Note that the initialization discards all previous state, i.e. initialization is equivalent to creating a new
      * instance of that Accumulator.
      *
      * @param keyPair  the keypair used for creating witnesses
-     * @param elements all elements that are accumulated
      * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
      */
     public final void initWitness(KeyPair keyPair) throws InvalidKeyException {
@@ -180,11 +192,30 @@ public abstract class Accumulator {
         engine.engineInitWitness(keyPair);
     }
 
+    /**
+     * Initializes this object for creating witnesses.
+     * <p>
+     * Note that the initialization discards all previous state, i.e. initialization is equivalent to creating a new
+     * instance of that Accumulator.
+     *
+     * @param keyPair the keypair used for creating witnesses
+     * @param random  the source of randomness for this accumulator
+     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     */
     public final void initWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         state = STATE.CREATE_WITNESS;
         engine.engineInitWitness(keyPair, random);
     }
 
+    /**
+     * Digests the given elements into a short accumulator value that is then used for creation of witnesses. The
+     * accumulator can retrieved via {@link #getAccumulatorValue()}. In some implementations the given elements may not
+     * contain duplicates.
+     *
+     * @param elements the elements that are digested to an accumulator value
+     * @throws AccumulatorException if this Accumulator is not initialized properly or if the accumulator value cannot
+     *                              be created from the given elements
+     */
     public final void digest(byte[]... elements) throws AccumulatorException {
         if (state != STATE.CREATE_WITNESS) {
             throw new AccumulatorException("not initialized for creating witnesses");
@@ -193,16 +224,13 @@ public abstract class Accumulator {
     }
 
     /**
-     * Initializes this object from the given accumulator value for creating witnesses. This method initializes the
-     * Accumulator object from an already existing accumulator value, while
-     * {@link #initWitness(KeyPair, byte[]...) initWitness} generates a new accumulator value.
-     * <p>
-     * Note that the initialization discards all previous state, i.e. initialization is equivalent to creating a new
-     * instance of that Accumulator.
+     * Restores this accumulator from the given accumulator state for creating witnesses. This method initializes the
+     * Accumulator object from an already existing accumulator value, while {@link #digest(byte[]...)} generates a new
+     * accumulator value.
      *
-     * @param keyPair          the keypair used for creating witnesses
-     * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
-     * @throws InvalidKeyException if the given keypair is inappropriate for initializing this Accumulator object.
+     * @param savedState a saved accumulator state as retrieved by {@link #getAccumulatorState()}
+     * @throws AccumulatorException if this Accumulator is not initialized properly or if the given saved state cannot
+     *                              be used to restore this accumulator
      */
     public final void restoreWitness(AccumulatorState savedState) throws AccumulatorException {
         if (state != STATE.CREATE_WITNESS) {
@@ -211,7 +239,20 @@ public abstract class Accumulator {
         engine.engineRestoreWitness(savedState);
     }
 
-    public final void restoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException, InvalidKeyException {
+    /**
+     * Restores this accumulator from the given accumulator and auxiliary values.
+     * <p>
+     * This method is similar to  {@link #restoreWitness(AccumulatorState)}, but an AccumulatorState object might
+     * contain additional data which may lead to better performance. The {@link #restoreWitness(AccumulatorState)}
+     * should therefore be preferred over this method.
+     *
+     * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
+     * @param auxiliaryValue   the auxiliary value as retrieved by {@link #getAuxiliaryValue()}
+     * @param elements         the elements that were used to create the accumulator value
+     * @throws AccumulatorException if this Accumulator is not initialized properly or if this accumulator cannot be
+     *                              restored from the given values and elements
+     */
+    public final void restoreWitness(byte[] accumulatorValue, byte[] auxiliaryValue, byte[]... elements) throws AccumulatorException {
         if (state != STATE.CREATE_WITNESS) {
             throw new AccumulatorException("not initialized for creating witnesses");
         }
@@ -226,7 +267,6 @@ public abstract class Accumulator {
      *
      * @param publicKey        the public key of the identity who accumulated accumulated elements into the given
      *                         accumulator value
-     * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
      * @throws InvalidKeyException if the given key is inappropriate for initializing this Accumulator object.
      */
     public final void initVerify(PublicKey publicKey) throws InvalidKeyException {
@@ -234,6 +274,13 @@ public abstract class Accumulator {
         engine.engineInitVerify(publicKey);
     }
 
+    /**
+     * Restores this accumulator for verification from the given accumulator value.
+     *
+     * @param accumulatorValue the accumulator value as retrieved by {@link #getAccumulatorValue()}
+     * @throws AccumulatorException if this Accumulator is not initialized properly or if this accumulator cannot be
+     *                              restored from the given value
+     */
     public final void restoreVerify(byte[] accumulatorValue) throws AccumulatorException {
         if (state != STATE.VERIFY) {
             throw new AccumulatorException("not initialized for verification");
@@ -242,7 +289,7 @@ public abstract class Accumulator {
     }
 
     /**
-     * Creates a witness for the given element with regard to this accumulator object.
+     * Creates a witness for the given element with regard to the private key and accumulator value.
      *
      * @param element the element
      * @return the witness bytes certifying the membership of the element in the accumulator
@@ -257,14 +304,14 @@ public abstract class Accumulator {
     }
 
     /**
-     * Verifies if the given witness certifies the membership of the given element in the accumulated set.
+     * Verifies whether the given witness certifies the membership of the given element in the accumulated set.
      *
-     * @param witness the witness for the given element
-     * @param element the element whose set-membersip is verfied
+     * @param witness the witness for the given element.
+     * @param element the element whose set-membersip is verfied.
      * @return true if the given <code>witness</code> is indeed a witness for <code>element</code> being an element of
      * the accumulated set.
      * @throws AccumulatorException if this Accumulator object is not initialized properly or if this accumulator
-     *                              algorithm is unable to process the given element
+     *                              algorithm is unable to process the given element.
      */
     public final boolean verify(byte[] witness, byte[] element) throws AccumulatorException {
         if (state == STATE.VERIFY) {
@@ -274,11 +321,11 @@ public abstract class Accumulator {
     }
 
     /**
-     * Returns the accumulator value of the accumulated elements
+     * Returns the accumulator value of the accumulated elements.
      *
-     * @return the accumulator value
+     * @return the accumulator value.
      * @throws AccumulatorException if this Accumulator object is not initialized properly or if this accumulator
-     *                              algorithm is unable to process the given element
+     *                              algorithm is unable to process the given element.
      */
     public final byte[] getAccumulatorValue() throws AccumulatorException {
         if (state != STATE.UNINITIALIZED) {
@@ -287,6 +334,16 @@ public abstract class Accumulator {
         throw new AccumulatorException("not initialized");
     }
 
+    /**
+     * Returns the auxiliary value of this accumulator.
+     * <p>
+     * The auxiliary value is used by some implementations to make the accumulator indistinguishable. See
+     * "Indistinguishability of One-Way Accumulators" by H. de Meer et al.
+     *
+     * @return the auxiliary value used by this accumulator or null.
+     * @throws AccumulatorException if this Accumulator object is not initialized properly or the auxiliary value cannot
+     *                              be retrieved.
+     */
     public final byte[] getAuxiliaryValue() throws AccumulatorException {
         if (state == STATE.CREATE_WITNESS) {
             return engine.engineGetAuxiliaryValue();
@@ -294,6 +351,16 @@ public abstract class Accumulator {
         throw new AccumulatorException("not initialized for creating witnesses");
     }
 
+    /**
+     * Returns the current state of this accumulator.
+     * <p>
+     * The AccumulatorState object contains the accumulator and auxiliary value and may additionally contain extra data
+     * to speed up restoration.
+     *
+     * @return the current accumulator state
+     * @throws AccumulatorException if this Accumulator object is not initialized properly or the state cannot be
+     *                              retrieved
+     */
     public final AccumulatorState getAccumulatorState() throws AccumulatorException {
         if (state == STATE.CREATE_WITNESS) {
             return engine.engineGetAccumulatorState();
@@ -332,7 +399,6 @@ public abstract class Accumulator {
     public final void setParameters(AlgorithmParameters parameters) throws InvalidAlgorithmParameterException {
         engine.engineSetParameters(parameters);
     }
-
 
     /**
      * Returns a string representation of this accumulator object. The returned string includes information about the

@@ -48,11 +48,6 @@ public class PSAccumulator extends AccumulatorSpi {
     private SecureRandom random;
 
     @Override
-    protected void engineInitWitness(KeyPair keyPair) throws InvalidKeyException {
-        engineInitWitness(keyPair, new SecureRandom());
-    }
-
-    @Override
     protected void engineInitWitness(KeyPair keyPair, SecureRandom random) throws InvalidKeyException {
         setKeyPair(keyPair);
         this.random = random;
