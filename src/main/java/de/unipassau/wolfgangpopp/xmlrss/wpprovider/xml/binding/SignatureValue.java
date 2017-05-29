@@ -21,6 +21,15 @@
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 
 /**
+ * The SignatureValue class is responsible for marshalling and unmarshalling the <code>SignatureValue</code> element of
+ * the redactable signature XML encoding. The signature value element has to be specifically adjusted for every
+ * implementation.
+ *
+ * The XSD Schema of the proof is defined as following
+ * <pre>
+ * {@code <element name="SignatureValue" type="anyType"/>}
+ * </pre>
+ *
  * @author Wolfgang Popp
  */
 public abstract class SignatureValue extends BindingElement<SignatureValue> {

@@ -27,9 +27,10 @@ import org.w3c.dom.Node;
 
 import java.util.Base64;
 
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
-
 /**
+ * The SimpleProof is an implementation of the Proof class that simply encodes one byte array. Implementations that use
+ * this proof are PSRSS and GSRSS.
+ *
  * @author Wolfgang Popp
  */
 public class SimpleProof extends Proof {

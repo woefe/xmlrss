@@ -33,6 +33,19 @@ import org.w3c.dom.Node;
 import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.getOwnerDocument;
 
 /**
+ * The Pointer class is responsible for marshalling and unmarshalling the <code>Pointer</code> element of the redactable
+ * signature XML encoding. The XSD Schema of the pointer is defined as following
+ * <pre>
+ * {@code <element name="Pointer">
+ *     <complexType>
+ *         <attribute name="Id" type="ID" use="optional"/>
+ *         <attribute name="URI" type="anyURI" use="required"/>
+ *         <attribute name="Redactable" type="boolean" use="optional"/>
+ *     </complexType>
+ * </element>
+ * }
+ * </pre>
+ *
  * @author Wolfgang Popp
  */
 public final class Pointer extends BindingElement<Pointer> {

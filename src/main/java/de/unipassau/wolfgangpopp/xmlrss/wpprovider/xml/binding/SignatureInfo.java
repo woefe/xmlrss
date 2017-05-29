@@ -28,6 +28,23 @@ import org.w3c.dom.Node;
 import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
 
 /**
+ * The SignatureInfo class is responsible for marshalling and unmarshalling the <code>SignatureInfo</code> element of
+ * the redactable signature XML encoding.
+ *
+ * The XSD Schema of the signature info is defined as following
+ * <pre>
+ * {@code
+ * <element name="SignatureInfo">
+ *     <complexType>
+ *         <sequence>
+ *             <element ref="drs:CanonicalizationMethod"/>
+ *             <element ref="drs:RedactableSignatureAlgorithm"/>
+ *         </sequence>
+ *     </complexType>
+ * </element>
+ * }
+ * </pre>
+ *
  * @author Wolfgang Popp
  */
 public class SignatureInfo extends BindingElement<SignatureInfo> {

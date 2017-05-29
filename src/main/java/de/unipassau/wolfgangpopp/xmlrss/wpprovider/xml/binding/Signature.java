@@ -31,6 +31,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * The Signature class is responsible for marshalling and unmarshalling the <code>Signature</code> element of the
+ * redactable signature XML encoding. The signature element is the root element of the XML encoding.
+ *
+ * The XSD Schema of the signature element is defined as following
+ * <pre>
+ * {@code
+ * <element name="Signature">
+ *     <complexType>
+ *         <sequence>
+ *             <element ref="drs:SignatureInfo"/>
+ *             <element ref="drs:References"/>
+ *             <element name="SignatureValue" type="anyType"/>
+ *             <element name="KeyInfo" type="anyType" minOccurs="0" maxOccurs="1"/>
+ *         </sequence>
+ *     </complexType>
+ * </element>
+ * }
+ * </pre>
+ *
  * @author Wolfgang Popp
  */
 public final class Signature<S extends SignatureValue, P extends Proof> extends BindingElement<Signature> {

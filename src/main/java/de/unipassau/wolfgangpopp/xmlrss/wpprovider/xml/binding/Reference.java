@@ -26,6 +26,23 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
+ * The Reference class is responsible for marshalling and unmarshalling the <code>Reference</code> element of the
+ * redactable signature XML encoding.
+ *
+ * The XSD Schema of the reference is defined as following
+ * <pre>
+ * {@code
+ * <element name="Reference">
+ *     <complexType>
+ *         <sequence>
+ *             <element ref="drs:Pointer"/>
+ *             <element name="Proof" type="anyType"/>
+ *         </sequence>
+ *     </complexType>
+ * </element>
+ * }
+ * </pre>
+ *
  * @author Wolfgang Popp
  */
 public final class Reference<P extends Proof> extends BindingElement<Reference> {
