@@ -20,27 +20,46 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 
+import java.security.GeneralSecurityException;
+
 /**
+ * The {@link RedactableSignatureException} is the general Exception for redactable signature implementations.
+ *
  * @author Wolfgang Popp
  */
-public class RedactableSignatureException extends Exception {
+public class RedactableSignatureException extends GeneralSecurityException {
+
+    /**
+     * Constructs a new RedactebleSignatureException without a detail message
+     */
     public RedactableSignatureException() {
     }
 
+    /**
+     * Constructs a new RedactableSignatureException with the given detail message.
+     *
+     * @param message the detail message
+     */
     public RedactableSignatureException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new RedactableSignatureException with the given detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause   the cause of this exception
+     */
     public RedactableSignatureException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * Constructs a new RedactableSignatureException with the given cause.
+     *
+     * @param cause the cause of this exception
+     */
     public RedactableSignatureException(Throwable cause) {
         super(cause);
-    }
-
-    public RedactableSignatureException(String message, Throwable cause, boolean enableSuppression,
-                                        boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

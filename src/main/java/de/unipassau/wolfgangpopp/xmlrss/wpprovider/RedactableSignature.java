@@ -40,18 +40,37 @@ import java.util.List;
  * A RedactableSignature object can be used to generate, verify, redact, merge or update redactable signatures. Note
  * that redactable signature schemes exist, which do not support merging or updating signatures.
  * <p>
- * A RedactableSignature object is used in three phases:
+ * Sign:
  * <ol>
- * <li> Initialization via: {@link #initSign(KeyPair) initSign}, {@link #initVerify(PublicKey) initVerify},
- * {@link #initRedact(PublicKey) initRedact}, {@link #initMerge(PublicKey) initMerge},
- * {@link #initUpdate(KeyPair) initUpdate}
- * <li> Adding the (message-)parts that will be signed, verified redacted by the RedactableSignature object, using
- * {@link #addPart(byte[], boolean) addPart}.
- * <li> Executing the the operation which the RedactableSignature object was initialized for. See
- * {@link #sign() sign}, {@link #initVerify(PublicKey) verify},
- * {@link #redact(SignatureOutput) redact},
- * {@link #merge(SignatureOutput, SignatureOutput) merge},
- * {@link #update(SignatureOutput) update}
+ *     <li>{@link #initSign(KeyPair)}</li>
+ *     <li>{@link #addPart(byte[])}</li>
+ *     <li>{@link #sign()}</li>
+ * </ol>
+ *
+ * Verify:
+ * <ol>
+ *     <li>{@link #initVerify(PublicKey)}</li>
+ *     <li>{@link #verify(SignatureOutput)}</li>
+ * </ol>
+ *
+ * Redact:
+ * <ol>
+ *     <li>{@link #initRedact(PublicKey)}</li>
+ *     <li>{@link #addIdentifier(Identifier)}</li>
+ *     <li>{@link #redact(SignatureOutput)}</li>
+ * </ol>
+ *
+ * Update:
+ * <ol>
+ *     <li>{@link #initUpdate(KeyPair)}</li>
+ *     <li>{@link #addPart(byte[])}</li>
+ *     <li>{@link #update(SignatureOutput)}</li>
+ * </ol>
+ *
+ * Merge:
+ * <ol>
+ *     <li>{@link #initMerge(PublicKey)}</li>
+ *     <li>{@link #merge(SignatureOutput, SignatureOutput)}</li>
  * </ol>
  *
  * @author Wolfgang Popp
@@ -269,10 +288,17 @@ public abstract class RedactableSignature {
     }
 
     /**
-     * @param part
+     * Adds a new message part to be signed.
+     * <p>
+     * Every message part added with this method can later be redacted if the given boolean flag is set to true. Note
+     * that the returned identifier might not identify the added element any more when redactions took place, because
+     * indices of the message elements might change because of redactions.
+     *
+     * @param part the part to be added
      * @param isRedactable a boolean indicating whether the given part can be redacted from the signed message.
-     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this redactable
-     *                                      signature algorithm is unable to process the given element.
+     * @return an Identifier that identifies the added element in the SignatureOutput
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this
+     *                                      redactable signature algorithm is unable to process the given element.
      */
     public final Identifier addPart(byte[] part, boolean isRedactable) throws RedactableSignatureException {
         if (state == STATE.SIGN || state == STATE.UPDATE) {
@@ -281,10 +307,27 @@ public abstract class RedactableSignature {
         throw new RedactableSignatureException("not initialized for signing or updating");
     }
 
+    /**
+     * Adds a new redactable message part.
+     * <p>
+     * This method is equivalent to <code>addPart(part, true)</code>.
+     *
+     * @param part the part to be added
+     * @return an Identifier that identifies the added element in the SignatureOutput
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this
+     *                                      redactable signature algorithm is unable to process the given element.
+     */
     public final Identifier addPart(byte[] part) throws RedactableSignatureException {
         return addPart(part, true);
     }
 
+    /**
+     * Identifies an element for redaction.
+     *
+     * @param identifier the identifier as returned by {@link #addPart(byte[])} or newly created
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly or if this
+     *                                      redactable signature algorithm is unable to process the given identifier.
+     */
     public final void addIdentifier(Identifier identifier) throws RedactableSignatureException {
         if (state == STATE.REDACT) {
             engine.engineAddIdentifier(identifier);
@@ -294,11 +337,15 @@ public abstract class RedactableSignature {
     }
 
     /**
-     * Signs the elements that were added via a {@link #addPart(byte[]) addPart} method against.
+     * Signs the elements that were added via a {@link #addPart(byte[]) addPart} method.
+     * <p>
+     * A call of this method resets this signature object to the initial state, which is the state it was in after a
+     * call of {@link #initSign(KeyPair)}. That is, the object is reset and available to generate another signature from
+     * the same signer.
      *
      * @return the SignatureOutput that contains the signature of the added elements.
-     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                                      signature algorithm cannot process the elements to be signed.
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this
+     *                                      redactable signature algorithm cannot process the elements to be signed.
      */
     public final SignatureOutput sign() throws RedactableSignatureException {
         if (state == STATE.SIGN) {
@@ -308,12 +355,19 @@ public abstract class RedactableSignature {
     }
 
     /**
-     * Verifies the elements that were added via a {@link #addPart(byte[]) addPart} method against the given signature.
+     * Verifies the given SignatureOutput.
+     * <p>
+     * The signature output already contains the message. Therefore, the <code>addPart()</code> method must not be
+     * called for verification.
+     * <p>
+     * A call of this method resets this signature object to the initial state, which is the state it was in after a
+     * call of {@link #initVerify(PublicKey)}. That is, the object is reset and available to verify another signature
+     * from the same identity whose public key was set via {@link #initVerify(PublicKey)}.
      *
      * @param signature the signature to be verified
      * @return true if the signature verifies, false otherwise
-     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                                      signature algorithm cannot process the elements to be verified.
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this
+     *                                      redactable signature algorithm cannot process the elements to be verified.
      */
     public final boolean verify(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.VERIFY) {
@@ -323,13 +377,17 @@ public abstract class RedactableSignature {
     }
 
     /**
-     * Redacts the elements that were added via a {@link #addPart(byte[]) addPart} method from the given
-     * SignatureOutput
+     * Redacts the elements that were added via a {@link #addIdentifier(Identifier)} method from the given
+     * SignatureOutput.
+     * <p>
+     * A call of this method resets this signature object to the initial state, which is the state it was in after a
+     * call of {@link #initRedact(PublicKey)}. That is, the object is reset and available to redact another signature
+     * from the same identity whose public key was set via {@link #initRedact(PublicKey)}.
      *
      * @param signature the signature which should be redacted
      * @return the redacted SignatureOutput
-     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                                      signature algorithm cannot process the elements to be redacted.
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this
+     *                                      redactable signature algorithm cannot process the elements to be redacted.
      */
     public final SignatureOutput redact(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.REDACT) {
@@ -339,14 +397,19 @@ public abstract class RedactableSignature {
     }
 
     /**
-     * Merges the two given signatures. Only different redacted versions of the same original signature can be merged
-     * again.
+     * Merges the two given signatures.
+     * <p>
+     * Only different redacted versions of the same original signature can be merged again.
+     * <p>
+     * A call of this method resets this signature object to the initial state, which is the state it was in after a
+     * call of {@link #initMerge(PublicKey)}. That is, the object is reset and available to redact another signature
+     * from the same identity whose public key was set via {@link #initMerge(PublicKey)}.
      *
      * @param signature1 a redacted version of a signature output
      * @param signature2 another redacted version of the same original signature output as <code>signature1</code>
      * @return the merged SignatureOutput of signature1 and signature2
-     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if the two
-     *                                      signatures cannot be merged
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if the
+     *                                      two signatures cannot be merged
      */
     public SignatureOutput merge(SignatureOutput signature1, SignatureOutput signature2)
             throws RedactableSignatureException {
@@ -359,11 +422,15 @@ public abstract class RedactableSignature {
 
     /**
      * Adds the elements that were added via a {@link #addPart(byte[]) addPart} method to the given signature.
+     * <p>
+     * A call of this method resets this signature object to the initial state, which is the state it was in after a
+     * call of {@link #initUpdate(KeyPair)}. That is, the object is reset and available to update another signature from
+     * the same signer.
      *
      * @param signature the signature which should be updated
-     * @return teh updated SignatureOutput object
-     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this redactable
-     *                                      signature algorithm cannot process the elements to be updated.
+     * @return the updated SignatureOutput object
+     * @throws RedactableSignatureException if this RedactableSignature object is not initialized properly. Or if this
+     *                                      redactable signature algorithm cannot process the elements to be updated.
      */
     public SignatureOutput update(SignatureOutput signature) throws RedactableSignatureException {
         if (state == STATE.UPDATE) {
