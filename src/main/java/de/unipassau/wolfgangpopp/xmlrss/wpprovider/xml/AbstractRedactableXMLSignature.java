@@ -35,7 +35,6 @@ import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.SignatureValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import javax.xml.bind.JAXBException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.PublicKey;

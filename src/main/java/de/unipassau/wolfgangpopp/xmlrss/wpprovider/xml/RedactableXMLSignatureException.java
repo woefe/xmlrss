@@ -20,10 +20,12 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
+import java.security.GeneralSecurityException;
+
 /**
  * @author Wolfgang Popp
  */
-public class RedactableXMLSignatureException extends Exception {
+public class RedactableXMLSignatureException extends GeneralSecurityException {
     public RedactableXMLSignatureException(Exception e) {
         super(e);
     }
@@ -38,10 +40,6 @@ public class RedactableXMLSignatureException extends Exception {
 
     public RedactableXMLSignatureException(Throwable cause) {
         super(cause);
-    }
-
-    public RedactableXMLSignatureException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 
     public RedactableXMLSignatureException() {

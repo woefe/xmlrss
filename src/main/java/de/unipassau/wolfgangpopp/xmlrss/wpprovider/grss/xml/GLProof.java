@@ -22,7 +22,6 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.xml;
 
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss.GLRSSSignatureOutput;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.RedactableXMLSignatureException;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding.Proof;
 import org.w3c.dom.Document;
@@ -33,8 +32,6 @@ import org.w3c.dom.NodeList;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
 
 /**
  * @author Wolfgang Popp

@@ -20,7 +20,6 @@
 
 package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 
-import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

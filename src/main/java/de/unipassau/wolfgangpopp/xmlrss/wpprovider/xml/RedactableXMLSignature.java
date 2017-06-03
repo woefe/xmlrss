@@ -207,12 +207,11 @@ public abstract class RedactableXMLSignature {
         throw new RedactableXMLSignatureException("not initialized for verification");
     }
 
-    public final void redact() throws RedactableXMLSignatureException {
+    public final Document redact() throws RedactableXMLSignatureException {
         if (state == STATE.REDACT) {
-            engine.engineRedact();
-        } else {
-            throw new RedactableXMLSignatureException("not initialized for redaction");
+            return engine.engineRedact();
         }
+        throw new RedactableXMLSignatureException("not initialized for redaction");
     }
 
     //TODO algorithm parameters

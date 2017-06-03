@@ -39,10 +39,6 @@ public class PSRSSException extends RedactableSignatureException {
         super(cause);
     }
 
-    public PSRSSException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
     public PSRSSException() {
     }
 }

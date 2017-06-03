@@ -36,18 +36,6 @@ import javax.xml.transform.dom.DOMResult;
  * @author Wolfgang Popp
  */
 public class XMLUtils {
-    public static <T> Node createNode(Document document, Object bindingObject, Class<T> clazz, String name) throws JAXBException {
-        final JAXBContext context = JAXBContext.newInstance(bindingObject.getClass());
-        Marshaller marshaller = context.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-        QName qName = new QName(RedactableXMLSignature.XML_NAMESPACE, name);
-        JAXBElement<T> element = new JAXBElement<T>(qName, clazz, (T) bindingObject);
-        DOMResult jaxbResult = new DOMResult();
-        marshaller.marshal(element, jaxbResult);
-        return jaxbResult.getNode();
-    }
-
     public static Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
         if (node == null || !expectedNodeName.equals(node.getNodeName())) {
             throw new RedactableXMLSignatureException("Cannot find expected node '" + expectedNodeName + "'");

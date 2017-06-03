@@ -28,8 +28,6 @@ import org.w3c.dom.Node;
 
 import java.util.Base64;
 
-import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNode;
-
 /**
  * @author Wolfgang Popp
  */
