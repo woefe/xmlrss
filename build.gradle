@@ -20,7 +20,7 @@
 
 version '1.0-SNAPSHOT'
 
-apply plugin: 'java'
+apply plugin: 'java-library'
 
 sourceCompatibility = 1.8
 
@@ -29,6 +29,6 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-    compile group: 'org.apache.santuario', name: 'xmlsec', version: '2.0.8'
+    testCompileOnly group: 'junit', name: 'junit', version: '4.11'
+    implementation group: 'org.apache.santuario', name: 'xmlsec', version: '2.0.8'
 }
