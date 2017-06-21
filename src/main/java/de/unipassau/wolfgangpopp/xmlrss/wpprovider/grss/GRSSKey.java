@@ -23,6 +23,7 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.grss;
 import java.security.Key;
 
 /**
+ * Common superclass for keys used by {@link GLRedactableSignature} and {@link GSRedactableSignature}.
  * @author Wolfgang Popp
  */
 public class GRSSKey implements Key {

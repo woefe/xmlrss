@@ -63,5 +63,4 @@ public abstract class GLRSSKeyPairGenerator extends KeyPairGeneratorSpi {
                     KeyPairGenerator.getInstance("BPA"));
         }
     }
-
 }

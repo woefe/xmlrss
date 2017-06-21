@@ -32,8 +32,10 @@ import java.util.List;
 
 /**
  * The Signature class is responsible for marshalling and unmarshalling the <code>Signature</code> element of the
- * redactable signature XML encoding. The signature element is the root element of the XML encoding.
- *
+ * redactable signature XML encoding. The signature element is the root element of the XML encoding. The redactable XML
+ * signature allows different implementations to use their own implementations of Proof and Signature value classes.
+ * Those classes are denoted by the type parameters <code>S</code> and <code>P</code>.
+ * <p>
  * The XSD Schema of the signature element is defined as following
  * <pre>
  * {@code
@@ -60,60 +62,78 @@ public final class Signature<S extends SignatureValue, P extends Proof> extends 
     private S signatureValue;
     private SignatureInfo signatureInfo;
 
+    /**
+     * Constructs a new signature object whose signature value and proofs are the given classes.
+     *
+     * @param proofClass          the class of the used proof (same as the type parameter P)
+     * @param signatureValueClass the class of the used signature value (same as the type parameter S)
+     */
     public Signature(Class<P> proofClass, Class<S> signatureValueClass) {
         this.proofClass = proofClass;
         this.signatureValueClass = signatureValueClass;
     }
 
+    /**
+     * Returns the signature info element.
+     *
+     * @return the signature info element
+     */
     public SignatureInfo getSignatureInfo() {
         return signatureInfo;
     }
 
+    /**
+     * Returns the list of references.
+     *
+     * @return the list of references
+     */
     public List<Reference<P>> getReferences() {
         return references;
     }
 
+    /**
+     * Returns the signature value.
+     *
+     * @return the signature value.
+     */
     public S getSignatureValue() {
         return signatureValue;
     }
 
+    /**
+     * Sets the signature info.
+     *
+     * @param signatureInfo the signature info
+     * @return this signature object
+     */
     public Signature setSignatureInfo(SignatureInfo signatureInfo) {
         this.signatureInfo = signatureInfo;
         return this;
     }
 
+    /**
+     * Sets the references.
+     *
+     * @param reference the references
+     * @return this signature object
+     */
     public Signature addReference(Reference<P> reference) {
         references.add(reference);
         return this;
     }
 
+    /**
+     * Sets the signature value.
+     *
+     * @param signatureValue the signature value
+     * @return this signature object
+     */
     public Signature setSignatureValue(S signatureValue) {
         this.signatureValue = signatureValue;
         return this;
     }
 
-    /*
-    public Document marshall(Document document) throws JAXBException {
-        final JAXBContext context = JAXBContext.newInstance(this.getClass(), proofClass, signatureValueClass);
-        Marshaller m = context.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-        m.marshal(this, document.getDocumentElement());
-        return document;
-    }
-
-    /*
-    public static Signature unmarshall(Node signatureNode) throws JAXBException {
-
-        final JAXBContext context = JAXBContext.newInstance(Signature.class, proofClass, signatureValueClass);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-        Signature<S, P> signature = (Signature<S, P>) unmarshaller.unmarshal(signatureNode);
-        signature.proofClass = proofClass;
-        signature.signatureValueClass = signatureValueClass;
-        return signature;
-    }
-    */
-
+    @SuppressWarnings("unchecked")
     @Override
     public Signature<S, P> unmarshall(Node node) throws RedactableXMLSignatureException {
         Node signature = checkThisNode(node);

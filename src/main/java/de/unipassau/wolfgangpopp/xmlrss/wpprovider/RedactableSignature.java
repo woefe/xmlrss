@@ -38,7 +38,7 @@ import java.util.List;
  * signatures allow to removed parts from a signed message without invalidating the signature of the message.
  * <p>
  * A RedactableSignature object can be used to generate, verify, redact, merge or update redactable signatures. Note
- * that redactable signature schemes exist, which do not support merging or updating signatures.
+ * that redactable signature schemes exist which do not support merging or updating signatures.
  * <p>
  * Sign:
  * <ol>
@@ -92,6 +92,7 @@ public abstract class RedactableSignature {
     /**
      * Constructs a RedactableSignature object with the specified algorithm name.
      *
+     * @param engine    the underlying engine of this RedactableSignature
      * @param algorithm the algorithm of this redactable signature
      */
     protected RedactableSignature(RedactableSignatureSpi engine, String algorithm) {

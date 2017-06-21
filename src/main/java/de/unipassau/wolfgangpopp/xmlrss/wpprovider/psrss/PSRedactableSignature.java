@@ -48,6 +48,10 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 
 /**
+ * The <code>PSRedactableSignature</code> class implements the updatable and mergeable redactable signature by Pöhls
+ * and Samelin as described in
+ * http://henrich.poehls.com/papers/2014_PoehlsSamelin_OnUpdatableRedactableSignatures_ACNS14_full.pdf
+ *
  * @author Wolfgang Popp
  */
 abstract class PSRedactableSignature extends RedactableSignatureSpi {
@@ -332,7 +336,7 @@ abstract class PSRedactableSignature extends RedactableSignatureSpi {
      * @param <E>        Input (argument) type
      * @param <R>        Result type
      * @return a collection of results of the function
-     * @throws PSRSSException
+     * @throws PSRSSException if the parallel execution failed
      */
     private <E, R> Collection<R> map(final Function<E, R> function, Iterable<E> collection) throws PSRSSException {
         ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());

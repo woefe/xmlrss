@@ -38,6 +38,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * The <code>PSRedactableXMLSignature</code> class provides the XML encoding for the {@link PSRedactableSignature}.
+ *
  * @author Wolfgang Popp
  */
 abstract class PSRedactableXMLSignature extends AbstractRedactableXMLSignature<PSSignatureValue, SimpleProof> {

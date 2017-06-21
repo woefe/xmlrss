@@ -98,7 +98,7 @@ public abstract class BindingElement<T extends BindingElement> {
      * the children of the given node are actually the expected nodes.
      *
      * @param node the DOM node to unmarshall
-     * @return the unmarshalled binding object
+     * @return the unmarshalled binding object (usually by returning <code>this</code>)
      * @throws RedactableXMLSignatureException if the given node cannot be unmarshalled. E.g. because the node is
      *                                         missing attributes.
      */

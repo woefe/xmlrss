@@ -23,38 +23,80 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider;
 import de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.ByteArray;
 
 /**
+ * The <code>Identifier</code> class provides means to identify elements in a set as well as elements of a list.
+ * <p>
+ * When elements within a list are removed, the indices change. To make sure the elements are actually located at the
+ * expected positions the Identifier requires to set both the index and the expected element.
+ *
  * @author Wolfgang Popp
  */
 public class Identifier {
     private final ByteArray bytes;
     private int position = -1;
 
+    /**
+     * Constructs a new identifier suitable to identify an element in a list.
+     *
+     * @param bytes    the bytes expected at the given position
+     * @param position the position of the expected bytes
+     */
     public Identifier(ByteArray bytes, int position) {
         this.bytes = bytes;
         this.position = position;
     }
 
+    /**
+     * Constructs a new identifier suitable to identify an element in a list.
+     *
+     * @param bytes    the bytes expected at the given position
+     * @param position the position of the expected bytes
+     */
     public Identifier(byte[] bytes, int position) {
         this.bytes = new ByteArray(bytes);
         this.position = position;
     }
 
+    /**
+     * Constructs a new identifier suitable to identify an element in a set.
+     *
+     * @param bytes the element in a set
+     */
     public Identifier(byte[] bytes) {
         this.bytes = new ByteArray(bytes);
     }
 
+    /**
+     * Constructs a new identifier suitable to identify an element in a set.
+     *
+     * @param bytes the element in a set
+     */
     public Identifier(ByteArray bytes) {
         this.bytes = bytes;
     }
 
+    /**
+     * Returns the identified element.
+     *
+     * @return the identified element
+     */
     public ByteArray getByteArray() {
         return bytes;
     }
 
+    /**
+     * Returns the identified element.
+     *
+     * @return the identified element
+     */
     public byte[] getBytes() {
         return getByteArray().getArray();
     }
 
+    /**
+     * Returns the position of the identified element
+     *
+     * @return the position or -1 if the identifier is not suitable to identify an element in a list
+     */
     public int getPosition() {
         return position;
     }

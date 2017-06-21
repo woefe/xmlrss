@@ -27,8 +27,9 @@ import org.w3c.dom.Node;
 
 /**
  * The Reference class is responsible for marshalling and unmarshalling the <code>Reference</code> element of the
- * redactable signature XML encoding.
- *
+ * redactable signature XML encoding. References contain proof elements which have to be implemented differently for
+ * various redactable signature schemes. The type parameter <code>P</code> denotes the specific {@link Proof} class.
+ * <p>
  * The XSD Schema of the reference is defined as following
  * <pre>
  * {@code
@@ -50,20 +51,44 @@ public final class Reference<P extends Proof> extends BindingElement<Reference> 
     private P proof;
     private Class<P> proofClass;
 
+    /**
+     * Constructs a new empty reference.
+     * <p>
+     * The reference is initialized when the unmarshall method is called.
+     *
+     * @param proofClass the class of the proof used in the redactable XML signature encoding
+     */
     public Reference(Class<P> proofClass) {
         this.proofClass = proofClass;
     }
 
+    /**
+     * Constructs a new reference with the given pointer and proof.
+     *
+     * @param pointer    the pointer of this reference
+     * @param proof      the proof of this reference
+     * @param proofClass the class of the used proof
+     */
     public Reference(Pointer pointer, P proof, Class<P> proofClass) {
         this.pointer = pointer;
         this.proof = proof;
         this.proofClass = proofClass;
     }
 
+    /**
+     * Returns the pointer of this reference.
+     *
+     * @return the pointer of this reference
+     */
     public Pointer getPointer() {
         return pointer;
     }
 
+    /**
+     * Returns the proof of this reference.
+     *
+     * @return the proof of this reference
+     */
     public P getProof() {
         return proof;
     }
@@ -91,6 +116,7 @@ public final class Reference<P extends Proof> extends BindingElement<Reference> 
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Reference<P> unmarshall(Node node) throws RedactableXMLSignatureException {
         Node reference = checkThisNode(node);

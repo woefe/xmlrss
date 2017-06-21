@@ -23,25 +23,43 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml;
 import java.security.GeneralSecurityException;
 
 /**
+ * The <code>RedactableXMLSignatureException</code> is the general Exception for redactable signature implementations.
+ *
  * @author Wolfgang Popp
  */
 public class RedactableXMLSignatureException extends GeneralSecurityException {
-    public RedactableXMLSignatureException(Exception e) {
-        super(e);
-    }
 
+    /**
+     * Constructs a new RedactableXMLSignatureException with the given detail message.
+     *
+     * @param message the detail message
+     */
     public RedactableXMLSignatureException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new RedactableXMLSignatureException with the given detail message and cause.
+     *
+     * @param message the detail message
+     * @param cause   the cause of this exception
+     */
     public RedactableXMLSignatureException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * Constructs a new RedactableXMLSignatureException with the given cause.
+     *
+     * @param cause the cause of this exception
+     */
     public RedactableXMLSignatureException(Throwable cause) {
         super(cause);
     }
 
+    /**
+     * Constructs a new RedactebleXMLSignatureException without a detail message
+     */
     public RedactableXMLSignatureException() {
     }
 }

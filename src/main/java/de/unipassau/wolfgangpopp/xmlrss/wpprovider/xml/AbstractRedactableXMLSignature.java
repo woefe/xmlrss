@@ -104,7 +104,7 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
 
             Pointer signatureInfoPointer = new Pointer("SignatureInfo");
             Document document = XMLUtils.getOwnerDocument(root);
-            byte[] pointerConcatSINode = signatureInfoPointer.concatNode(signatureInfo.marshall(document), root);
+            byte[] pointerConcatSINode = signatureInfoPointer.concatNode(signatureInfo.marshall(document));
             pointers.put(new ByteArray(pointerConcatSINode), signatureInfoPointer);
             try {
                 rss.addPart(pointerConcatSINode);

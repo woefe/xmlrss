@@ -29,8 +29,9 @@ import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNo
 
 /**
  * The SignatureInfo class is responsible for marshalling and unmarshalling the <code>SignatureInfo</code> element of
- * the redactable signature XML encoding.
- *
+ * the redactable signature XML encoding. The SignatureInfo element states the used canonicalization method and the
+ * redactable signature algorithm.
+ * <p>
  * The XSD Schema of the signature info is defined as following
  * <pre>
  * {@code
@@ -48,23 +49,45 @@ import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNo
  * @author Wolfgang Popp
  */
 public class SignatureInfo extends BindingElement<SignatureInfo> {
+
     private static final String REDACTABLE_SIGNATURE_ALGORITHM = "RedactableSignatureAlgorithm";
     private static final String CANONICALIZATION_METHOD = "CanonicalizationMethod";
     private String canonicalizationMethod;
     private String redactableSignatureAlgorithm;
 
+    /**
+     * Constructs a new and empty SignatureInfo.
+     * <p>
+     * The attributes of this signature info are initialized when calling the {@link #unmarshall(Node)} method.
+     */
     public SignatureInfo() {
     }
 
+    /**
+     * Constructs a new SignatureInfo with the given canonicalization method and signature algorithm.
+     *
+     * @param canonicalizationMethod    the used canonicalization method
+     * @param redactableSignatureMethod the use redactable signature algorithm
+     */
     public SignatureInfo(String canonicalizationMethod, String redactableSignatureMethod) {
         this.canonicalizationMethod = canonicalizationMethod;
         this.redactableSignatureAlgorithm = redactableSignatureMethod;
     }
 
+    /**
+     * Returns the canonicalization method used in this redactable xml signature.
+     *
+     * @return the canonicalization method
+     */
     public String getCanonicalizationMethod() {
         return canonicalizationMethod;
     }
 
+    /**
+     * Returns the redactable signature algorithm used in this redactable xml signature.
+     *
+     * @return the redactable signature algorithm
+     */
     public String getRedactableSignatureMethod() {
         return redactableSignatureAlgorithm;
     }

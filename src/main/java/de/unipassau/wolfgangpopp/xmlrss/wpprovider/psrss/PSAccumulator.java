@@ -37,6 +37,9 @@ import java.util.Arrays;
 import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.CryptoUtils.fullDomainHash;
 
 /**
+ * The <code>PSAccumulator</code> class implements the trapdoor accumulator as proposed in
+ * http://henrich.poehls.com/papers/2014_PoehlsSamelin_OnUpdatableRedactableSignatures_ACNS14_full.pdf
+ *
  * @author Wolfgang Popp
  */
 public class PSAccumulator extends AccumulatorSpi {

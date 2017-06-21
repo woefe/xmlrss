@@ -45,6 +45,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * The <code>GLRedactableSignature</code> implements the general redactable signature for lists as described in
+ * http://henrich.poehls.com/papers/2015_DerlerPoehlsSamelinSlamanig-GeneralFrameworkForRedactableSignatures_ICISC.pdf
+ *
  * @author Wolfgang Popp
  */
 public abstract class GLRedactableSignature extends RedactableSignatureSpi {

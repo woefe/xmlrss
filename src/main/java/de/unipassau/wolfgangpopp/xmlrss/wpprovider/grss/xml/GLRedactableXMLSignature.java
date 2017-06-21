@@ -36,6 +36,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * The <code>GLRedactableXMLSignature</code> class provides the XML encoding for the {@link GLRedactableXMLSignature}.
+ *
  * @author Wolfgang Popp
  */
 public abstract class GLRedactableXMLSignature extends AbstractRedactableXMLSignature<GSSignatureValue, GLProof> {

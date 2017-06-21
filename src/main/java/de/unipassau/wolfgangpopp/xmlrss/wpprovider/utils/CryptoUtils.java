@@ -26,6 +26,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 /**
+ * The <code>CryptoUtils</code> class contains helper functions for cryptographic operations.
+ *
  * @author Wolfgang Popp
  */
 public final class CryptoUtils {

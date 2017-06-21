@@ -24,6 +24,8 @@ import java.math.BigInteger;
 import java.security.Key;
 
 /**
+ * Common superclass for keys used by the {@link BPAccumulator}.
+ *
  * @author Wolfgang Popp
  */
 public class BPKey implements Key {

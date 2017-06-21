@@ -26,6 +26,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
+ * The <code>Dereferencer</code> is used to dereference URIs within a given XML document.
+ *
  * @author Wolfgang Popp
  */
 public class Dereferencer {
@@ -56,6 +58,16 @@ public class Dereferencer {
         return XMLUtils.checkNode(signatureNode.getFirstChild(), "SignatureInfo");
     }
 
+    /**
+     * Dereference the given uri within the document of the given root element.
+     * <p>
+     * Currently this method only supports XPointer-ID-references and the special SignatureInfo-URI.
+     *
+     * @param uri  the uri to dereference
+     * @param root the root node whose owner document is searched for dereferenciation
+     * @return the dereferenced node
+     * @throws RedactableXMLSignatureException if the given URI cannot be resolved or is not supported
+     */
     public static Node dereference(String uri, Node root) throws RedactableXMLSignatureException {
         if (uri == null || uri.length() == 0) {
             throw new RedactableXMLSignatureException("unsupported URI");

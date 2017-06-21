@@ -33,9 +33,21 @@ import javax.xml.namespace.QName;
 import javax.xml.transform.dom.DOMResult;
 
 /**
+ * The <code>XMLUtils</code> class contains helper functions for XML operations.
+ *
  * @author Wolfgang Popp
  */
 public class XMLUtils {
+
+    /**
+     * Checks whether the given node has the expected name. This function throws an exception if the node does not have
+     * the expected name
+     *
+     * @param node             the node to check
+     * @param expectedNodeName the expected name of the node
+     * @return the given node unmodified
+     * @throws RedactableXMLSignatureException if the given node does not have the expected name
+     */
     public static Node checkNode(Node node, String expectedNodeName) throws RedactableXMLSignatureException {
         if (node == null || !expectedNodeName.equals(node.getNodeName())) {
             throw new RedactableXMLSignatureException("Cannot find expected node '" + expectedNodeName + "'");
@@ -44,6 +56,12 @@ public class XMLUtils {
         return node;
     }
 
+    /**
+     * Returns the document of a given node.
+     *
+     * @param node the node
+     * @return the document of the given node
+     */
     public static Document getOwnerDocument(Node node) {
         if (node.getNodeType() == Node.DOCUMENT_NODE) {
             return (Document) node;
@@ -51,6 +69,13 @@ public class XMLUtils {
         return node.getOwnerDocument();
     }
 
+    /**
+     * Retrieves the signature node of the given root node.
+     *
+     * @param root the root node of an XML document
+     * @return the signature node
+     * @throws RedactableXMLSignatureException if the Signature node could not be found
+     */
     public static Node getSignatureNode(Node root) throws RedactableXMLSignatureException {
         Document doc = getOwnerDocument(root);
         return checkNode(doc.getElementsByTagNameNS(RedactableXMLSignature.XML_NAMESPACE, "Signature").item(0),

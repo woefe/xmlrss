@@ -40,6 +40,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * The <code>GSRedactableXMLSignature</code> class provides the XML encoding for the {@link GSRedactableXMLSignature}.
+ *
  * @author Wolfgang Popp
  */
 public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSignature<GSSignatureValue, SimpleProof> {
@@ -103,7 +105,7 @@ public abstract class GSRedactableXMLSignature extends AbstractRedactableXMLSign
             throws RedactableXMLSignatureException {
 
         ensureBuilderExists();
-        GSSignatureValue gsSignatureValue = ((GSSignatureValue) signatureValue);
+        GSSignatureValue gsSignatureValue = signatureValue;
         builder.setAccumulatorValue(gsSignatureValue.getAccumulatorValue())
                 .setDSigValue(gsSignatureValue.getDSigValue());
     }

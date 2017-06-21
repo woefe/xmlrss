@@ -23,8 +23,9 @@ package de.unipassau.wolfgangpopp.xmlrss.wpprovider.xml.binding;
 /**
  * The Proof class is responsible for marshalling and unmarshalling the <code>Proof</code> element of the redactable
  * signature XML encoding. The proof element has to be specifically adjusted for every implementation. Implementations
- * have to implement their own encoding of the proof element.
- *
+ * have to implement their own encoding of the proof element. An example of a proof implementation is the
+ * {@link SimpleProof}.
+ * <p>
  * The XSD Schema of the proof is defined as following
  * <pre>
  * {@code <element name="Proof" type="anyType"/> }

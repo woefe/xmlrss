@@ -36,13 +36,28 @@ import java.util.Base64;
 public class SimpleProof extends Proof {
     private String proof;
 
+    /**
+     * Constructs a new and empty SimpleProof.
+     * <p>
+     * The attributes of this object are initialized when the {@link #unmarshall(Node)} method is called.
+     */
     public SimpleProof() {
     }
 
+    /**
+     * Constructs a new SimpleProof encoding the given byte array.
+     *
+     * @param proof the proof as byte array
+     */
     public SimpleProof(byte[] proof) {
         this.proof = Base64.getEncoder().encodeToString(proof);
     }
 
+    /**
+     * Returns the proof encoded in this SimpleProof.
+     *
+     * @return the proof as byte[] array
+     */
     public byte[] getBytes() {
         return Base64.getDecoder().decode(proof);
     }

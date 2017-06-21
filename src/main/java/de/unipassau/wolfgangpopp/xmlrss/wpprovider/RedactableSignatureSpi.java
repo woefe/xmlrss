@@ -31,7 +31,7 @@ import java.security.SecureRandom;
  * This class defines the Service Provider Interface for the {@link RedactableSignature} class.
  * <p>
  * All abstract methods in this class must be implemented by cryptographic services providers who wish to supply the
- * implementation of a particular accumulator algorithm.
+ * implementation of a particular redactable signature algorithm.
  *
  * @author Wolfgang Popp
  */
@@ -200,8 +200,8 @@ public abstract class RedactableSignatureSpi {
             throws InvalidAlgorithmParameterException;
 
     /**
-     * Returns the algorithm parameters used by this redactable signature engine or null if this accumulator engine does
-     * not use any parameters.
+     * Returns the algorithm parameters used by this redactable signature engine or null if this redactable signature
+     * engine does not use any parameters.
      *
      * @return the algorithm parameters or null if this engine does not use any parameters.
      */

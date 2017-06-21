@@ -26,6 +26,8 @@ import org.apache.xml.security.c14n.InvalidCanonicalizerException;
 import org.w3c.dom.Node;
 
 /**
+ * The <code>Canonicalizer</code> class transforms XML elements to a canonical representation.
+ *
  * @author Wolfgang Popp
  */
 public class Canonicalizer {
@@ -43,6 +45,13 @@ public class Canonicalizer {
         }
     }
 
+    /**
+     * Canonicalizes a subtree starting at the given node.
+     *
+     * @param node the node to canonicalize
+     * @return a canonical representation of the given node and all its children
+     * @throws CanonicalizationException if the given node cannot be processed
+     */
     public static byte[] canonicalize(Node node) throws CanonicalizationException {
         return canonicalizer.canonicalizeSubtree(node);
     }
