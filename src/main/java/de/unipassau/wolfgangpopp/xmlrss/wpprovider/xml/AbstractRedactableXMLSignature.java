@@ -51,6 +51,12 @@ import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.checkNo
 import static de.unipassau.wolfgangpopp.xmlrss.wpprovider.utils.XMLUtils.getSignatureNode;
 
 /**
+ * The <code>AbstractRedactableXMLSignature</code> helps implementors of a RedactableXMLSignature by reducing the
+ * required work to implementations of XML encoding for the {@link SignatureValue} and {@link Proof} classes.
+ * <p>
+ * Provider who want to support a RedactableXMLSignature can implement the {@link RedactableXMLSignatureSpi} directly
+ * or use this abstract helper class.
+ *
  * @author Wolfgang Popp
  */
 public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P extends Proof>
@@ -64,6 +70,14 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
     private final List<String> uris = new ArrayList<>();
     private final Set<String> redactUris = new HashSet<>();
 
+    /**
+     * Constructss a new AbstractRedactableXMLSignature with the given underlying redactable signature scheme and proof
+     * and signature value classes.
+     *
+     * @param rss                 the underlying redactable signature scheme
+     * @param proofClass          the class of the XML encoding of the proof used by the given rss
+     * @param signatureValueClass the class of the XML encoding of the signature value used by the given rss
+     */
     protected AbstractRedactableXMLSignature(RedactableSignature rss, Class<P> proofClass,
                                              Class<S> signatureValueClass) {
         super();
@@ -207,10 +221,25 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
         return true;
     }
 
+    /**
+     * Returns the Pointer element of the given message part.
+     *
+     * @param messagePart the message part
+     * @return the pointer identifying the given message part
+     */
     protected Pointer getPointerForMessagePart(byte[] messagePart) {
         return pointers.get(new ByteArray(messagePart));
     }
 
+    /**
+     * Returns the message part for a given pointer.
+     * <p>
+     * The message part is the concatenation of the pointer with its dereferenced content.
+     *
+     * @param pointer the pointer
+     * @return pointer concatenated with the content it points to
+     * @throws RedactableXMLSignatureException if the pointer cannot be dereferenced or canonicalization fails
+     */
     protected byte[] getMessagePartForPointer(Pointer pointer) throws RedactableXMLSignatureException {
         return pointer.concatDereference(root);
     }
@@ -256,22 +285,108 @@ public abstract class AbstractRedactableXMLSignature<S extends SignatureValue, P
         return doUnmarshall();
     }
 
+    /**
+     * Returns the name of the used redactable signature algorithm.
+     * <p>
+     * The algorithm is usually identified by a URI. E.g. "http://sec.uni-passau.de/2017/xmlrss/psrss";
+     *
+     * @return the name of the redactable signature algorithm
+     */
     protected abstract String getRedactableSignatureMethod();
 
+    /**
+     * Returns the name of the used canonicalization algorithm.
+     * <p>
+     * The algorithm is usually identified by a URI. E.g. "http://www.w3.org/2006/12/xml-c14n11#WithComments"
+     *
+     * @return the name of the canonicalization algorithm.
+     */
     protected abstract String getCanonicalizationMethod();
 
+    /**
+     * Creates a implementation specific signature value object from the given signature output.
+     *
+     * @param signatureOutput the signature output, where the signature value is extracted from
+     * @return the signature value object used in this RedactableXMLSignature
+     * @throws RedactableXMLSignatureException if the signature output has a bad type or cannot be used to create the
+     *                                         signature value
+     */
     protected abstract S marshallSignatureValue(SignatureOutput signatureOutput) throws RedactableXMLSignatureException;
 
+    /**
+     * Creates a collection of references from the given signature output.
+     * <p>
+     * Implementors can use the {@link #getPointerForMessagePart(byte[])} method to resolve a message part in the
+     * signature output to a pointer object.
+     * <p>
+     * Set-based implementations should use sets as the collection datatype, and list-based implementations lists.
+     *
+     * @param signatureOutput the signature output of the underlying redactable signature
+     * @return a collection of references
+     * @throws RedactableXMLSignatureException if the signature output has a bad type or cannot be used to create the
+     *                                         references
+     */
     protected abstract Collection<Reference<P>> marshallReferences(SignatureOutput signatureOutput)
             throws RedactableXMLSignatureException;
 
+    /**
+     * Creates an identifier suitable to identify elements in the datastructure (sets or lists) of the underlying
+     * redactable signature.
+     *
+     * @param messagePart the identified message part
+     * @param index       the index of the message part (might be negative, when the redactable signature is based on sets)
+     * @return an identifier identifying the given message part at the given index
+     * @throws RedactableXMLSignatureException if the given message part cannot be identified (e.g. invalid index)
+     */
     protected abstract Identifier createIdentifier(byte[] messagePart, int index) throws RedactableXMLSignatureException;
 
+    /**
+     * Unmarshals a reference using the given pointer and proof.
+     * <p>
+     * This method should add the pointer and proof to the signature output that will be generated with
+     * {@link #doUnmarshall()}
+     * <p>
+     * Unmarshalling is split into three steps:
+     * <ol>
+     * <li>{@link #prepareUnmarshallReference(int, int, Pointer, Proof)}: unmarshalling of references</li>
+     * <li>{@link #prepareUnmarshallSignatureValue(int, SignatureValue)}: unmarshalling of the signature value</li>
+     * <li>{@link #doUnmarshall()}: creating the {@link SignatureOutput} from the signature value and references</li>
+     * </ol>
+     *
+     * @param messageSize the size of the message that is being unmarshalled
+     * @param index       the index of the reference that is being unmarshalled
+     * @param pointer     the pointer element of the reference
+     * @param proof       the proof element of the reference
+     * @throws RedactableXMLSignatureException if unmarshalling fails
+     */
     protected abstract void prepareUnmarshallReference(int messageSize, int index, Pointer pointer, P proof)
             throws RedactableXMLSignatureException;
 
+    /**
+     * Unmarshalls the signature value from the XML representation wrapper class.
+     * <p>
+     * This method should add the signature value to the signature output that will be generated with
+     * {@link #doUnmarshall()}
+     * <p>
+     * Unmarshalling is split into three steps:
+     * <ol>
+     * <li>{@link #prepareUnmarshallReference(int, int, Pointer, Proof)}: unmarshalling of references</li>
+     * <li>{@link #prepareUnmarshallSignatureValue(int, SignatureValue)}: unmarshalling of the signature value</li>
+     * <li>{@link #doUnmarshall()}: creating the {@link SignatureOutput} from the signature value and references</li>
+     * </ol>
+     *
+     * @param messageSize    the size of the message that is being unmarshalled
+     * @param signatureValue the signature value represented by the underlying xml
+     * @throws RedactableXMLSignatureException if unmarshalling fails
+     */
     protected abstract void prepareUnmarshallSignatureValue(int messageSize, S signatureValue)
             throws RedactableXMLSignatureException;
 
+    /**
+     * Performs the last step of unmarshalling.
+     *
+     * @return the unmarshalled signature output
+     * @throws RedactableXMLSignatureException if unmarshalling cannot be executed
+     */
     protected abstract SignatureOutput doUnmarshall() throws RedactableXMLSignatureException;
 }
